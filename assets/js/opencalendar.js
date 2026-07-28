@@ -426,14 +426,28 @@
 
   function buildPageHref(root, page) {
     var params = currentFilterParams(root);
-    params.set('oc_page', String(Math.max(1, page || 1)));
+    params.delete('oc_page');
+    params.delete('_url');
+    var path = String(window.location.pathname || '/').replace(/\/oc_page:\d+/g, '');
+    path = path.replace(/\/$/, '') || '/';
+    var href = path + '/oc_page:' + Math.max(1, page || 1);
     var query = params.toString();
-    return window.location.pathname + (query ? '?' + query : '') + window.location.hash;
+    if (query) {
+      href += '?' + query;
+    }
+    return href + window.location.hash;
   }
 
   function currentFilterParams(root) {
     var form = root.querySelector('[data-oc-filters]');
-    var params = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams();
+    var sourceParams = new URLSearchParams(window.location.search);
+    ['q', 'source', 'category'].forEach(function (key) {
+      var value = sourceParams.get(key);
+      if (value) {
+        params.set(key, value);
+      }
+    });
     if (!form) {
       return params;
     }
@@ -475,8 +489,11 @@
 
     var apply = function () {
       var params = currentFilterParams(root);
-      params.delete('oc_page');
-      window.location.search = params.toString();
+      var path = String(form.getAttribute('action') || window.location.pathname || '/')
+        .replace(/\/oc_page:\d+/g, '')
+        .replace(/\/$/, '') || '/';
+      var query = params.toString();
+      window.location.href = path + (query ? '?' + query : '');
     };
 
     form.addEventListener('change', apply);
