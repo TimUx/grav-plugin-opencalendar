@@ -9,6 +9,8 @@ use Grav\Plugin\OpenCalendar\Enum\CleanupPolicy;
 use Grav\Plugin\OpenCalendar\Enum\SyncInterval;
 use Grav\Plugin\OpenCalendar\Http\CurlHttpClient;
 use Grav\Plugin\OpenCalendar\Http\HttpClientInterface;
+use Grav\Plugin\OpenCalendar\Logging\LoggerInterface;
+use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 use Grav\Plugin\OpenCalendar\Source\SourceFactory;
 use Grav\Plugin\OpenCalendar\Storage\CalendarRepository;
 use Grav\Plugin\OpenCalendar\Storage\Database;
@@ -16,8 +18,6 @@ use Grav\Plugin\OpenCalendar\Storage\EventRepository;
 use Grav\Plugin\OpenCalendar\Storage\Migrator;
 use Grav\Plugin\OpenCalendar\Sync\SyncJob;
 use Grav\Plugin\OpenCalendar\Sync\SyncService;
-use Grav\Plugin\OpenCalendar\Logging\LoggerInterface;
-use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 
 /**
  * Lightweight service container / factory for OpenCalendar.
@@ -175,7 +175,8 @@ final class Container
     public function sourceConfigs(): array
     {
         $rows = $this->config['sources'] ?? [];
-        if (!is_array($rows)) {
+        $rows = ConfigNormalizer::toArray($rows);
+        if ($rows === []) {
             return [];
         }
 
@@ -184,6 +185,11 @@ final class Container
 
         foreach ($rows as $index => $row) {
             if (!is_array($row)) {
+                continue;
+            }
+
+            // Skip completely empty list placeholders from Admin.
+            if (trim((string) ($row['name'] ?? '')) === '' && trim((string) ($row['url'] ?? '')) === '') {
                 continue;
             }
 

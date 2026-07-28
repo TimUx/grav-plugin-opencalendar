@@ -12,6 +12,7 @@ use Grav\Plugin\OpenCalendar\Controllers\ApiController;
 use Grav\Plugin\OpenCalendar\Controllers\ShortcodeProcessor;
 use Grav\Plugin\OpenCalendar\Logging\BridgeLogger;
 use Grav\Plugin\OpenCalendar\Logging\NullLogger;
+use Grav\Plugin\OpenCalendar\Services\ConfigNormalizer;
 use Grav\Plugin\OpenCalendar\Services\Container;
 use Grav\Plugin\OpenCalendar\Twig\TwigExtension;
 use RocketTheme\Toolbox\Event\Event;
@@ -260,12 +261,12 @@ class OpenCalendarPlugin extends Plugin
             return;
         }
 
-        $admin = new AdminController($this->container());
+        $admin = new AdminController($this->container(true));
         $result = match ($action) {
             'sync' => $admin->syncNow(isset($_GET['source']) ? (string) $_GET['source'] : null),
             'rebuild' => $admin->rebuildDatabase(),
             'clear-cache' => $admin->clearCache(),
-            'status' => array_merge(['ok' => true, 'message' => 'OK'], $admin->status()),
+            'status' => $admin->status(),
             default => null,
         };
 
@@ -316,9 +317,12 @@ class OpenCalendarPlugin extends Plugin
 
     private function pluginConfig(?string $key = null, mixed $default = null): mixed
     {
-        $config = $this->config->get('plugins.opencalendar');
-        if (!is_array($config)) {
-            $config = [];
+        $raw = $this->config->get('plugins.opencalendar', []);
+        $config = ConfigNormalizer::toArray($raw);
+
+        // Fallback: some Grav versions expose plugin config via ArrayAccess as a Data object.
+        if ($config === [] && isset($this->config['plugins.opencalendar'])) {
+            $config = ConfigNormalizer::toArray($this->config['plugins.opencalendar']);
         }
 
         if ($key === null) {
@@ -337,8 +341,12 @@ class OpenCalendarPlugin extends Plugin
         return $value;
     }
 
-    private function container(): Container
+    private function container(bool $fresh = false): Container
     {
+        if ($fresh) {
+            $this->container = null;
+        }
+
         if ($this->container instanceof Container) {
             return $this->container;
         }
@@ -355,7 +363,7 @@ class OpenCalendarPlugin extends Plugin
         $this->container = new Container(
             config: $config,
             pluginPath: __DIR__,
-            gravCache: $cache,
+            gravCache: is_object($cache) ? $cache : null,
             logger: $logger,
         );
 

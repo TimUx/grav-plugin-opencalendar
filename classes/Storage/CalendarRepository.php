@@ -209,10 +209,9 @@ final class CalendarRepository
 
     public function deleteMissingKeys(array $keepKeys): int
     {
+        // Never wipe the whole calendars table because of an empty/misread config.
         if ($keepKeys === []) {
-            $stmt = $this->db->execute('DELETE FROM calendars');
-
-            return $stmt->rowCount();
+            return 0;
         }
 
         $placeholders = [];

@@ -37,7 +37,11 @@ final class SourceConfig
         $key = $fallbackKey ?? self::slugify($name);
 
         $type = SourceType::tryFrom((string) ($row['type'] ?? 'ics')) ?? SourceType::Ics;
-        $auth = is_array($row['auth'] ?? null) ? $row['auth'] : ['type' => 'none'];
+        $authRaw = $row['auth'] ?? ['type' => 'none'];
+        if (is_object($authRaw) && method_exists($authRaw, 'toArray')) {
+            $authRaw = $authRaw->toArray();
+        }
+        $auth = is_array($authRaw) ? $authRaw : ['type' => 'none'];
 
         $refresh = $row['refresh'] ?? 'inherit';
         if (is_int($refresh)) {
@@ -45,10 +49,14 @@ final class SourceConfig
         }
         $refresh = (string) $refresh;
 
+        $enabled = array_key_exists('enabled', $row)
+            ? filter_var($row['enabled'], FILTER_VALIDATE_BOOLEAN)
+            : true;
+
         return new self(
             key: $key,
             name: $name !== '' ? $name : 'Unnamed',
-            enabled: (bool) ($row['enabled'] ?? true),
+            enabled: $enabled,
             type: $type,
             url: trim((string) ($row['url'] ?? '')),
             refresh: $refresh !== '' ? $refresh : 'inherit',
