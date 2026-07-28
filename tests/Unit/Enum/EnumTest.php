@@ -30,7 +30,9 @@ final class EnumTest extends TestCase
     public function testSourceType(): void
     {
         self::assertTrue(SourceType::Ics->isImplemented());
-        self::assertFalse(SourceType::CalDav->isImplemented());
+        self::assertTrue(SourceType::CalDav->isImplemented());
+        self::assertTrue(SourceType::Json->isImplemented());
+        self::assertTrue(SourceType::Local->isImplemented());
         self::assertContains('ics', SourceType::values());
     }
 }

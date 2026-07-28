@@ -36,7 +36,9 @@ See [ICS.md](ICS.md) for format notes and troubleshooting.
 
 ## CalDAV
 
-For authenticated calendar servers (Nextcloud, Radicale, Baikal, etc.).
+For authenticated calendar servers (Nextcloud, Radicale, Baikal, iCloud via app passwords, etc.).
+
+OpenCalendar issues a CalDAV `REPORT calendar-query` against the collection URL, extracts `calendar-data`, and parses events with the ICS engine (including RRULE expansion).
 
 ```yaml
 - name: Personal Calendar
@@ -53,31 +55,32 @@ For authenticated calendar servers (Nextcloud, Radicale, Baikal, etc.).
 
 Recommendations:
 
-- Use app-specific passwords, not account passwords
+- Use the **calendar collection URL** (ends with the calendar name), not the DAV root
+- Prefer app-specific passwords, not account passwords
 - Store credentials in `user/config/plugins/opencalendar.yaml`, not in git
 - CalDAV sync may be slower than ICS — use longer refresh intervals
+- If REPORT is unsupported, OpenCalendar falls back to a plain GET (ICS export URLs)
 
 ## JSON
 
-For custom HTTP APIs returning a documented JSON event schema.
+For custom HTTP APIs returning JSON events.
 
-Expected shape (conceptual):
+Accepted envelopes:
 
-```json
-{
-  "events": [
-    {
-      "uid": "unique-id",
-      "title": "Team standup",
-      "start": "2026-07-28T09:00:00+02:00",
-      "end": "2026-07-28T09:30:00+02:00",
-      "description": "Daily sync",
-      "location": "Room A",
-      "categories": ["work"]
-    }
-  ]
-}
-```
+- `{ "events": [ ... ] }`
+- `{ "data": [ ... ] }` / `{ "items": [ ... ] }` / `{ "results": [ ... ] }`
+- a raw JSON array `[ ... ]`
+
+Event fields (aliases supported):
+
+| Field | Aliases |
+|-------|---------|
+| `uid` | `id` |
+| `title` | `summary`, `name` |
+| `start` | `start_at`, `dtstart`, `begin` |
+| `end` | `end_at`, `dtend` |
+| `all_day` | `allDay` |
+| `description`, `location`, `organizer`, `url`, `status`, `categories`, `color`, `rrule` | |
 
 ```yaml
 - name: Internal Events API
@@ -86,25 +89,32 @@ Expected shape (conceptual):
   url: 'https://intranet.example.com/api/events'
   auth:
     type: bearer
-    password: 'your-api-token'
+    token: 'your-api-token'
 ```
+
+Bearer tokens may also be placed in `auth.password` for Admin forms that only expose a password field.
 
 ## Local
 
-For ICS or JSON files shipped with the site or dropped into the plugin folder.
+For ICS or JSON files under the configured local base path (plugin `data/` / user-data).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'data/static-schedule.ics'
+  url: 'static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-Place files under `user/plugins/opencalendar/data/` or another path relative to the plugin root.
+- Paths are resolved relative to the local base directory and cannot escape it
+- `.ics` / `.ical` → ICS parser
+- `.json` → JSON parser
+- Content sniffing is used when the extension is ambiguous
+
+Place files under `user/plugins/opencalendar/data/` (or the configured storage/data directory).
 
 ## Disabled example
 

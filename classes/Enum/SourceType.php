@@ -31,6 +31,6 @@ enum SourceType: string
 
     public function isImplemented(): bool
     {
-        return $this === self::Ics;
+        return true;
     }
 }

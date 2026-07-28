@@ -74,12 +74,14 @@ final class SourceFactory
             recurringHorizonDays: (int) ($importOptions['recurring_horizon_days'] ?? 365),
             stripHtml: (bool) ($importOptions['strip_html'] ?? false),
         );
+        $jsonParser = new JsonParser(defaultTimezone: $defaultTimezone);
+        $horizonDays = (int) ($importOptions['recurring_horizon_days'] ?? 365);
 
         return new self([
             new IcsSource($http, $parser, $httpOptions),
-            new CalDavSource($http, $httpOptions),
-            new JsonSource($http, $httpOptions),
-            new LocalSource($http, $localBasePath, $httpOptions),
+            new CalDavSource($http, $parser, $httpOptions, $horizonDays),
+            new JsonSource($http, $jsonParser, $httpOptions),
+            new LocalSource($http, $localBasePath, $parser, $jsonParser, $httpOptions),
         ]);
     }
 }
