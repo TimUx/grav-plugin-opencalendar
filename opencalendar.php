@@ -10,6 +10,8 @@ use Grav\Plugin\OpenCalendar\Api\RateLimiter;
 use Grav\Plugin\OpenCalendar\Controllers\AdminController;
 use Grav\Plugin\OpenCalendar\Controllers\ApiController;
 use Grav\Plugin\OpenCalendar\Controllers\ShortcodeProcessor;
+use Grav\Plugin\OpenCalendar\Logging\BridgeLogger;
+use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 use Grav\Plugin\OpenCalendar\Services\Container;
 use Grav\Plugin\OpenCalendar\Twig\TwigExtension;
 use RocketTheme\Toolbox\Event\Event;
@@ -322,13 +324,14 @@ class OpenCalendarPlugin extends Plugin
         }
 
         $cache = $this->grav['cache'] ?? null;
-        $logger = $this->grav['log'] ?? new \Psr\Log\NullLogger();
+        $gravLog = $this->grav['log'] ?? null;
+        $logger = is_object($gravLog) ? new BridgeLogger($gravLog) : new NullLogger();
 
         $this->container = new Container(
             config: $config,
             pluginPath: __DIR__,
             gravCache: $cache,
-            logger: $logger instanceof \Psr\Log\LoggerInterface ? $logger : new \Psr\Log\NullLogger(),
+            logger: $logger,
         );
 
         return $this->container;

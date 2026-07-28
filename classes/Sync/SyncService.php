@@ -12,8 +12,8 @@ use Grav\Plugin\OpenCalendar\Enum\SyncStatus;
 use Grav\Plugin\OpenCalendar\Storage\CalendarRepository;
 use Grav\Plugin\OpenCalendar\Storage\Database;
 use Grav\Plugin\OpenCalendar\Storage\EventRepository;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Grav\Plugin\OpenCalendar\Logging\LoggerInterface;
+use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 
 /**
  * Orchestrates multi-source synchronization, cleanup, and maintenance.

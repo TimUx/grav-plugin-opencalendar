@@ -16,8 +16,8 @@ use Grav\Plugin\OpenCalendar\Storage\EventRepository;
 use Grav\Plugin\OpenCalendar\Storage\Migrator;
 use Grav\Plugin\OpenCalendar\Sync\SyncJob;
 use Grav\Plugin\OpenCalendar\Sync\SyncService;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Grav\Plugin\OpenCalendar\Logging\LoggerInterface;
+use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 
 /**
  * Lightweight service container / factory for OpenCalendar.

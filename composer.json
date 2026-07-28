@@ -17,7 +17,6 @@
         "ext-pdo_sqlite": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "psr/log": "^3.0",
         "sabre/vobject": "^4.5"
     },
     "require-dev": {
