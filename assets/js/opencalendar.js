@@ -301,7 +301,7 @@
     }
   }
 
-  function renderListHtml(config) {
+  function renderListHtml(config, root) {
     var labels = i18n(config);
     var events = config.eventsList || [];
     var meta = config.meta || {};
@@ -334,7 +334,7 @@
         + '<span class="oc-list__icon" aria-hidden="true">📅</span>'
         + '<span class="oc-list__body">'
         + '<span class="oc-list__when">' + when + '</span>'
-        + '<span class="oc-list__title">' + title + '</span>'
+        + '<strong class="oc-list__title">' + title + '</strong>'
         + (location ? '<span class="oc-list__location">' + location + '</span>' : '')
         + '</span>'
         + '</button></li>';
@@ -349,59 +349,38 @@
       var pageLabel = String(labels.page || 'Page %1 of %2')
         .replace('%1', String(page))
         .replace('%2', String(pages));
+      var prevPage = Math.max(1, page - 1);
+      var nextPage = Math.min(pages, page + 1);
+      var prevHref = buildPageHref(root, prevPage);
+      var nextHref = buildPageHref(root, nextPage);
       html += '<nav class="oc-pagination" aria-label="' + escapeHtml(labels.pagination || 'Pagination')
-        + '" data-oc-pagination data-oc-page="' + page + '" data-oc-pages="' + pages + '">'
-        + '<button type="button" class="oc-pagination__btn" data-oc-page-goto="' + Math.max(1, page - 1) + '"'
-        + (page <= 1 ? ' disabled aria-disabled="true"' : '') + '>'
-        + escapeHtml(labels.previous || 'Previous') + '</button>'
-        + '<span class="oc-pagination__status" data-oc-page-status>' + escapeHtml(pageLabel) + '</span>'
-        + '<button type="button" class="oc-pagination__btn" data-oc-page-goto="' + Math.min(pages, page + 1) + '"'
-        + (page >= pages ? ' disabled aria-disabled="true"' : '') + '>'
-        + escapeHtml(labels.next || 'Next') + '</button>'
-        + '</nav>';
+        + '" data-oc-pagination data-oc-page="' + page + '" data-oc-pages="' + pages + '">';
+      if (page <= 1) {
+        html += '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
+          + escapeHtml(labels.previous || 'Previous') + '</span>';
+      } else {
+        html += '<a class="oc-pagination__btn" href="' + escapeHtml(prevHref) + '">'
+          + escapeHtml(labels.previous || 'Previous') + '</a>';
+      }
+      html += '<span class="oc-pagination__status" data-oc-page-status>' + escapeHtml(pageLabel) + '</span>';
+      if (page >= pages) {
+        html += '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
+          + escapeHtml(labels.next || 'Next') + '</span>';
+      } else {
+        html += '<a class="oc-pagination__btn" href="' + escapeHtml(nextHref) + '">'
+          + escapeHtml(labels.next || 'Next') + '</a>';
+      }
+      html += '</nav>';
     }
 
     return html;
   }
 
-  function mapApiEvents(payload) {
-    return (payload.data || []).map(function (item) {
-      return {
-        id: item.id,
-        uid: item.uid,
-        title: item.title,
-        start: item.start,
-        end: item.end,
-        all_day: item.allDay,
-        location: item.location,
-        description: item.description,
-        organizer: item.organizer,
-        categories: item.categories,
-        url: item.url,
-        attachments: item.attachments,
-        color: item.color,
-        calendar_name: item.source && item.source.name,
-        calendar_key: item.source && item.source.key,
-        calendar_color: item.source && item.source.color
-      };
-    });
-  }
-
-  function applyEventsToConfig(config, payload) {
-    config.eventsList = mapApiEvents(payload);
-    config.meta = payload.meta || config.meta || {};
-    config.events = config.eventsList.map(function (item) {
-      return {
-        id: String(item.id || item.uid),
-        title: item.title,
-        start: item.start,
-        end: item.end,
-        allDay: !!item.all_day,
-        backgroundColor: item.color,
-        borderColor: item.color,
-        extendedProps: item
-      };
-    });
+  function buildPageHref(root, page) {
+    var params = currentFilterParams(root);
+    params.set('oc_page', String(Math.max(1, page || 1)));
+    var query = params.toString();
+    return window.location.pathname + (query ? '?' + query : '') + window.location.hash;
   }
 
   function currentFilterParams(root) {
@@ -431,71 +410,6 @@
     return params;
   }
 
-  function buildEventsUrl(config, root, page) {
-    var api = config.api || {};
-    var meta = config.meta || {};
-    var limit = meta.limit || 50;
-    var offset = Math.max(0, (Math.max(1, page) - 1) * limit);
-    var params = currentFilterParams(root);
-    params.set('limit', String(limit));
-    params.set('offset', String(offset));
-    params.delete('oc_page');
-    return api.route.replace(/\/$/, '') + '/events?' + params.toString();
-  }
-
-  function navigateToPage(root, config, page) {
-    var meta = config.meta || {};
-    var pages = Number(meta.pages || 1);
-    var nextPage = Math.max(1, Math.min(pages || 1, Number(page) || 1));
-    var api = config.api || {};
-
-    if (api.enabled && api.route) {
-      root.classList.add('oc-loading');
-      fetch(buildEventsUrl(config, root, nextPage), { headers: { Accept: 'application/json' } })
-        .then(function (r) { return r.json(); })
-        .then(function (payload) {
-          applyEventsToConfig(config, payload);
-          var list = root.querySelector('[data-oc-list]');
-          if (list) {
-            list.innerHTML = renderListHtml(config);
-            initList(root, config);
-            initPagination(root, config);
-          }
-          var params = currentFilterParams(root);
-          params.set('oc_page', String(config.meta.page || nextPage));
-          var query = params.toString();
-          var url = window.location.pathname + (query ? '?' + query : '') + window.location.hash;
-          window.history.replaceState({}, '', url);
-        })
-        .catch(function () {
-          /* keep current page */
-        })
-        .finally(function () {
-          root.classList.remove('oc-loading');
-        });
-      return;
-    }
-
-    var params = currentFilterParams(root);
-    params.set('oc_page', String(nextPage));
-    window.location.search = params.toString();
-  }
-
-  function initPagination(root, config) {
-    var nav = root.querySelector('[data-oc-pagination]');
-    if (!nav) {
-      return;
-    }
-    nav.querySelectorAll('[data-oc-page-goto]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        if (btn.disabled) {
-          return;
-        }
-        navigateToPage(root, config, btn.getAttribute('data-oc-page-goto'));
-      });
-    });
-  }
-
   function initList(root, config) {
     root.querySelectorAll('[data-oc-event-id]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -512,38 +426,9 @@
     }
 
     var apply = function () {
-      var api = config.api || {};
-      var isList = root.getAttribute('data-view') === 'list';
-
-      if (!api.enabled || !api.route) {
-        var params = currentFilterParams(root);
-        params.delete('oc_page');
-        window.location.search = params.toString();
-        return;
-      }
-
-      if (isList) {
-        navigateToPage(root, config, 1);
-        return;
-      }
-
-      root.classList.add('oc-loading');
-      fetch(buildEventsUrl(config, root, 1), { headers: { Accept: 'application/json' } })
-        .then(function (r) { return r.json(); })
-        .then(function (payload) {
-          applyEventsToConfig(config, payload);
-          var mount = root.querySelector('[data-oc-calendar]');
-          if (mount) {
-            mount.innerHTML = '';
-            initCalendar(root, config);
-          }
-        })
-        .catch(function () {
-          /* keep current data */
-        })
-        .finally(function () {
-          root.classList.remove('oc-loading');
-        });
+      var params = currentFilterParams(root);
+      params.delete('oc_page');
+      window.location.search = params.toString();
     };
 
     form.addEventListener('change', apply);
@@ -575,7 +460,6 @@
 
     if (root.getAttribute('data-view') === 'list') {
       initList(root, config);
-      initPagination(root, config);
     } else {
       initCalendar(root, config);
     }

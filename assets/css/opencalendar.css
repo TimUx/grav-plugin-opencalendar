@@ -103,7 +103,7 @@
   border-radius: 8px;
 }
 
-.oc-list__button {
+.opencalendar .oc-list__button {
   width: 100%;
   text-align: left;
   border: 0;
@@ -111,84 +111,116 @@
   color: inherit;
   padding: 0.75rem 0.9rem;
   cursor: pointer;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.65rem 0.75rem;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
-.oc-list__button:focus-visible {
+.opencalendar .oc-list__button:focus-visible {
   outline: 2px solid var(--oc-accent);
   outline-offset: 2px;
 }
 
-.oc-list__icon {
-  font-size: 1.25rem;
-  line-height: 1.2;
-  margin-top: 0.15rem;
+.opencalendar .oc-list__icon {
+  flex: 0 0 auto;
+  font-size: 1.35rem;
+  line-height: 1;
+  margin-top: 0.1rem;
 }
 
-.oc-list__body {
-  display: grid;
-  gap: 0.2rem;
+.opencalendar .oc-list__body {
+  flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
 }
 
-.oc-list__when {
+.opencalendar .oc-list__when,
+.opencalendar .oc-list__title,
+.opencalendar .oc-list__location {
+  display: block;
+  width: 100%;
+}
+
+.opencalendar .oc-list__when {
   font-size: 0.8rem;
+  line-height: 1.35;
   color: var(--oc-muted);
 }
 
-.oc-list__title {
+.opencalendar .oc-list__title {
   font-weight: 600;
+  line-height: 1.35;
+  color: var(--oc-text);
 }
 
-.oc-list__location {
+.opencalendar .oc-list__location {
   font-size: 0.9rem;
+  line-height: 1.35;
   color: var(--oc-muted);
 }
 
-.oc-list__empty,
-.oc-pagination {
+.opencalendar .oc-list__empty {
   color: var(--oc-muted);
   margin-top: 1rem;
 }
 
-.oc-pagination {
+.opencalendar .oc-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  margin-top: 1.25rem;
+  color: var(--oc-muted);
 }
 
-.oc-pagination__status {
-  min-width: 7rem;
+.opencalendar .oc-pagination__status {
+  min-width: 7.5rem;
   text-align: center;
+  font-size: 0.95rem;
 }
 
-.oc-pagination__btn {
+.opencalendar .oc-pagination__btn {
   appearance: none;
-  border: 1px solid var(--oc-border, #d0d7de);
-  background: var(--oc-bg, #fff);
-  color: var(--oc-text, #1f2328);
-  border-radius: 8px;
-  padding: 0.4rem 0.85rem;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--oc-border);
+  border-radius: 999px;
+  background: var(--oc-bg);
+  color: var(--oc-text);
   font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
   cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.oc-pagination__btn:hover:not(:disabled) {
-  border-color: var(--oc-accent, #3788d8);
-  color: var(--oc-accent, #3788d8);
+.opencalendar .oc-pagination__btn:hover,
+.opencalendar .oc-pagination__btn:focus-visible {
+  border-color: var(--oc-accent);
+  color: var(--oc-accent);
+  outline: none;
 }
 
-.oc-pagination__btn:disabled {
-  opacity: 0.45;
+.opencalendar .oc-pagination__btn--disabled,
+.opencalendar .oc-pagination__btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
 }
 
-.oc-root.oc-loading {
+.opencalendar.oc-root.oc-loading {
   opacity: 0.72;
   pointer-events: none;
 }

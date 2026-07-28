@@ -48,6 +48,11 @@ class TwigExtension extends AbstractExtension
             $calendarKeys = array_map('strval', $source);
         }
 
+        $requestFilters = $this->requestFilters($options);
+        if ($calendarKeys === [] && $requestFilters['source'] !== '') {
+            $calendarKeys = [$requestFilters['source']];
+        }
+
         $limit = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
         $page = $this->resolvePage($options);
         $offset = isset($options['offset'])
@@ -62,8 +67,15 @@ class TwigExtension extends AbstractExtension
             FILTER_VALIDATE_BOOLEAN
         );
 
+        $categoriesFilter = [];
+        if ($requestFilters['category'] !== '') {
+            $categoriesFilter[] = $requestFilters['category'];
+        }
+
         $query = new EventQuery(
             calendarKeys: array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== '')),
+            categories: $categoriesFilter,
+            search: $requestFilters['q'] !== '' ? $requestFilters['q'] : null,
             sort: (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc'),
             limit: $limit,
             offset: $offset,
@@ -115,6 +127,7 @@ class TwigExtension extends AbstractExtension
             'calendar' => $calendarConfig,
             'list' => $listConfig,
             'filters' => $this->config['filters'] ?? [],
+            'activeFilters' => $requestFilters,
             'search' => $this->config['search'] ?? [],
             'api' => [
                 'enabled' => (bool) ($this->config['api']['enabled'] ?? false),
@@ -231,13 +244,16 @@ HTML;
         }
 
         $i18n = is_array($payload['i18n'] ?? null) ? $payload['i18n'] : $this->frontendI18n();
+        $active = is_array($payload['activeFilters'] ?? null) ? $payload['activeFilters'] : ['q' => '', 'source' => '', 'category' => ''];
         $searchEnabled = (bool) (($payload['search']['enabled'] ?? true));
         $html = '<form class="oc-filters" data-oc-filters method="get" role="search">';
 
         if ($searchEnabled) {
             $html .= '<label class="oc-filters__search"><span class="oc-visually-hidden">'
                 . htmlspecialchars((string) $i18n['search'], ENT_QUOTES, 'UTF-8') . '</span>'
-                . '<input type="search" name="q" placeholder="'
+                . '<input type="search" name="q" value="'
+                . htmlspecialchars((string) ($active['q'] ?? ''), ENT_QUOTES, 'UTF-8')
+                . '" placeholder="'
                 . htmlspecialchars((string) $i18n['search_placeholder'], ENT_QUOTES, 'UTF-8')
                 . '" data-oc-search autocomplete="off"></label>';
         }
@@ -250,7 +266,9 @@ HTML;
                 if (!($cal['enabled'] ?? true)) {
                     continue;
                 }
-                $html .= '<option value="' . htmlspecialchars((string) $cal['key'], ENT_QUOTES, 'UTF-8') . '">'
+                $key = (string) $cal['key'];
+                $selected = ((string) ($active['source'] ?? '') === $key) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '"' . $selected . '>'
                     . htmlspecialchars((string) $cal['name'], ENT_QUOTES, 'UTF-8') . '</option>';
             }
             $html .= '</select></label>';
@@ -261,7 +279,8 @@ HTML;
                 . '<select name="category" data-oc-filter-category><option value="">'
                 . htmlspecialchars((string) $i18n['all'], ENT_QUOTES, 'UTF-8') . '</option>';
             foreach ($payload['categories'] as $cat) {
-                $html .= '<option value="' . htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') . '">'
+                $selected = ((string) ($active['category'] ?? '') === (string) $cat) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') . '"' . $selected . '>'
                     . htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') . '</option>';
             }
             $html .= '</select></label>';
@@ -320,7 +339,7 @@ HTML;
                 . '<span class="oc-list__icon" aria-hidden="true">📅</span>'
                 . '<span class="oc-list__body">'
                 . '<span class="oc-list__when">' . $when . '</span>'
-                . '<span class="oc-list__title">' . $title . '</span>'
+                . '<strong class="oc-list__title">' . $title . '</strong>'
                 . ($location !== '' ? '<span class="oc-list__location">' . $location . '</span>' : '')
                 . '</span>'
                 . '</button></li>';
@@ -340,19 +359,35 @@ HTML;
             );
             $prevLabel = htmlspecialchars((string) ($i18n['previous'] ?? 'Previous'), ENT_QUOTES, 'UTF-8');
             $nextLabel = htmlspecialchars((string) ($i18n['next'] ?? 'Next'), ENT_QUOTES, 'UTF-8');
-            $prevDisabled = $page <= 1 ? ' disabled aria-disabled="true"' : '';
-            $nextDisabled = $page >= $pages ? ' disabled aria-disabled="true"' : '';
+            $prevPage = max(1, $page - 1);
+            $nextPage = min($pages, $page + 1);
             $html .= '<nav class="oc-pagination" aria-label="'
                 . htmlspecialchars((string) $i18n['pagination'], ENT_QUOTES, 'UTF-8')
-                . '" data-oc-pagination data-oc-page="' . $page . '" data-oc-pages="' . $pages . '">'
-                . '<button type="button" class="oc-pagination__btn" data-oc-page-goto="'
-                . max(1, $page - 1) . '"' . $prevDisabled . '>' . $prevLabel . '</button>'
-                . '<span class="oc-pagination__status" data-oc-page-status>'
+                . '" data-oc-pagination data-oc-page="' . $page . '" data-oc-pages="' . $pages . '">';
+
+            if ($page <= 1) {
+                $html .= '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
+                    . $prevLabel . '</span>';
+            } else {
+                $html .= '<a class="oc-pagination__btn" href="'
+                    . htmlspecialchars($this->buildPageHref($prevPage), ENT_QUOTES, 'UTF-8')
+                    . '" data-oc-page-goto="' . $prevPage . '">' . $prevLabel . '</a>';
+            }
+
+            $html .= '<span class="oc-pagination__status" data-oc-page-status>'
                 . htmlspecialchars($pageLabel, ENT_QUOTES, 'UTF-8')
-                . '</span>'
-                . '<button type="button" class="oc-pagination__btn" data-oc-page-goto="'
-                . min($pages, $page + 1) . '"' . $nextDisabled . '>' . $nextLabel . '</button>'
-                . '</nav>';
+                . '</span>';
+
+            if ($page >= $pages) {
+                $html .= '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
+                    . $nextLabel . '</span>';
+            } else {
+                $html .= '<a class="oc-pagination__btn" href="'
+                    . htmlspecialchars($this->buildPageHref($nextPage), ENT_QUOTES, 'UTF-8')
+                    . '" data-oc-page-goto="' . $nextPage . '">' . $nextLabel . '</a>';
+            }
+
+            $html .= '</nav>';
         }
 
         $html .= '</div>';
@@ -475,6 +510,64 @@ HTML;
         }
 
         return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array{q: string, source: string, category: string}
+     */
+    private function requestFilters(array $options): array
+    {
+        $q = trim((string) ($options['q'] ?? $this->queryParam('q') ?? ''));
+        $source = trim((string) ($options['source_filter'] ?? $this->queryParam('source') ?? ''));
+        $category = trim((string) ($options['category'] ?? $this->queryParam('category') ?? ''));
+
+        return [
+            'q' => $q,
+            'source' => $source,
+            'category' => $category,
+        ];
+    }
+
+    private function queryParam(string $key): ?string
+    {
+        if (isset($_GET[$key]) && is_scalar($_GET[$key])) {
+            return (string) $_GET[$key];
+        }
+
+        try {
+            if (class_exists(\Grav\Common\Grav::class)) {
+                $grav = \Grav\Common\Grav::instance();
+                $uri = $grav['uri'] ?? null;
+                if (is_object($uri) && method_exists($uri, 'query')) {
+                    $value = $uri->query($key);
+                    if ($value !== null && $value !== false && is_scalar($value)) {
+                        return (string) $value;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // ignore
+        }
+
+        return null;
+    }
+
+    private function buildPageHref(int $page): string
+    {
+        $query = [];
+        if (isset($_GET) && is_array($_GET)) {
+            foreach ($_GET as $key => $value) {
+                if (!is_string($key) || is_array($value)) {
+                    continue;
+                }
+                $query[$key] = (string) $value;
+            }
+        }
+
+        $query['oc_page'] = (string) max(1, $page);
+
+        return '?' . http_build_query($query);
     }
 
     private function resolvePage(array $options): int

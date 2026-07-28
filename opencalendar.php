@@ -149,11 +149,13 @@ class OpenCalendarPlugin extends Plugin
     {
         $assets = $this->grav['assets'];
         $base = 'plugin://opencalendar';
+        $cssVersion = @filemtime(__DIR__ . '/assets/css/opencalendar.css') ?: time();
+        $jsVersion = @filemtime(__DIR__ . '/assets/js/opencalendar.js') ?: time();
 
-        $assets->addCss($base . '/assets/css/opencalendar.css');
+        $assets->addCss($base . '/assets/css/opencalendar.css?v=' . $cssVersion);
         $assets->addCss('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.css');
         $assets->addJs('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.js', ['group' => 'bottom']);
-        $assets->addJs($base . '/assets/js/opencalendar.js', ['group' => 'bottom']);
+        $assets->addJs($base . '/assets/js/opencalendar.js?v=' . $jsVersion, ['group' => 'bottom']);
     }
 
     public function onAdminTwigSiteVariables(): void
