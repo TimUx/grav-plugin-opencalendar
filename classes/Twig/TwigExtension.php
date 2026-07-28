@@ -40,6 +40,11 @@ class TwigExtension extends AbstractExtension
     public function render(array $options = []): string
     {
         $view = (string) ($options['view'] ?? $this->config['display']['default_view'] ?? 'calendar');
+        // Grav page cache ignores many query strings; list pagination must re-render.
+        if ($view === 'list') {
+            $this->disablePageCache();
+        }
+
         $source = $options['source'] ?? $options['calendar'] ?? null;
         $calendarKeys = [];
         if (is_string($source) && $source !== '') {
@@ -261,7 +266,9 @@ HTML;
         $i18n = is_array($payload['i18n'] ?? null) ? $payload['i18n'] : $this->frontendI18n();
         $active = is_array($payload['activeFilters'] ?? null) ? $payload['activeFilters'] : ['q' => '', 'source' => '', 'category' => ''];
         $searchEnabled = (bool) (($payload['search']['enabled'] ?? true));
-        $html = '<form class="oc-filters" data-oc-filters method="get" role="search">';
+        $html = '<form class="oc-filters" data-oc-filters method="get" action="'
+            . htmlspecialchars($this->currentPath(), ENT_QUOTES, 'UTF-8')
+            . '" role="search">';
 
         if ($searchEnabled) {
             $html .= '<label class="oc-filters__search"><span class="oc-visually-hidden">'
@@ -568,21 +575,71 @@ HTML;
         return null;
     }
 
+    private function disablePageCache(): void
+    {
+        try {
+            if (!class_exists(\Grav\Common\Grav::class)) {
+                return;
+            }
+
+            $grav = \Grav\Common\Grav::instance();
+            $page = $grav['page'] ?? null;
+            if (is_object($page) && method_exists($page, 'modifyHeader')) {
+                $page->modifyHeader('cache_enable', false);
+            }
+
+            $config = $grav['config'] ?? null;
+            if (is_object($config) && method_exists($config, 'set')) {
+                $config->set('system.cache.current', false);
+            }
+        } catch (\Throwable) {
+            // ignore
+        }
+    }
+
+    private function currentPath(): string
+    {
+        try {
+            if (class_exists(\Grav\Common\Grav::class)) {
+                $uri = \Grav\Common\Grav::instance()['uri'] ?? null;
+                if (is_object($uri) && method_exists($uri, 'path')) {
+                    $path = rtrim((string) $uri->path(), '/');
+                    $path = (string) preg_replace('#/oc_page:\d+#', '', $path);
+
+                    return $path !== '' ? $path : '/';
+                }
+            }
+        } catch (\Throwable) {
+            // ignore
+        }
+
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = is_string($path) ? rtrim($path, '/') : '';
+        $path = (string) preg_replace('#/oc_page:\d+#', '', $path);
+
+        return $path !== '' ? $path : '/';
+    }
+
     private function buildPageHref(int $page): string
     {
+        $page = max(1, $page);
+        $path = $this->currentPath();
         $query = [];
-        if (isset($_GET) && is_array($_GET)) {
-            foreach ($_GET as $key => $value) {
-                if (!is_string($key) || is_array($value)) {
-                    continue;
-                }
-                $query[$key] = (string) $value;
+        foreach (['q', 'source', 'category'] as $key) {
+            $value = $this->queryParam($key);
+            if ($value !== null && $value !== '') {
+                $query[$key] = $value;
             }
         }
 
-        $query['oc_page'] = (string) max(1, $page);
+        // Grav URL params participate in page-cache keys; query strings often do not.
+        $href = $path . '/oc_page:' . $page;
+        if ($query !== []) {
+            $href .= '?' . http_build_query($query);
+        }
 
-        return '?' . http_build_query($query);
+        return $href;
     }
 
     private function resolvePage(array $options): int
@@ -591,15 +648,15 @@ HTML;
             return max(1, (int) $options['page']);
         }
 
-        $fromQuery = $_GET['oc_page'] ?? null;
-        if ($fromQuery !== null && $fromQuery !== '') {
-            return max(1, (int) $fromQuery);
-        }
-
         try {
             if (class_exists(\Grav\Common\Grav::class)) {
-                $grav = \Grav\Common\Grav::instance();
-                $uri = $grav['uri'] ?? null;
+                $uri = \Grav\Common\Grav::instance()['uri'] ?? null;
+                if (is_object($uri) && method_exists($uri, 'param')) {
+                    $param = $uri->param('oc_page');
+                    if ($param !== false && $param !== null && $param !== '') {
+                        return max(1, (int) $param);
+                    }
+                }
                 if (is_object($uri) && method_exists($uri, 'query')) {
                     $value = $uri->query('oc_page');
                     if ($value !== null && $value !== false && $value !== '') {
@@ -609,6 +666,16 @@ HTML;
             }
         } catch (\Throwable) {
             // ignore
+        }
+
+        $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        if (preg_match('#(?:^|/)oc_page:(\d+)(?:/|$|\?)#', $requestUri, $matches) === 1) {
+            return max(1, (int) $matches[1]);
+        }
+
+        $fromQuery = $_GET['oc_page'] ?? null;
+        if ($fromQuery !== null && $fromQuery !== '') {
+            return max(1, (int) $fromQuery);
         }
 
         return 1;
