@@ -47,6 +47,7 @@ final class IcsParser
         }
 
         $timezone = $this->resolveTimezone($document);
+        $this->localizeFloatingTimes($document, $timezone);
         $events = [];
 
         if ($this->expandRecurring) {
@@ -99,11 +100,11 @@ final class IcsParser
         }
 
         $allDay = !$dtStart->hasTime();
-        $startAt = $this->toImmutable($dtStart->getDateTime(), $fallbackTz, $allDay);
+        $startAt = $this->fromIcalDate($dtStart, $fallbackTz);
         $endAt = null;
 
         if (isset($vevent->DTEND)) {
-            $endAt = $this->toImmutable($vevent->DTEND->getDateTime(), $fallbackTz, $allDay);
+            $endAt = $this->fromIcalDate($vevent->DTEND, $fallbackTz);
         } elseif (isset($vevent->DURATION) && $startAt !== null) {
             try {
                 $duration = $vevent->DURATION->getDateInterval();
@@ -174,11 +175,45 @@ final class IcsParser
         );
     }
 
-    private function toImmutable(
-        \DateTimeInterface $dt,
-        \DateTimeZone $fallbackTz,
-        bool $allDay,
-    ): \DateTimeImmutable {
+    private function localizeFloatingTimes(VCalendar $calendar, \DateTimeZone $timezone): void
+    {
+        $tzName = $timezone->getName();
+
+        foreach ($calendar->select('VEVENT') as $component) {
+            if (!$component instanceof VEvent) {
+                continue;
+            }
+
+            foreach (['DTSTART', 'DTEND', 'RECURRENCE-ID'] as $name) {
+                if (!isset($component->{$name})) {
+                    continue;
+                }
+
+                $prop = $component->{$name};
+                if (!is_object($prop) || !method_exists($prop, 'isFloating') || !method_exists($prop, 'hasTime')) {
+                    continue;
+                }
+
+                if (!$prop->hasTime() || !$prop->isFloating()) {
+                    continue;
+                }
+
+                $prop['TZID'] = $tzName;
+            }
+        }
+    }
+
+    /**
+     * @param \Sabre\VObject\Property $prop
+     */
+    private function fromIcalDate(object $prop, \DateTimeZone $fallbackTz): \DateTimeImmutable
+    {
+        if (!method_exists($prop, 'getDateTime')) {
+            throw new \RuntimeException('Invalid iCalendar date property.');
+        }
+
+        $allDay = method_exists($prop, 'hasTime') && !$prop->hasTime();
+        $dt = $prop->getDateTime();
         $immutable = $dt instanceof \DateTimeImmutable
             ? $dt
             : \DateTimeImmutable::createFromInterface($dt);
@@ -187,16 +222,13 @@ final class IcsParser
             return new \DateTimeImmutable($immutable->format('Y-m-d'), new \DateTimeZone('UTC'));
         }
 
-        if ($immutable->getTimezone()->getName() === 'UTC' || $immutable->getTimezone()->getName() === 'Z') {
-            // Keep floating times in configured default timezone when no TZID was present.
-            try {
-                return new \DateTimeImmutable($immutable->format('Y-m-d H:i:s'), $fallbackTz);
-            } catch (\Exception) {
-                return $immutable;
-            }
+        // Floating local times (no TZID / Z) keep wall-clock in site/calendar timezone.
+        if (method_exists($prop, 'isFloating') && $prop->isFloating()) {
+            return new \DateTimeImmutable($immutable->format('Y-m-d H:i:s'), $fallbackTz);
         }
 
-        return $immutable;
+        // Absolute times (Z or TZID): preserve the instant, express in display timezone.
+        return $immutable->setTimezone($fallbackTz);
     }
 
     private function resolveTimezone(VCalendar $calendar): \DateTimeZone

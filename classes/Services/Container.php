@@ -119,7 +119,7 @@ final class Container
             importOptions: is_array($this->config['advanced']['import'] ?? null)
                 ? $this->config['advanced']['import']
                 : [],
-            defaultTimezone: (string) ($this->config['timezone'] ?? 'UTC'),
+            defaultTimezone: (string) ($this->config['timezone'] ?? 'Europe/Berlin'),
             localBasePath: $this->pluginPath,
         );
     }

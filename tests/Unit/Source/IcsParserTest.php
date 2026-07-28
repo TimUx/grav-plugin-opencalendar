@@ -94,6 +94,51 @@ final class IcsParserTest extends TestCase
         }
     }
 
+    public function testParsesUtcInstantIntoDefaultTimezone(): void
+    {
+        $parser = new IcsParser('Europe/Berlin', true, 365, false);
+        $ics = <<<'ICS'
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenCalendar//TEST//EN
+BEGIN:VEVENT
+UID:utc-drill@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:20260804T170000Z
+DTEND:20260804T190000Z
+SUMMARY:Uebungsdienst
+END:VEVENT
+END:VCALENDAR
+ICS;
+
+        $events = $parser->parse($ics, $this->config, 1);
+        self::assertCount(1, $events);
+        self::assertSame('2026-08-04 19:00', $events[0]->startAt->format('Y-m-d H:i'));
+        self::assertSame('Europe/Berlin', $events[0]->startAt->getTimezone()->getName());
+    }
+
+    public function testParsesFloatingTimeInDefaultTimezone(): void
+    {
+        $parser = new IcsParser('Europe/Berlin', true, 365, false);
+        $ics = <<<'ICS'
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenCalendar//TEST//EN
+BEGIN:VEVENT
+UID:floating-drill@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:20260804T190000
+DTEND:20260804T210000
+SUMMARY:Uebungsdienst
+END:VEVENT
+END:VCALENDAR
+ICS;
+
+        $events = $parser->parse($ics, $this->config, 1);
+        self::assertCount(1, $events);
+        self::assertSame('2026-08-04 19:00', $events[0]->startAt->format('Y-m-d H:i'));
+    }
+
     public function testRejectsInvalidPayload(): void
     {
         $this->expectException(\RuntimeException::class);

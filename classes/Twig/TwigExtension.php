@@ -48,7 +48,11 @@ class TwigExtension extends AbstractExtension
             $calendarKeys = array_map('strval', $source);
         }
 
-        $limit = (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50);
+        $limit = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
+        $page = $this->resolvePage($options);
+        $offset = isset($options['offset'])
+            ? max(0, (int) $options['offset'])
+            : ($page - 1) * $limit;
         $futureOnly = filter_var(
             $options['future_only'] ?? false,
             FILTER_VALIDATE_BOOLEAN
@@ -61,8 +65,8 @@ class TwigExtension extends AbstractExtension
         $query = new EventQuery(
             calendarKeys: array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== '')),
             sort: (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc'),
-            limit: max(1, $limit),
-            offset: max(0, (int) ($options['offset'] ?? 0)),
+            limit: $limit,
+            offset: $offset,
             futureOnly: $futureOnly,
             includeExpired: $includeExpired,
         );
@@ -74,7 +78,7 @@ class TwigExtension extends AbstractExtension
         $instanceId = 'oc-' . bin2hex(random_bytes(4));
         $theme = (string) ($options['theme'] ?? $this->config['theme'] ?? 'auto');
         $locale = $this->resolveLocale((string) ($options['locale'] ?? $this->config['locale'] ?? 'auto'));
-        $timezone = (string) ($this->config['timezone'] ?? 'UTC');
+        $timezone = (string) ($this->config['timezone'] ?? 'Europe/Berlin');
 
         $calendarConfig = is_array($this->config['display']['calendar'] ?? null)
             ? $this->config['display']['calendar']
@@ -287,9 +291,11 @@ HTML;
         }
 
         $currentGroup = null;
+        $locale = (string) ($payload['locale'] ?? 'de');
+        $timezone = (string) ($payload['timezone'] ?? 'Europe/Berlin');
         foreach ($events as $event) {
             $start = (string) ($event['start'] ?? '');
-            $group = $start !== '' ? substr($start, 0, 7) : 'unknown';
+            $group = $this->formatListGroup($start, $locale, $timezone);
             if ($group !== $currentGroup) {
                 if ($currentGroup !== null) {
                     $html .= '</ul>';
@@ -303,13 +309,20 @@ HTML;
             $title = htmlspecialchars((string) ($event['title'] ?? ''), ENT_QUOTES, 'UTF-8');
             $location = htmlspecialchars((string) ($event['location'] ?? ''), ENT_QUOTES, 'UTF-8');
             $id = htmlspecialchars((string) ($event['id'] ?? $event['uid'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $when = htmlspecialchars($this->formatListWhen($start, !empty($event['all_day']), (string) ($payload['locale'] ?? 'de')), ENT_QUOTES, 'UTF-8');
+            $when = htmlspecialchars(
+                $this->formatListWhen($start, !empty($event['all_day']), $locale, $timezone),
+                ENT_QUOTES,
+                'UTF-8'
+            );
 
             $html .= '<li class="oc-list__item" style="--oc-event-color:' . $color . '">'
                 . '<button type="button" class="oc-list__button" data-oc-event-id="' . $id . '">'
+                . '<span class="oc-list__icon" aria-hidden="true">📅</span>'
+                . '<span class="oc-list__body">'
                 . '<span class="oc-list__when">' . $when . '</span>'
                 . '<span class="oc-list__title">' . $title . '</span>'
                 . ($location !== '' ? '<span class="oc-list__location">' . $location . '</span>' : '')
+                . '</span>'
                 . '</button></li>';
         }
 
@@ -325,11 +338,21 @@ HTML;
                 [(string) $page, (string) $pages],
                 (string) $i18n['page']
             );
+            $prevLabel = htmlspecialchars((string) ($i18n['previous'] ?? 'Previous'), ENT_QUOTES, 'UTF-8');
+            $nextLabel = htmlspecialchars((string) ($i18n['next'] ?? 'Next'), ENT_QUOTES, 'UTF-8');
+            $prevDisabled = $page <= 1 ? ' disabled aria-disabled="true"' : '';
+            $nextDisabled = $page >= $pages ? ' disabled aria-disabled="true"' : '';
             $html .= '<nav class="oc-pagination" aria-label="'
                 . htmlspecialchars((string) $i18n['pagination'], ENT_QUOTES, 'UTF-8')
-                . '" data-oc-pagination><span>'
+                . '" data-oc-pagination data-oc-page="' . $page . '" data-oc-pages="' . $pages . '">'
+                . '<button type="button" class="oc-pagination__btn" data-oc-page-goto="'
+                . max(1, $page - 1) . '"' . $prevDisabled . '>' . $prevLabel . '</button>'
+                . '<span class="oc-pagination__status" data-oc-page-status>'
                 . htmlspecialchars($pageLabel, ENT_QUOTES, 'UTF-8')
-                . '</span></nav>';
+                . '</span>'
+                . '<button type="button" class="oc-pagination__btn" data-oc-page-goto="'
+                . min($pages, $page + 1) . '"' . $nextDisabled . '>' . $nextLabel . '</button>'
+                . '</nav>';
         }
 
         $html .= '</div>';
@@ -351,6 +374,8 @@ HTML;
             'no_events' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS'),
             'page' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_PAGE'),
             'pagination' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_PAGINATION'),
+            'previous' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_PREVIOUS'),
+            'next' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_NEXT'),
             'close' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_CLOSE'),
             'date' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_DATE'),
             'time' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_TIME'),
@@ -373,11 +398,10 @@ HTML;
      */
     private function t(string $key, array $replace = []): string
     {
-        if (is_callable($this->translator)) {
-            return (string) ($this->translator)($key, $replace);
-        }
+        $locale = $this->resolveLocale((string) ($this->config['locale'] ?? 'auto'));
+        $isDe = str_starts_with(strtolower($locale), 'de');
 
-        $fallback = [
+        $en = [
             'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH' => 'Search',
             'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH_PLACEHOLDER' => 'Search events…',
             'PLUGIN_OPENCALENDAR.FRONTEND_FILTER_SOURCES' => 'Calendar',
@@ -386,6 +410,8 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS' => 'No events found.',
             'PLUGIN_OPENCALENDAR.FRONTEND_PAGE' => 'Page %1 of %2',
             'PLUGIN_OPENCALENDAR.FRONTEND_PAGINATION' => 'Event pagination',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PREVIOUS' => 'Previous',
+            'PLUGIN_OPENCALENDAR.FRONTEND_NEXT' => 'Next',
             'PLUGIN_OPENCALENDAR.FRONTEND_CLOSE' => 'Close',
             'PLUGIN_OPENCALENDAR.FRONTEND_DATE' => 'Date',
             'PLUGIN_OPENCALENDAR.FRONTEND_TIME' => 'Time',
@@ -402,7 +428,82 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'List',
         ];
 
-        return $fallback[$key] ?? $key;
+        $de = [
+            'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH' => 'Suche',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH_PLACEHOLDER' => 'Termine suchen…',
+            'PLUGIN_OPENCALENDAR.FRONTEND_FILTER_SOURCES' => 'Kalender',
+            'PLUGIN_OPENCALENDAR.FRONTEND_FILTER_CATEGORIES' => 'Kategorie',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ALL' => 'Alle',
+            'PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS' => 'Keine Termine gefunden.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PAGE' => 'Seite %1 von %2',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PAGINATION' => 'Termin-Seitennummerierung',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PREVIOUS' => 'Zurück',
+            'PLUGIN_OPENCALENDAR.FRONTEND_NEXT' => 'Weiter',
+            'PLUGIN_OPENCALENDAR.FRONTEND_CLOSE' => 'Schließen',
+            'PLUGIN_OPENCALENDAR.FRONTEND_DATE' => 'Datum',
+            'PLUGIN_OPENCALENDAR.FRONTEND_TIME' => 'Zeit',
+            'PLUGIN_OPENCALENDAR.FRONTEND_LOCATION' => 'Ort',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ORGANIZER' => 'Organisator',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SOURCE' => 'Kalender',
+            'PLUGIN_OPENCALENDAR.FRONTEND_CATEGORIES' => 'Kategorien',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ALL_DAY' => 'Ganztägig',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ATTACHMENT' => 'Anhang',
+            'PLUGIN_OPENCALENDAR.FRONTEND_TODAY' => 'Heute',
+            'PLUGIN_OPENCALENDAR.FRONTEND_MONTH' => 'Monat',
+            'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Woche',
+            'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Tag',
+            'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'Liste',
+        ];
+
+        $value = null;
+        if (is_callable($this->translator)) {
+            $translated = (string) ($this->translator)($key, $replace);
+            if ($translated !== '' && $translated !== $key && !str_starts_with($translated, 'PLUGIN_OPENCALENDAR.')) {
+                // Ignore English Grav defaults when the active locale is German.
+                if (!($isDe && isset($en[$key], $de[$key]) && $translated === $en[$key])) {
+                    $value = $translated;
+                }
+            }
+        }
+
+        if ($value === null) {
+            $value = ($isDe ? $de : $en)[$key] ?? $en[$key] ?? $key;
+        }
+
+        foreach ($replace as $search => $replacement) {
+            $value = str_replace('%' . $search, (string) $replacement, $value);
+        }
+
+        return $value;
+    }
+
+    private function resolvePage(array $options): int
+    {
+        if (isset($options['page'])) {
+            return max(1, (int) $options['page']);
+        }
+
+        $fromQuery = $_GET['oc_page'] ?? null;
+        if ($fromQuery !== null && $fromQuery !== '') {
+            return max(1, (int) $fromQuery);
+        }
+
+        try {
+            if (class_exists(\Grav\Common\Grav::class)) {
+                $grav = \Grav\Common\Grav::instance();
+                $uri = $grav['uri'] ?? null;
+                if (is_object($uri) && method_exists($uri, 'query')) {
+                    $value = $uri->query('oc_page');
+                    if ($value !== null && $value !== false && $value !== '') {
+                        return max(1, (int) $value);
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            // ignore
+        }
+
+        return 1;
     }
 
     private function resolveLocale(string $locale): string
@@ -432,27 +533,69 @@ HTML;
         return 'en';
     }
 
-    private function formatListWhen(string $start, bool $allDay, string $locale): string
+    private function formatListWhen(string $start, bool $allDay, string $locale, string $timezone = 'Europe/Berlin'): string
     {
         if ($start === '') {
             return '';
         }
 
         try {
-            if (!class_exists(\IntlDateFormatter::class)) {
-                return $start;
+            $dt = $this->toDisplayDateTime($start, $timezone);
+            $isDe = str_starts_with(strtolower($locale), 'de');
+
+            if ($allDay) {
+                return $isDe ? $dt->format('d.m.Y') : $dt->format('Y-m-d');
             }
 
-            $dt = new \DateTimeImmutable($start);
-            $formatter = new \IntlDateFormatter(
-                $locale !== '' ? $locale : 'en',
-                \IntlDateFormatter::MEDIUM,
-                $allDay ? \IntlDateFormatter::NONE : \IntlDateFormatter::SHORT
-            );
+            if ($isDe) {
+                return $dt->format('d.m.Y H:i') . ' Uhr';
+            }
 
-            return (string) $formatter->format($dt);
+            return $dt->format('Y-m-d H:i');
         } catch (\Throwable) {
             return $start;
+        }
+    }
+
+    private function formatListGroup(string $start, string $locale, string $timezone = 'Europe/Berlin'): string
+    {
+        if ($start === '') {
+            return '—';
+        }
+
+        try {
+            $dt = $this->toDisplayDateTime($start, $timezone);
+            $isDe = str_starts_with(strtolower($locale), 'de');
+
+            if ($isDe) {
+                static $months = [
+                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
+                ];
+
+                return ($months[(int) $dt->format('n')] ?? $dt->format('m')) . ' ' . $dt->format('Y');
+            }
+
+            return $dt->format('F Y');
+        } catch (\Throwable) {
+            return substr($start, 0, 7);
+        }
+    }
+
+    private function toDisplayDateTime(string $start, string $timezone): \DateTimeImmutable
+    {
+        $dt = new \DateTimeImmutable($start);
+        $tzName = $timezone !== '' ? $timezone : 'Europe/Berlin';
+        // Legacy default was UTC; German sites should still show local wall time.
+        if (strcasecmp($tzName, 'UTC') === 0) {
+            $tzName = 'Europe/Berlin';
+        }
+
+        try {
+            return $dt->setTimezone(new \DateTimeZone($tzName));
+        } catch (\Throwable) {
+            return $dt->setTimezone(new \DateTimeZone('Europe/Berlin'));
         }
     }
 }

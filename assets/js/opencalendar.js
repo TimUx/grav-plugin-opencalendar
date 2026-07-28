@@ -43,7 +43,23 @@
     return null;
   }
 
-  function formatDate(value, allDay, locale) {
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function resolveTimeZone(timezone) {
+    var tz = timezone || 'Europe/Berlin';
+    if (String(tz).toUpperCase() === 'UTC') {
+      return 'Europe/Berlin';
+    }
+    return tz;
+  }
+
+  function isGermanLocale(locale) {
+    return String(locale || '').toLowerCase().indexOf('de') === 0;
+  }
+
+  function formatModalDate(value, locale, timezone) {
     if (!value) {
       return '';
     }
@@ -52,10 +68,82 @@
       if (Number.isNaN(d.getTime())) {
         return String(value);
       }
-      var opts = allDay
-        ? { dateStyle: 'full' }
-        : { dateStyle: 'full', timeStyle: 'short' };
-      return d.toLocaleString(locale || undefined, opts);
+      var loc = isGermanLocale(locale) ? 'de-DE' : (locale || undefined);
+      return new Intl.DateTimeFormat(loc, {
+        timeZone: resolveTimeZone(timezone),
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(d);
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function formatModalTime(value, locale, timezone) {
+    if (!value) {
+      return '';
+    }
+    try {
+      var d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        return String(value);
+      }
+      var isDe = isGermanLocale(locale);
+      var parts = new Intl.DateTimeFormat(isDe ? 'de-DE' : (locale || undefined), {
+        timeZone: resolveTimeZone(timezone),
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: !isDe
+      }).formatToParts(d);
+      var map = {};
+      parts.forEach(function (p) {
+        if (p.type !== 'literal') {
+          map[p.type] = p.value;
+        }
+      });
+      var time = (map.hour || '00') + ':' + (map.minute || '00');
+      if (map.dayPeriod) {
+        time += ' ' + map.dayPeriod;
+      }
+      return isDe ? (time + ' Uhr') : time;
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function formatListWhen(value, allDay, locale, timezone) {
+    if (!value) {
+      return '';
+    }
+    try {
+      var d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        return String(value);
+      }
+      var isDe = isGermanLocale(locale);
+      var tz = resolveTimeZone(timezone);
+      var dateParts = new Intl.DateTimeFormat(isDe ? 'de-DE' : (locale || undefined), {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(d);
+      var map = {};
+      dateParts.forEach(function (p) {
+        if (p.type !== 'literal') {
+          map[p.type] = p.value;
+        }
+      });
+      var date = isDe
+        ? ((map.day || pad2(d.getDate())) + '.' + (map.month || pad2(d.getMonth() + 1)) + '.' + (map.year || d.getFullYear()))
+        : ((map.year || d.getFullYear()) + '-' + (map.month || pad2(d.getMonth() + 1)) + '-' + (map.day || pad2(d.getDate())));
+      if (allDay) {
+        return date;
+      }
+      var time = formatModalTime(value, locale, timezone);
+      return date + ' ' + time;
     } catch (e) {
       return String(value);
     }
@@ -68,6 +156,7 @@
     }
     var labels = i18n(config);
     var locale = config.locale && config.locale !== 'auto' ? config.locale : undefined;
+    var timezone = config.timezone || undefined;
 
     var set = function (name, value) {
       var el = modal.querySelector('[data-oc-field="' + name + '"]');
@@ -105,8 +194,8 @@
 
     var allDay = !!(event.all_day || event.allDay);
     set('title', event.title || '');
-    set('date', formatDate(event.start, allDay, locale));
-    set('time', allDay ? (labels.all_day || 'All day') : formatDate(event.start, false, locale));
+    set('date', formatModalDate(event.start, locale, timezone));
+    set('time', allDay ? (labels.all_day || 'All day') : formatModalTime(event.start, locale, timezone));
     set('location', event.location || '');
     set('organizer', event.organizer || '');
     set('calendar', event.calendar_name || (event.calendar && event.calendar.name) || event.calendar || '');
@@ -184,6 +273,229 @@
     });
   }
 
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatListGroup(value, locale, timezone) {
+    if (!value) {
+      return '—';
+    }
+    try {
+      var d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        return String(value).slice(0, 7);
+      }
+      return new Intl.DateTimeFormat(isGermanLocale(locale) ? 'de-DE' : (locale || undefined), {
+        timeZone: resolveTimeZone(timezone),
+        month: 'long',
+        year: 'numeric'
+      }).format(d);
+    } catch (e) {
+      return String(value).slice(0, 7);
+    }
+  }
+
+  function renderListHtml(config) {
+    var labels = i18n(config);
+    var events = config.eventsList || [];
+    var meta = config.meta || {};
+    var locale = config.locale;
+    var timezone = config.timezone;
+    var html = '';
+
+    if (!events.length) {
+      return '<p class="oc-list__empty">' + escapeHtml(labels.no_events || 'No events found.') + '</p>';
+    }
+
+    var currentGroup = null;
+    events.forEach(function (event) {
+      var start = event.start || '';
+      var group = formatListGroup(start, locale, timezone);
+      if (group !== currentGroup) {
+        if (currentGroup !== null) {
+          html += '</ul>';
+        }
+        html += '<h3 class="oc-list__group">' + escapeHtml(group) + '</h3><ul class="oc-list__items">';
+        currentGroup = group;
+      }
+      var color = escapeHtml(event.color || '#3788d8');
+      var title = escapeHtml(event.title || '');
+      var location = escapeHtml(event.location || '');
+      var id = escapeHtml(event.id || event.uid || '');
+      var when = escapeHtml(formatListWhen(start, !!(event.all_day || event.allDay), locale, timezone));
+      html += '<li class="oc-list__item" style="--oc-event-color:' + color + '">'
+        + '<button type="button" class="oc-list__button" data-oc-event-id="' + id + '">'
+        + '<span class="oc-list__icon" aria-hidden="true">📅</span>'
+        + '<span class="oc-list__body">'
+        + '<span class="oc-list__when">' + when + '</span>'
+        + '<span class="oc-list__title">' + title + '</span>'
+        + (location ? '<span class="oc-list__location">' + location + '</span>' : '')
+        + '</span>'
+        + '</button></li>';
+    });
+    if (currentGroup !== null) {
+      html += '</ul>';
+    }
+
+    var page = Number(meta.page || 1);
+    var pages = Number(meta.pages || 1);
+    if (pages > 1) {
+      var pageLabel = String(labels.page || 'Page %1 of %2')
+        .replace('%1', String(page))
+        .replace('%2', String(pages));
+      html += '<nav class="oc-pagination" aria-label="' + escapeHtml(labels.pagination || 'Pagination')
+        + '" data-oc-pagination data-oc-page="' + page + '" data-oc-pages="' + pages + '">'
+        + '<button type="button" class="oc-pagination__btn" data-oc-page-goto="' + Math.max(1, page - 1) + '"'
+        + (page <= 1 ? ' disabled aria-disabled="true"' : '') + '>'
+        + escapeHtml(labels.previous || 'Previous') + '</button>'
+        + '<span class="oc-pagination__status" data-oc-page-status>' + escapeHtml(pageLabel) + '</span>'
+        + '<button type="button" class="oc-pagination__btn" data-oc-page-goto="' + Math.min(pages, page + 1) + '"'
+        + (page >= pages ? ' disabled aria-disabled="true"' : '') + '>'
+        + escapeHtml(labels.next || 'Next') + '</button>'
+        + '</nav>';
+    }
+
+    return html;
+  }
+
+  function mapApiEvents(payload) {
+    return (payload.data || []).map(function (item) {
+      return {
+        id: item.id,
+        uid: item.uid,
+        title: item.title,
+        start: item.start,
+        end: item.end,
+        all_day: item.allDay,
+        location: item.location,
+        description: item.description,
+        organizer: item.organizer,
+        categories: item.categories,
+        url: item.url,
+        attachments: item.attachments,
+        color: item.color,
+        calendar_name: item.source && item.source.name,
+        calendar_key: item.source && item.source.key,
+        calendar_color: item.source && item.source.color
+      };
+    });
+  }
+
+  function applyEventsToConfig(config, payload) {
+    config.eventsList = mapApiEvents(payload);
+    config.meta = payload.meta || config.meta || {};
+    config.events = config.eventsList.map(function (item) {
+      return {
+        id: String(item.id || item.uid),
+        title: item.title,
+        start: item.start,
+        end: item.end,
+        allDay: !!item.all_day,
+        backgroundColor: item.color,
+        borderColor: item.color,
+        extendedProps: item
+      };
+    });
+  }
+
+  function currentFilterParams(root) {
+    var form = root.querySelector('[data-oc-filters]');
+    var params = new URLSearchParams(window.location.search);
+    if (!form) {
+      return params;
+    }
+    var q = (form.querySelector('[data-oc-search]') || {}).value || '';
+    var source = (form.querySelector('[data-oc-filter-source]') || {}).value || '';
+    var category = (form.querySelector('[data-oc-filter-category]') || {}).value || '';
+    if (q) {
+      params.set('q', q);
+    } else {
+      params.delete('q');
+    }
+    if (source) {
+      params.set('source', source);
+    } else {
+      params.delete('source');
+    }
+    if (category) {
+      params.set('category', category);
+    } else {
+      params.delete('category');
+    }
+    return params;
+  }
+
+  function buildEventsUrl(config, root, page) {
+    var api = config.api || {};
+    var meta = config.meta || {};
+    var limit = meta.limit || 50;
+    var offset = Math.max(0, (Math.max(1, page) - 1) * limit);
+    var params = currentFilterParams(root);
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    params.delete('oc_page');
+    return api.route.replace(/\/$/, '') + '/events?' + params.toString();
+  }
+
+  function navigateToPage(root, config, page) {
+    var meta = config.meta || {};
+    var pages = Number(meta.pages || 1);
+    var nextPage = Math.max(1, Math.min(pages || 1, Number(page) || 1));
+    var api = config.api || {};
+
+    if (api.enabled && api.route) {
+      root.classList.add('oc-loading');
+      fetch(buildEventsUrl(config, root, nextPage), { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (payload) {
+          applyEventsToConfig(config, payload);
+          var list = root.querySelector('[data-oc-list]');
+          if (list) {
+            list.innerHTML = renderListHtml(config);
+            initList(root, config);
+            initPagination(root, config);
+          }
+          var params = currentFilterParams(root);
+          params.set('oc_page', String(config.meta.page || nextPage));
+          var query = params.toString();
+          var url = window.location.pathname + (query ? '?' + query : '') + window.location.hash;
+          window.history.replaceState({}, '', url);
+        })
+        .catch(function () {
+          /* keep current page */
+        })
+        .finally(function () {
+          root.classList.remove('oc-loading');
+        });
+      return;
+    }
+
+    var params = currentFilterParams(root);
+    params.set('oc_page', String(nextPage));
+    window.location.search = params.toString();
+  }
+
+  function initPagination(root, config) {
+    var nav = root.querySelector('[data-oc-pagination]');
+    if (!nav) {
+      return;
+    }
+    nav.querySelectorAll('[data-oc-page-goto]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) {
+          return;
+        }
+        navigateToPage(root, config, btn.getAttribute('data-oc-page-goto'));
+      });
+    });
+  }
+
   function initList(root, config) {
     root.querySelectorAll('[data-oc-event-id]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -200,78 +512,37 @@
     }
 
     var apply = function () {
-      var q = (form.querySelector('[data-oc-search]') || {}).value || '';
-      var source = (form.querySelector('[data-oc-filter-source]') || {}).value || '';
-      var category = (form.querySelector('[data-oc-filter-category]') || {}).value || '';
       var api = config.api || {};
+      var isList = root.getAttribute('data-view') === 'list';
+
       if (!api.enabled || !api.route) {
+        var params = currentFilterParams(root);
+        params.delete('oc_page');
+        window.location.search = params.toString();
         return;
       }
 
-      var url = api.route.replace(/\/$/, '') + '/events?limit=' + encodeURIComponent((config.meta && config.meta.limit) || 50);
-      if (q) {
-        url += '&q=' + encodeURIComponent(q);
-      }
-      if (source) {
-        url += '&source=' + encodeURIComponent(source);
-      }
-      if (category) {
-        url += '&category=' + encodeURIComponent(category);
+      if (isList) {
+        navigateToPage(root, config, 1);
+        return;
       }
 
-      fetch(url, { headers: { Accept: 'application/json' } })
+      root.classList.add('oc-loading');
+      fetch(buildEventsUrl(config, root, 1), { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.json(); })
         .then(function (payload) {
-          config.eventsList = (payload.data || []).map(function (item) {
-            return {
-              id: item.id,
-              uid: item.uid,
-              title: item.title,
-              start: item.start,
-              end: item.end,
-              all_day: item.allDay,
-              location: item.location,
-              description: item.description,
-              organizer: item.organizer,
-              categories: item.categories,
-              url: item.url,
-              attachments: item.attachments,
-              color: item.color,
-              calendar_name: item.source && item.source.name,
-              calendar_key: item.source && item.source.key,
-              calendar_color: item.source && item.source.color
-            };
-          });
-          config.events = config.eventsList.map(function (item) {
-            return {
-              id: String(item.id || item.uid),
-              title: item.title,
-              start: item.start,
-              end: item.end,
-              allDay: !!item.all_day,
-              backgroundColor: item.color,
-              borderColor: item.color,
-              extendedProps: item
-            };
-          });
-
-          var list = root.querySelector('[data-oc-list]');
-          if (list) {
-            window.location.search = new URLSearchParams({
-              q: q,
-              source: source,
-              category: category
-            }).toString();
-          } else {
-            var mount = root.querySelector('[data-oc-calendar]');
-            if (mount) {
-              mount.innerHTML = '';
-              initCalendar(root, config);
-            }
+          applyEventsToConfig(config, payload);
+          var mount = root.querySelector('[data-oc-calendar]');
+          if (mount) {
+            mount.innerHTML = '';
+            initCalendar(root, config);
           }
         })
         .catch(function () {
           /* keep current data */
+        })
+        .finally(function () {
+          root.classList.remove('oc-loading');
         });
     };
 
@@ -304,6 +575,7 @@
 
     if (root.getAttribute('data-view') === 'list') {
       initList(root, config);
+      initPagination(root, config);
     } else {
       initCalendar(root, config);
     }
