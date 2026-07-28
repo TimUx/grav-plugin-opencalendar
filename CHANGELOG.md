@@ -7,5 +7,5 @@
     * SQLite storage with FTS5 search, pagination, and filtering
     * Calendar and list frontend views powered by Event Calendar 5.10.1
     * Twig helpers, shortcodes, optional REST API, and Admin configuration
-    * Extensible source architecture with CalDAV/JSON/Local stubs
+    * Extensible source architecture with ICS, CalDAV, JSON, and local adapters
     * PHPUnit, PHPStan level 8, PHP_CodeSniffer, and GitHub Actions CI

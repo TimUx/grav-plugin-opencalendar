@@ -11,12 +11,15 @@ use Grav\Plugin\OpenCalendar\Http\HttpClientInterface;
 use Grav\Plugin\OpenCalendar\Models\Event;
 
 /**
- * JSON API source stub — architecture placeholder for a future implementation.
+ * JSON HTTP API calendar source.
  */
 final class JsonSource extends AbstractSource
 {
-    public function __construct(HttpClientInterface $http, array $httpOptions = [])
-    {
+    public function __construct(
+        HttpClientInterface $http,
+        private readonly JsonParser $parser,
+        array $httpOptions = [],
+    ) {
         parent::__construct($http, $httpOptions);
     }
 
@@ -31,9 +34,31 @@ final class JsonSource extends AbstractSource
         ?string $lastModified = null,
         ?string $contentHash = null,
     ): FetchResult {
-        throw new \RuntimeException(
-            'JSON source type is not implemented yet. Use type "ics" or contribute JsonSource.'
-        );
+        if ($config->url === '') {
+            throw new \InvalidArgumentException('JSON source URL must not be empty.');
+        }
+
+        if ($this->isLocalPath($config->url)) {
+            return $this->fetchLocalFile($config->url, $contentHash);
+        }
+
+        $result = $this->fetchHttp($config, $etag, $lastModified, [
+            'Accept' => 'application/json',
+        ]);
+
+        if (
+            !$result->notModified && $contentHash !== null && $contentHash !== ''
+            && $result->contentHash === $contentHash
+        ) {
+            return FetchResult::notModified(
+                $result->httpStatus,
+                $result->etag ?? $etag,
+                $result->lastModified ?? $lastModified,
+                $contentHash,
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -41,6 +66,36 @@ final class JsonSource extends AbstractSource
      */
     public function parse(string $payload, SourceConfig $config, int $calendarId = 0): array
     {
-        throw new \RuntimeException('JSON source type is not implemented yet.');
+        return $this->parser->parse($payload, $config, $calendarId);
+    }
+
+    private function isLocalPath(string $url): bool
+    {
+        if (str_starts_with($url, 'file://')) {
+            return true;
+        }
+
+        return !str_contains($url, '://') && is_file($url);
+    }
+
+    private function fetchLocalFile(string $path, ?string $contentHash): FetchResult
+    {
+        $file = str_starts_with($path, 'file://') ? substr($path, 7) : $path;
+        if (!is_file($file) || !is_readable($file)) {
+            throw new \RuntimeException('Local JSON file not readable: ' . $file);
+        }
+
+        $body = file_get_contents($file);
+        if ($body === false) {
+            throw new \RuntimeException('Unable to read local JSON file: ' . $file);
+        }
+
+        $hash = hash('sha256', $body);
+        $mtime = gmdate('D, d M Y H:i:s', (int) filemtime($file)) . ' GMT';
+        if ($contentHash !== null && $contentHash !== '' && $hash === $contentHash) {
+            return FetchResult::notModified(200, null, $mtime, $hash);
+        }
+
+        return new FetchResult($body, 200, null, $mtime, false, $hash);
     }
 }

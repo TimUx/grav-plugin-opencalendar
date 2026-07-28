@@ -212,7 +212,8 @@ Guide: [docs/FAQ.md](docs/FAQ.md)
 
 ## Roadmap
 
-- [ ] CalDAV discovery and multi-collection sync
+- [x] CalDAV discovery and multi-collection sync
+- [x] JSON API and local file source adapters
 - [ ] Admin dashboard widget with sync status
 - [ ] Webhook-triggered sync for push updates
 - [ ] Export to ICS

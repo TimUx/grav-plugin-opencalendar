@@ -63,6 +63,20 @@ final class SyncServiceTest extends TestCase
                 int $maxRedirects = 3,
                 string $userAgent = 'OpenCalendar/1.0',
             ): HttpResponse {
+                return $this->request('GET', $url, null, $headers, $auth, $timeout, $verifySsl, $maxRedirects, $userAgent);
+            }
+
+            public function request(
+                string $method,
+                string $url,
+                ?string $body = null,
+                array $headers = [],
+                array $auth = [],
+                int $timeout = 30,
+                bool $verifySsl = true,
+                int $maxRedirects = 3,
+                string $userAgent = 'OpenCalendar/1.0',
+            ): HttpResponse {
                 throw new \RuntimeException('HTTP should not be called for local file sync');
             }
         };
