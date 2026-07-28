@@ -59,23 +59,60 @@
     return String(locale || '').toLowerCase().indexOf('de') === 0;
   }
 
+  function resolveLocale(config, root) {
+    var locale = config && config.locale ? String(config.locale) : '';
+    if (!locale || locale === 'auto') {
+      locale = (root && root.getAttribute('data-locale')) || '';
+    }
+    if (!locale || locale === 'auto') {
+      locale = document.documentElement.lang || navigator.language || 'de';
+    }
+    return locale;
+  }
+
+  function formatPartsMap(value, locale, timezone, options) {
+    var d = new Date(value);
+    if (Number.isNaN(d.getTime())) {
+      return null;
+    }
+    var loc = isGermanLocale(locale) ? 'de-DE' : (locale || undefined);
+    var opts = Object.assign({ timeZone: resolveTimeZone(timezone) }, options || {});
+    var map = {};
+    new Intl.DateTimeFormat(loc, opts).formatToParts(d).forEach(function (p) {
+      if (p.type !== 'literal') {
+        map[p.type] = p.value;
+      }
+    });
+    map.__date = d;
+    return map;
+  }
+
   function formatModalDate(value, locale, timezone) {
     if (!value) {
       return '';
     }
     try {
-      var d = new Date(value);
-      if (Number.isNaN(d.getTime())) {
+      var isDe = isGermanLocale(locale);
+      var map = formatPartsMap(value, locale, timezone, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      if (!map) {
         return String(value);
       }
-      var loc = isGermanLocale(locale) ? 'de-DE' : (locale || undefined);
-      return new Intl.DateTimeFormat(loc, {
+      if (isDe) {
+        // Explicit German date only — never include time ("um …").
+        return (map.weekday || '') + ', ' + (map.day || '') + '. ' + (map.month || '') + ' ' + (map.year || '');
+      }
+      return new Intl.DateTimeFormat(locale || undefined, {
         timeZone: resolveTimeZone(timezone),
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-      }).format(d);
+      }).format(map.__date);
     } catch (e) {
       return String(value);
     }
@@ -86,25 +123,28 @@
       return '';
     }
     try {
-      var d = new Date(value);
-      if (Number.isNaN(d.getTime())) {
-        return String(value);
-      }
       var isDe = isGermanLocale(locale);
-      var parts = new Intl.DateTimeFormat(isDe ? 'de-DE' : (locale || undefined), {
-        timeZone: resolveTimeZone(timezone),
+      var map = formatPartsMap(value, locale, timezone, {
         hour: '2-digit',
         minute: '2-digit',
         hour12: !isDe
-      }).formatToParts(d);
-      var map = {};
-      parts.forEach(function (p) {
-        if (p.type !== 'literal') {
-          map[p.type] = p.value;
-        }
       });
-      var time = (map.hour || '00') + ':' + (map.minute || '00');
-      if (map.dayPeriod) {
+      if (!map) {
+        return String(value);
+      }
+      var hour = map.hour || '00';
+      var minute = map.minute || '00';
+      // Some locales return hour="19 Uhr" — keep digits only.
+      hour = String(hour).replace(/[^\d]/g, '') || '00';
+      minute = String(minute).replace(/[^\d]/g, '') || '00';
+      if (hour.length < 2) {
+        hour = pad2(hour);
+      }
+      if (minute.length < 2) {
+        minute = pad2(minute);
+      }
+      var time = hour + ':' + minute;
+      if (!isDe && map.dayPeriod) {
         time += ' ' + map.dayPeriod;
       }
       return isDe ? (time + ' Uhr') : time;
@@ -155,8 +195,8 @@
       return;
     }
     var labels = i18n(config);
-    var locale = config.locale && config.locale !== 'auto' ? config.locale : undefined;
-    var timezone = config.timezone || undefined;
+    var locale = resolveLocale(config, root);
+    var timezone = config.timezone || root.getAttribute('data-timezone') || 'Europe/Berlin';
 
     var set = function (name, value) {
       var el = modal.querySelector('[data-oc-field="' + name + '"]');
@@ -193,9 +233,17 @@
     };
 
     var allDay = !!(event.all_day || event.allDay);
+    var startValue = event.start || event.startAt || '';
+    var displayDate = event.display_date || (event.extendedProps && event.extendedProps.display_date) || '';
+    var displayTime = event.display_time || (event.extendedProps && event.extendedProps.display_time) || '';
     set('title', event.title || '');
-    set('date', formatModalDate(event.start, locale, timezone));
-    set('time', allDay ? (labels.all_day || 'All day') : formatModalTime(event.start, locale, timezone));
+    set('date', displayDate || formatModalDate(startValue, locale, timezone));
+    set(
+      'time',
+      allDay
+        ? (labels.all_day || 'Ganztägig')
+        : (displayTime || formatModalTime(startValue, locale, timezone))
+    );
     set('location', event.location || '');
     set('organizer', event.organizer || '');
     set('calendar', event.calendar_name || (event.calendar && event.calendar.name) || event.calendar || '');

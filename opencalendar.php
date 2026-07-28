@@ -149,13 +149,30 @@ class OpenCalendarPlugin extends Plugin
     {
         $assets = $this->grav['assets'];
         $base = 'plugin://opencalendar';
-        $cssVersion = @filemtime(__DIR__ . '/assets/css/opencalendar.css') ?: time();
         $jsVersion = @filemtime(__DIR__ . '/assets/js/opencalendar.js') ?: time();
 
-        $assets->addCss($base . '/assets/css/opencalendar.css?v=' . $cssVersion);
+        $assets->addCss($base . '/assets/css/opencalendar.css', [
+            'priority' => 80,
+            'pipeline' => false,
+            'loading' => null,
+        ]);
         $assets->addCss('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.css');
         $assets->addJs('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.js', ['group' => 'bottom']);
-        $assets->addJs($base . '/assets/js/opencalendar.js?v=' . $jsVersion, ['group' => 'bottom']);
+        $assets->addJs($base . '/assets/js/opencalendar.js', [
+            'group' => 'bottom',
+            'priority' => 80,
+            'pipeline' => false,
+        ]);
+
+        // Bust browser/CDN caches when plugin assets change.
+        try {
+            $assets->addInlineJs(
+                'window.OpenCalendarAssetVersion=' . json_encode((string) $jsVersion) . ';',
+                ['group' => 'bottom', 'priority' => 79]
+            );
+        } catch (\Throwable) {
+            // ignore older Grav asset APIs
+        }
     }
 
     public function onAdminTwigSiteVariables(): void
