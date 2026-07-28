@@ -15,16 +15,26 @@ PLUGIN_OPENCALENDAR:
 
   # Sync dashboard
   SYNC_DASHBOARD_TITLE: Synchronization Dashboard
-  SYNC_DASHBOARD_HELP: 'Monitor source synchronization status. Trigger actions via the Admin endpoints listed below.'
-  SYNC_DASHBOARD_ACTIONS: |
-    **Actions (Admin session required):**
-
-    - `/admin/plugins/opencalendar/sync` — Synchronize Now
-    - `/admin/plugins/opencalendar/rebuild` — Rebuild Database
-    - `/admin/plugins/opencalendar/clear-cache` — Clear Cache
-    - `/admin/plugins/opencalendar/status` — JSON status
+  SYNC_DASHBOARD_HELP: 'Monitor source synchronization status and run maintenance actions.'
   SYNC_EVENT_COUNT: Events in database
   SYNC_ACTIONS: Actions
+  SYNC_NOW: Synchronize now
+  SYNC_ONE: Sync
+  REBUILD_DATABASE: Rebuild database
+  CLEAR_CACHE: Clear cache
+  REFRESH_STATUS: Refresh status
+  SYNC_NO_CALENDARS: No calendars synchronized yet. Save your sources and run a sync.
+  SYNC_ACTION_OK: Action completed successfully.
+  SYNC_ACTION_ERROR: Action failed. Check the Grav log for details.
+  SYNC_ACTION_RUNNING: Running…
+  SYNC_COL_SOURCE: Source
+  SYNC_COL_STATUS: Status
+  SYNC_COL_LAST_SYNC: Last sync
+  SYNC_COL_DURATION: Duration
+  SYNC_COL_IMPORTED: Imported
+  SYNC_COL_UPDATED: Updated
+  SYNC_COL_DELETED: Deleted
+  SYNC_COL_ERROR: Error
 
   # General
   ENABLED: Plugin enabled

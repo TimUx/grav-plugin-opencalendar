@@ -1,40 +1,7 @@
 title: PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_TITLE
-
 form:
   validation: loose
   fields:
-    sync_info:
-      type: display
-      markdown: true
-      content: "PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_HELP"
-
-    sync_status:
-      type: display
-      markdown: true
-      content: |
-        **Events in database:** {{ opencalendar_status.event_count|default(0) }}
-
-        | Source | Status | Last Sync | Duration | Imported | Updated | Deleted | Error |
-        | --- | --- | --- | --- | --- | --- | --- | --- |
-        {% for cal in opencalendar_status.calendars|default([]) %}
-        | {{ cal.name }} | {{ cal.status }} | {{ cal.last_sync_at|default('—') }} | {{ cal.last_sync_duration_ms|default('—') }} ms | {{ cal.imported_count }} | {{ cal.updated_count }} | {{ cal.deleted_count }} | {{ cal.last_error|default('') }} |
-        {% else %}
-        | — | — | — | — | — | — | — | No calendars synchronized yet |
-        {% endfor %}
-
-    sync_actions:
-      type: section
-      title: PLUGIN_OPENCALENDAR.SYNC_ACTIONS
-      underline: true
-
-    sync_now_help:
-      type: display
-      markdown: true
-      content: |
-        Use these Admin AJAX endpoints (while logged in):
-
-        - `GET /admin/plugins/opencalendar/sync` — synchronize all sources now
-        - `GET /admin/plugins/opencalendar/sync?source=KEY` — synchronize one source
-        - `GET /admin/plugins/opencalendar/rebuild` — wipe events and rebuild
-        - `GET /admin/plugins/opencalendar/clear-cache` — clear OpenCalendar caches
-        - `GET /admin/plugins/opencalendar/status` — JSON status payload
+    sync_panel:
+      type: opencalendar_sync
+      label: PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_TITLE
