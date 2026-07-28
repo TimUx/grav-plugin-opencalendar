@@ -19,7 +19,7 @@
   }
 
   function findEvent(config, id) {
-    var list = config.eventsList || [];
+    var list = (config.eventsListAll || []).concat(config.eventsList || []);
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       if (String(item.id) === String(id) || String(item.uid) === String(id)) {
@@ -349,10 +349,91 @@
     }
   }
 
+  function pageFromUrl() {
+    var match = String(window.location.pathname || '').match(/\/(?:oc_)?page:(\d+)/);
+    return match ? Math.max(1, parseInt(match[1], 10) || 1) : 1;
+  }
+
+  function basePathFromUrl() {
+    return String(window.location.pathname || '/')
+      .replace(/\/(?:oc_)?page:\d+/g, '')
+      .replace(/\/$/, '') || '/';
+  }
+
+  function buildPageHref(root, page) {
+    var params = currentFilterParams(root);
+    params.delete('page');
+    params.delete('oc_page');
+    params.delete('_url');
+    var path = basePathFromUrl();
+    var href = Math.max(1, page || 1) > 1 ? (path + '/page:' + Math.max(1, page || 1)) : path;
+    var query = params.toString();
+    if (query) {
+      href += '?' + query;
+    }
+    return href + window.location.hash;
+  }
+
+  function sliceEventsForPage(config, page) {
+    var all = config.eventsListAll || config.eventsList || [];
+    var limit = Number((config.meta && config.meta.limit) || 50);
+    var total = Number((config.meta && config.meta.total) || all.length);
+    var pages = Math.max(1, Number((config.meta && config.meta.pages) || Math.ceil(total / limit) || 1));
+    page = Math.max(1, Math.min(pages, Number(page) || 1));
+    var offset = (page - 1) * limit;
+    config.eventsList = all.slice(offset, offset + limit);
+    config.meta = Object.assign({}, config.meta || {}, {
+      page: page,
+      pages: pages,
+      limit: limit,
+      offset: offset,
+      total: total
+    });
+    return config;
+  }
+
+  function renderGravPagination(config, root) {
+    var labels = i18n(config);
+    var meta = config.meta || {};
+    var page = Number(meta.page || 1);
+    var pages = Number(meta.pages || 1);
+    if (pages <= 1) {
+      return '';
+    }
+    var html = '<nav class="oc-pagination" aria-label="' + escapeHtml(labels.pagination || 'Pagination')
+      + '" data-oc-pagination data-oc-page="' + page + '" data-oc-pages="' + pages + '"><ul class="pagination">';
+    if (page > 1) {
+      html += '<li><a rel="prev" href="' + escapeHtml(buildPageHref(root, page - 1))
+        + '" data-oc-page-goto="' + (page - 1) + '">&laquo;</a></li>';
+    } else {
+      html += '<li><span aria-hidden="true">&laquo;</span></li>';
+    }
+    var delta = 2;
+    for (var i = 1; i <= pages; i++) {
+      var inDelta = Math.abs(i - page) <= delta || i === 1 || i === pages;
+      var border = !inDelta && Math.abs(i - page) === delta + 1;
+      if (i === page) {
+        html += '<li><span class="active">' + i + '</span></li>';
+      } else if (inDelta) {
+        html += '<li><a href="' + escapeHtml(buildPageHref(root, i))
+          + '" data-oc-page-goto="' + i + '">' + i + '</a></li>';
+      } else if (border) {
+        html += '<li class="gap"><span>&hellip;</span></li>';
+      }
+    }
+    if (page < pages) {
+      html += '<li><a rel="next" href="' + escapeHtml(buildPageHref(root, page + 1))
+        + '" data-oc-page-goto="' + (page + 1) + '">&raquo;</a></li>';
+    } else {
+      html += '<li><span aria-hidden="true">&raquo;</span></li>';
+    }
+    html += '</ul></nav>';
+    return html;
+  }
+
   function renderListHtml(config, root) {
     var labels = i18n(config);
     var events = config.eventsList || [];
-    var meta = config.meta || {};
     var locale = config.locale;
     var timezone = config.timezone;
     var html = '';
@@ -391,51 +472,38 @@
       html += '</ul>';
     }
 
-    var page = Number(meta.page || 1);
-    var pages = Number(meta.pages || 1);
-    if (pages > 1) {
-      var pageLabel = String(labels.page || 'Page %1 of %2')
-        .replace('%1', String(page))
-        .replace('%2', String(pages));
-      var prevPage = Math.max(1, page - 1);
-      var nextPage = Math.min(pages, page + 1);
-      var prevHref = buildPageHref(root, prevPage);
-      var nextHref = buildPageHref(root, nextPage);
-      html += '<nav class="oc-pagination" aria-label="' + escapeHtml(labels.pagination || 'Pagination')
-        + '" data-oc-pagination data-oc-page="' + page + '" data-oc-pages="' + pages + '">';
-      if (page <= 1) {
-        html += '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
-          + escapeHtml(labels.previous || 'Previous') + '</span>';
-      } else {
-        html += '<a class="oc-pagination__btn" href="' + escapeHtml(prevHref) + '">'
-          + escapeHtml(labels.previous || 'Previous') + '</a>';
-      }
-      html += '<span class="oc-pagination__status" data-oc-page-status>' + escapeHtml(pageLabel) + '</span>';
-      if (page >= pages) {
-        html += '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
-          + escapeHtml(labels.next || 'Next') + '</span>';
-      } else {
-        html += '<a class="oc-pagination__btn" href="' + escapeHtml(nextHref) + '">'
-          + escapeHtml(labels.next || 'Next') + '</a>';
-      }
-      html += '</nav>';
-    }
-
+    html += renderGravPagination(config, root);
     return html;
   }
 
-  function buildPageHref(root, page) {
-    var params = currentFilterParams(root);
-    params.delete('oc_page');
-    params.delete('_url');
-    var path = String(window.location.pathname || '/').replace(/\/oc_page:\d+/g, '');
-    path = path.replace(/\/$/, '') || '/';
-    var href = path + '/oc_page:' + Math.max(1, page || 1);
-    var query = params.toString();
-    if (query) {
-      href += '?' + query;
+  function showListPage(root, config, page, pushUrl) {
+    sliceEventsForPage(config, page);
+    var list = root.querySelector('[data-oc-list]');
+    if (list) {
+      list.innerHTML = renderListHtml(config, root);
+      initList(root, config);
+      initPagination(root, config);
     }
-    return href + window.location.hash;
+    if (pushUrl) {
+      var href = buildPageHref(root, config.meta.page || page);
+      if (href !== window.location.pathname + window.location.search + window.location.hash) {
+        window.history.pushState({ ocPage: config.meta.page }, '', href);
+      }
+    }
+  }
+
+  function initPagination(root, config) {
+    var nav = root.querySelector('[data-oc-pagination]');
+    if (!nav) {
+      return;
+    }
+    nav.querySelectorAll('[data-oc-page-goto]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        showListPage(root, config, link.getAttribute('data-oc-page-goto'), true);
+        root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   }
 
   function currentFilterParams(root) {
@@ -489,8 +557,8 @@
 
     var apply = function () {
       var params = currentFilterParams(root);
-      var path = String(form.getAttribute('action') || window.location.pathname || '/')
-        .replace(/\/oc_page:\d+/g, '')
+      var path = String(form.getAttribute('action') || basePathFromUrl())
+        .replace(/\/(?:oc_)?page:\d+/g, '')
         .replace(/\/$/, '') || '/';
       var query = params.toString();
       window.location.href = path + (query ? '?' + query : '');
@@ -510,7 +578,13 @@
     }
 
     if (!config.locale || config.locale === 'auto') {
-      config.locale = root.getAttribute('data-locale') || 'en';
+      config.locale = root.getAttribute('data-locale') || document.documentElement.lang || 'en';
+    }
+    if (!config.timezone) {
+      config.timezone = root.getAttribute('data-timezone') || 'Europe/Berlin';
+    }
+    if (!config.eventsListAll && config.eventsList) {
+      config.eventsListAll = config.eventsList.slice();
     }
 
     root.querySelectorAll('[data-oc-modal-close]').forEach(function (el) {
@@ -524,7 +598,10 @@
     });
 
     if (root.getAttribute('data-view') === 'list') {
-      initList(root, config);
+      showListPage(root, config, pageFromUrl(), false);
+      window.addEventListener('popstate', function () {
+        showListPage(root, config, pageFromUrl(), false);
+      });
     } else {
       initCalendar(root, config);
     }
