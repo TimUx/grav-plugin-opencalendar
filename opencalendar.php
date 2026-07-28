@@ -360,11 +360,30 @@ class OpenCalendarPlugin extends Plugin
         $gravLog = $this->grav['log'] ?? null;
         $logger = is_object($gravLog) ? new BridgeLogger($gravLog) : new NullLogger();
 
+        $userDataPath = null;
+        try {
+            $locator = $this->grav['locator'] ?? null;
+            if (is_object($locator) && method_exists($locator, 'findResource')) {
+                $found = $locator->findResource('user-data://', true);
+                if (is_string($found) && $found !== '') {
+                    $userDataPath = $found;
+                }
+            }
+        } catch (\Throwable) {
+            $userDataPath = null;
+        }
+
+        // Fallback: user/plugins/opencalendar → user/data
+        if ($userDataPath === null || $userDataPath === '') {
+            $userDataPath = dirname(__DIR__, 2) . '/data';
+        }
+
         $this->container = new Container(
             config: $config,
             pluginPath: __DIR__,
             gravCache: is_object($cache) ? $cache : null,
             logger: $logger,
+            userDataPath: $userDataPath,
         );
 
         return $this->container;

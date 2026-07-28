@@ -28,16 +28,48 @@ final class Database
             throw new \RuntimeException('Unable to create database directory: ' . $dir);
         }
 
-        $this->pdo = new \PDO('sqlite:' . $this->path, null, null, [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
+        if (!is_writable($dir)) {
+            throw new \RuntimeException(
+                'SQLite directory is not writable by the web server user: ' . $dir
+                . '. Fix ownership (e.g. chown -R www-data:www-data "' . $dir . '") '
+                . 'or set storage.path to user-data://opencalendar/opencalendar.db'
+            );
+        }
+
+        if (is_file($this->path) && !is_writable($this->path)) {
+            throw new \RuntimeException(
+                'SQLite database is not writable by the web server user: ' . $this->path
+                . '. Fix ownership/permissions or move storage.path to a writable location.'
+            );
+        }
+
+        try {
+            $this->pdo = new \PDO('sqlite:' . $this->path, null, null, [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+        } catch (\PDOException $e) {
+            throw new \RuntimeException(
+                'Unable to open SQLite database at ' . $this->path . ': ' . $e->getMessage(),
+                (int) $e->getCode(),
+                $e
+            );
+        }
 
         $this->pdo->exec('PRAGMA foreign_keys = ON');
         $this->pdo->exec('PRAGMA busy_timeout = 5000');
         if ($this->walMode) {
-            $this->pdo->exec('PRAGMA journal_mode = WAL');
+            try {
+                $this->pdo->exec('PRAGMA journal_mode = WAL');
+            } catch (\PDOException $e) {
+                throw new \RuntimeException(
+                    'SQLite WAL mode failed (directory must be writable): ' . $dir
+                    . ' — ' . $e->getMessage(),
+                    (int) $e->getCode(),
+                    $e
+                );
+            }
         }
 
         return $this->pdo;
