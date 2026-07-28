@@ -60,14 +60,14 @@ class TwigExtension extends AbstractExtension
 
         $perPage = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
         $page = $this->resolvePage($options);
-        $futureOnly = filter_var(
-            $options['future_only'] ?? false,
-            FILTER_VALIDATE_BOOLEAN
-        );
-        $includeExpired = filter_var(
-            $options['include_expired'] ?? ($this->config['display']['list']['show_past'] ?? true),
-            FILTER_VALIDATE_BOOLEAN
-        );
+        $futureOnly = $this->toBool($options['future_only'] ?? false);
+        if (array_key_exists('show_past', $options)) {
+            $includeExpired = $this->toBool($options['show_past']);
+        } else {
+            $includeExpired = $this->toBool(
+                $options['include_expired'] ?? ($this->config['display']['list']['show_past'] ?? true)
+            );
+        }
 
         $categoriesFilter = [];
         if ($requestFilters['category'] !== '') {
@@ -76,6 +76,8 @@ class TwigExtension extends AbstractExtension
 
         $calendarKeys = array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== ''));
         $sort = (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc');
+        $from = $this->parseOptionDate($options['from'] ?? null);
+        $to = $this->parseOptionDate($options['to'] ?? null);
 
         // List view: load a full window of events and paginate with Grav's /page:N URLs
         // (client-side slice), so Grav page-cache cannot pin the UI to page 1.
@@ -85,6 +87,8 @@ class TwigExtension extends AbstractExtension
             : (isset($options['offset']) ? max(0, (int) $options['offset']) : ($page - 1) * $perPage);
 
         $query = new EventQuery(
+            from: $from,
+            to: $to,
             calendarKeys: $calendarKeys,
             categories: $categoriesFilter,
             search: $requestFilters['q'] !== '' ? $requestFilters['q'] : null,
@@ -162,9 +166,9 @@ class TwigExtension extends AbstractExtension
             'categories' => $categories,
             'calendar' => $calendarConfig,
             'list' => $listConfig,
-            'filters' => $this->config['filters'] ?? [],
+            'filters' => $this->resolveFiltersConfig($options),
             'activeFilters' => $requestFilters,
-            'search' => $this->config['search'] ?? [],
+            'search' => $this->resolveSearchConfig($options),
             'api' => [
                 'enabled' => (bool) ($this->config['api']['enabled'] ?? false),
                 'route' => (string) ($this->config['api']['route'] ?? '/opencalendar/api'),
@@ -276,13 +280,17 @@ HTML;
     private function renderFilters(array $payload): string
     {
         $filters = is_array($payload['filters'] ?? null) ? $payload['filters'] : [];
-        if (!($filters['enabled'] ?? true)) {
+        $search = is_array($payload['search'] ?? null) ? $payload['search'] : [];
+        $searchEnabled = (bool) ($search['enabled'] ?? true);
+        $showSource = (bool) ($filters['show_source_filter'] ?? true);
+        $showCategory = (bool) ($filters['show_category_filter'] ?? true);
+
+        if (!($filters['enabled'] ?? true) || (!$searchEnabled && !$showSource && !$showCategory)) {
             return '';
         }
 
         $i18n = is_array($payload['i18n'] ?? null) ? $payload['i18n'] : $this->frontendI18n();
         $active = is_array($payload['activeFilters'] ?? null) ? $payload['activeFilters'] : ['q' => '', 'source' => '', 'category' => ''];
-        $searchEnabled = (bool) (($payload['search']['enabled'] ?? true));
         $html = '<form class="oc-filters" data-oc-filters method="get" action="'
             . htmlspecialchars($this->currentPath(), ENT_QUOTES, 'UTF-8')
             . '" role="search">';
@@ -297,7 +305,7 @@ HTML;
                 . '" data-oc-search autocomplete="off"></label>';
         }
 
-        if ($filters['show_source_filter'] ?? true) {
+        if ($showSource) {
             $html .= '<label>' . htmlspecialchars((string) $i18n['filter_sources'], ENT_QUOTES, 'UTF-8')
                 . '<select name="source" data-oc-filter-source><option value="">'
                 . htmlspecialchars((string) $i18n['all'], ENT_QUOTES, 'UTF-8') . '</option>';
@@ -313,7 +321,7 @@ HTML;
             $html .= '</select></label>';
         }
 
-        if (($filters['show_category_filter'] ?? true) && ($payload['categories'] ?? []) !== []) {
+        if ($showCategory && ($payload['categories'] ?? []) !== []) {
             $html .= '<label>' . htmlspecialchars((string) $i18n['filter_categories'], ENT_QUOTES, 'UTF-8')
                 . '<select name="category" data-oc-filter-category><option value="">'
                 . htmlspecialchars((string) $i18n['all'], ENT_QUOTES, 'UTF-8') . '</option>';
@@ -604,6 +612,73 @@ HTML;
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    private function resolveFiltersConfig(array $options): array
+    {
+        $filters = is_array($this->config['filters'] ?? null) ? $this->config['filters'] : [];
+        $showFilters = array_key_exists('show_filters', $options)
+            ? $this->toBool($options['show_filters'])
+            : (bool) ($filters['enabled'] ?? true);
+        $showSearch = array_key_exists('show_search', $options)
+            ? $this->toBool($options['show_search'])
+            : (bool) (($this->config['search']['enabled'] ?? true));
+
+        $filters['enabled'] = $showFilters || $showSearch;
+        $filters['show_source_filter'] = $showFilters && (bool) ($filters['show_source_filter'] ?? true);
+        $filters['show_category_filter'] = $showFilters && (bool) ($filters['show_category_filter'] ?? true);
+        $filters['show_date_range_filter'] = $showFilters && (bool) ($filters['show_date_range_filter'] ?? true);
+
+        return $filters;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    private function resolveSearchConfig(array $options): array
+    {
+        $search = is_array($this->config['search'] ?? null) ? $this->config['search'] : [];
+        if (array_key_exists('show_search', $options)) {
+            $search['enabled'] = $this->toBool($options['show_search']);
+        }
+
+        return $search;
+    }
+
+    private function toBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function parseOptionDate(mixed $value): ?\DateTimeImmutable
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            $timezone = (string) ($this->config['timezone'] ?? 'Europe/Berlin');
+            if (strcasecmp($timezone, 'UTC') === 0) {
+                $timezone = 'Europe/Berlin';
+            }
+
+            return new \DateTimeImmutable(trim((string) $value), new \DateTimeZone($timezone));
+        } catch (\Throwable) {
+            try {
+                return new \DateTimeImmutable(trim((string) $value));
+            } catch (\Throwable) {
+                return null;
+            }
+        }
     }
 
     private function disablePageCache(): void
