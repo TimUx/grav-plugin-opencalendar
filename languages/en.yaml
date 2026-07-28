@@ -163,6 +163,13 @@ PLUGIN_OPENCALENDAR:
   PERSIST_IN_URL: Persist filters in URL
   PERSIST_IN_URL_HELP: 'Allows sharing filtered views via query parameters.'
 
+  # Admin dashboard widget
+  DASHBOARD_WIDGET_TITLE: OpenCalendar
+  DASHBOARD_EVENTS: events
+  DASHBOARD_SOURCES: sources
+  DASHBOARD_ERRORS: with errors
+  DASHBOARD_OPEN_PLUGIN: Open plugin settings
+
   # Advanced / API
   SECTION_API: REST API
   API_ENABLED: Enable API
@@ -170,6 +177,20 @@ PLUGIN_OPENCALENDAR:
   API_ROUTE: API route prefix
   RATE_LIMIT: Rate limiting
   RATE_LIMIT_MAX: Max requests per window
+  SECTION_WEBHOOK: Webhook sync
+  WEBHOOK_ENABLED: Enable webhook
+  WEBHOOK_ENABLED_HELP: 'Allow external systems to trigger a forced sync via HTTP (requires secret).'
+  WEBHOOK_ROUTE: Webhook route
+  WEBHOOK_SECRET: Shared secret
+  WEBHOOK_SECRET_HELP: 'Send as X-OpenCalendar-Token header, Authorization: Bearer, or ?token=.'
+  WEBHOOK_ALLOW_SOURCE: Allow source parameter
+  WEBHOOK_ALLOW_SOURCE_HELP: 'Accept ?source= or JSON body source to sync a single calendar.'
+  SECTION_EXPORT: ICS export
+  EXPORT_ENABLED: Enable ICS export
+  EXPORT_ENABLED_HELP: 'Publish an aggregated text/calendar feed for subscription in other calendar apps.'
+  EXPORT_ROUTE: Export route
+  EXPORT_CALENDAR_NAME: Calendar name
+  EXPORT_MAX_EVENTS: Maximum events
   SECTION_ADVANCED: Advanced options
   DEBUG: Debug mode
   LOG_LEVEL: Log level

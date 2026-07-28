@@ -122,7 +122,8 @@ Use language strings in custom templates:
 {{ 'PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS'|t }}
 ```
 
-See `languages/en.yaml` and `languages/de.yaml` for available keys.
+See `languages/*.yaml` (`en`, `de`, `fr`, `es`, `nl`, `it`) for available keys.
+
 
 ## Caching
 

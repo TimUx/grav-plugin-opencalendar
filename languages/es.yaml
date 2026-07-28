@@ -1,0 +1,234 @@
+PLUGIN_OPENCALENDAR:
+  PLUGIN_NAME: OpenCalendar
+  PLUGIN_DESCRIPTION: Agregue calendarios desde ICS, CalDAV, JSON y fuentes locales.
+  TAB_GENERAL: General
+  TAB_STORAGE: Almacenamiento
+  TAB_SOURCES: Fuentes
+  TAB_DISPLAY: Visualización
+  TAB_SEARCH: Búsqueda
+  TAB_FILTERS: Filtros
+  TAB_ADVANCED: Avanzado
+  TAB_SYNC: Panel de sync
+  SYNC_DASHBOARD_TITLE: Panel de sincronización
+  SYNC_DASHBOARD_HELP: Supervise el estado de sincronización y ejecute acciones de mantenimiento.
+  SYNC_EVENT_COUNT: Eventos en la base de datos
+  SYNC_ACTIONS: Acciones
+  SYNC_NOW: Sincronizar ahora
+  SYNC_ONE: Sync
+  REBUILD_DATABASE: Reconstruir base de datos
+  CLEAR_CACHE: Vaciar caché
+  REFRESH_STATUS: Actualizar estado
+  SYNC_NO_CALENDARS: Aún no hay calendarios sincronizados. Guarde las fuentes y ejecute una sync.
+  SYNC_ACTION_OK: Acción completada correctamente.
+  SYNC_ACTION_ERROR: La acción falló. Revise el registro de Grav.
+  SYNC_ACTION_RUNNING: Ejecutando…
+  SYNC_COL_SOURCE: Fuente
+  SYNC_COL_STATUS: Estado
+  SYNC_COL_LAST_SYNC: Última sync
+  SYNC_COL_DURATION: Duración
+  SYNC_COL_IMPORTED: Importados
+  SYNC_COL_UPDATED: Actualizados
+  SYNC_COL_DELETED: Eliminados
+  SYNC_COL_ERROR: Error
+  ENABLED: Plugin activado
+  LOCALE: Configuración regional
+  LOCALE_HELP: Use auto to follow the Grav site language, or pick a fixed locale for date formatting.
+  LOCALE_AUTO: Auto (idioma del sitio)
+  TIMEZONE: Zona horaria predeterminada
+  TIMEZONE_HELP: IANA timezone name used when events do not specify TZID (e.g. Europe/Berlin).
+  THEME: Tema de color
+  THEME_HELP: Frontend calendar color scheme. Auto follows the visitor system preference.
+  THEME_AUTO: Auto
+  THEME_LIGHT: Claro
+  THEME_DARK: Oscuro
+  SYNC_INTERVAL: Intervalo de sync
+  SYNC_INTERVAL_HELP: How often background jobs fetch updates from remote sources.
+  SYNC_5MIN: Cada 5 minutos
+  SYNC_10MIN: Cada 10 minutos
+  SYNC_15MIN: Cada 15 minutos
+  SYNC_30MIN: Cada 30 minutos
+  SYNC_60MIN: Cada 60 minutos
+  SYNC_DAILY: Una vez al día
+  CLEANUP: Limpieza de eventos
+  CLEANUP_HELP: How long to retain removed or superseded events before permanent deletion.
+  CLEANUP_NEVER: Nunca eliminar
+  CLEANUP_IMMEDIATE: Eliminar de inmediato
+  CLEANUP_1DAY: After 1 day
+  CLEANUP_7DAYS: After 7 days
+  CLEANUP_30DAYS: After 30 days
+  CLEANUP_90DAYS: After 90 days
+  SECTION_CACHE: Caché
+  CACHE_ENABLED: Activar caché
+  CACHE_TTL: Render cache TTL (seconds)
+  CACHE_TTL_HELP: How long rendered event collections are cached. 0 clears on next sync.
+  PARSE_CACHE: Cache parsed feeds
+  PARSE_CACHE_TTL: Parse cache TTL (seconds)
+  PARSE_CACHE_TTL_HELP: Reuse parsed ICS/JSON between sync runs to reduce CPU usage.
+  STORAGE_PATH: Database path
+  STORAGE_PATH_HELP: 'Preferred: user-data://opencalendar/opencalendar.db (writable Grav user data). Plugin-relative paths like data/opencalendar.db still work but need write permissions for the web server.'
+  WAL_MODE: SQLite WAL mode
+  WAL_MODE_HELP: Write-Ahead Logging improves read concurrency. Recommended for production.
+  VACUUM_ON_CLEANUP: VACUUM on cleanup
+  VACUUM_ON_CLEANUP_HELP: Reclaim disk space after cleanup runs. May briefly lock the database.
+  SOURCES: Fuentes de calendario
+  SOURCES_HELP: Define one or more feeds. Disabled sources are skipped during sync.
+  ADD_SOURCE: Añadir fuente
+  SOURCE_NAME: Nombre
+  SOURCE_ENABLED: Activada
+  SOURCE_TYPE: Tipo
+  SOURCE_TYPE_HELP: ICS for public feeds, CalDAV for authenticated servers, JSON for custom APIs, local for files in the plugin data folder.
+  SOURCE_TYPE_ICS: ICS (iCalendar)
+  SOURCE_TYPE_CALDAV: CalDAV
+  SOURCE_TYPE_JSON: API JSON
+  SOURCE_TYPE_LOCAL: Archivo local
+  SOURCE_URL: URL o ruta
+  SOURCE_URL_HELP: Remote URL for ICS/CalDAV/JSON, or relative path under the plugin for local sources.
+  SOURCE_REFRESH: Refresh interval
+  SOURCE_REFRESH_HELP: Override global sync interval for this source, or inherit the default.
+  REFRESH_INHERIT: Inherit global interval
+  SOURCE_COLOR: Color del evento
+  SOURCE_DESCRIPTION: Descripción
+  AUTH_TYPE: Autenticación
+  AUTH_TYPE_HELP: Credentials are stored in config. Use environment overrides for production secrets.
+  AUTH_NONE: Ninguna
+  AUTH_BASIC: HTTP Basic
+  AUTH_BEARER: Token Bearer
+  AUTH_USERNAME: Usuario
+  AUTH_PASSWORD: Contraseña / token
+  DEFAULT_VIEW: Vista predeterminada
+  VIEW_CALENDAR: Calendario
+  VIEW_LIST: Lista
+  SECTION_CALENDAR_VIEW: Calendar view
+  CALENDAR_INITIAL_VIEW: Initial calendar layout
+  CAL_MONTH: Month grid
+  CAL_WEEK: Week timeline
+  CAL_DAY: Day timeline
+  CAL_LIST_WEEK: List (week)
+  FIRST_DAY: Primer día de la semana
+  SUNDAY: Domingo
+  MONDAY: Lunes
+  SATURDAY: Sábado
+  WEEK_NUMBERS: Show week numbers
+  SHOW_NOW_INDICATOR: Show current time indicator
+  NAV_LINKS: Clickable day/week links
+  SECTION_LIST_VIEW: List view
+  LIST_GROUP_BY: Group events by
+  GROUP_NONE: No grouping
+  GROUP_DAY: Day
+  GROUP_WEEK: Week
+  GROUP_MONTH: Month
+  LIST_SORT: Orden
+  SORT_ASC: Ascendente
+  SORT_DESC: Descendente
+  LIST_LIMIT: Maximum events per page
+  SHOW_PAST: Mostrar eventos pasados
+  PAST_DAYS: Past events window (days)
+  PAST_DAYS_HELP: When showing past events, limit how far back to query.
+  SHOW_DESCRIPTION: Mostrar descripciones
+  SHOW_LOCATION: Mostrar ubicaciones
+  SECTION_EVENT: Event display
+  LINK_EXTERNAL: Link to external URLs
+  OPEN_NEW_TAB: Open links in new tab
+  TRUNCATE_DESCRIPTION: Truncate description at (characters)
+  TRUNCATE_DESCRIPTION_HELP: 0 disables truncation.
+  SHOW_SOURCE_BADGE: Show source badge
+  TAB_SEARCH_LABEL: Search
+  SEARCH_ENABLED: Activar búsqueda
+  MIN_QUERY_LENGTH: Minimum query length
+  MAX_RESULTS: Maximum results
+  SEARCH_FIELDS: Searchable fields
+  SEARCH_FIELDS_HELP: Event fields included in full-text search.
+  SEARCH_HIGHLIGHT: Highlight matches
+  FILTERS_ENABLED: Activar filtros
+  SHOW_SOURCE_FILTER: Source filter
+  SHOW_CATEGORY_FILTER: Category filter
+  SHOW_DATE_RANGE_FILTER: Date range filter
+  PERSIST_IN_URL: Persist filters in URL
+  PERSIST_IN_URL_HELP: Allows sharing filtered views via query parameters.
+  DASHBOARD_WIDGET_TITLE: OpenCalendar
+  DASHBOARD_EVENTS: eventos
+  DASHBOARD_SOURCES: fuentes
+  DASHBOARD_ERRORS: con errores
+  DASHBOARD_OPEN_PLUGIN: Abrir ajustes del plugin
+  SECTION_API: API REST
+  API_ENABLED: Activar API
+  API_ENABLED_HELP: Expose read-only JSON endpoints. Restrict access on public sites.
+  API_ROUTE: API route prefix
+  RATE_LIMIT: Rate limiting
+  RATE_LIMIT_MAX: Max requests per window
+  SECTION_WEBHOOK: Sync por webhook
+  WEBHOOK_ENABLED: Activar webhook
+  WEBHOOK_ENABLED_HELP: Allow external systems to trigger a forced sync via HTTP (requires secret).
+  WEBHOOK_ROUTE: Ruta del webhook
+  WEBHOOK_SECRET: Secreto compartido
+  WEBHOOK_SECRET_HELP: 'Send as X-OpenCalendar-Token header, Authorization: Bearer, or ?token=.'
+  WEBHOOK_ALLOW_SOURCE: Allow source parameter
+  WEBHOOK_ALLOW_SOURCE_HELP: Accept ?source= or JSON body source to sync a single calendar.
+  SECTION_EXPORT: Exportación ICS
+  EXPORT_ENABLED: Activar exportación ICS
+  EXPORT_ENABLED_HELP: Publish an aggregated text/calendar feed for subscription in other calendar apps.
+  EXPORT_ROUTE: Ruta de exportación
+  EXPORT_CALENDAR_NAME: Nombre del calendario
+  EXPORT_MAX_EVENTS: Eventos máximos
+  SECTION_ADVANCED: Opciones avanzadas
+  DEBUG: Modo depuración
+  LOG_LEVEL: Log level
+  HTTP_TIMEOUT: HTTP timeout (seconds)
+  VERIFY_SSL: Verify SSL certificates
+  SCHEDULER_ENABLED: Integración con Grav Scheduler
+  SCHEDULER_ENABLED_HELP: Register sync and cleanup jobs with the Grav Scheduler plugin.
+  DEDUPLICATE: Deduplicate events
+  DEDUPLICATE_HELP: Merge identical events from multiple sources using UID and timestamps.
+  EXPAND_RECURRING: Expand recurring events
+  EXPAND_RECURRING_HELP: Materialize RRULE occurrences into individual rows for querying.
+  RECURRING_HORIZON: Recurring horizon (days)
+  FRONTEND_TITLE: Calendario
+  FRONTEND_NO_EVENTS: No se encontraron eventos.
+  FRONTEND_LOADING: Cargando eventos…
+  FRONTEND_ERROR: No se pudieron cargar los eventos del calendario.
+  FRONTEND_SEARCH: Buscar
+  FRONTEND_SEARCH_PLACEHOLDER: Buscar eventos…
+  FRONTEND_FILTER_SOURCES: Calendario
+  FRONTEND_FILTER_CATEGORIES: Categoría
+  FRONTEND_FILTER_FROM: Desde
+  FRONTEND_FILTER_TO: Hasta
+  FRONTEND_FILTER_APPLY: Aplicar filtros
+  FRONTEND_FILTER_RESET: Restablecer
+  FRONTEND_ALL: Todos
+  FRONTEND_ALL_SOURCES: All sources
+  FRONTEND_ALL_CATEGORIES: All categories
+  FRONTEND_TODAY: Hoy
+  FRONTEND_PREVIOUS: Anterior
+  FRONTEND_NEXT: Siguiente
+  FRONTEND_MONTH: Mes
+  FRONTEND_WEEK: Semana
+  FRONTEND_DAY: Día
+  FRONTEND_LIST: Lista
+  FRONTEND_AGENDA: Agenda
+  FRONTEND_ALL_DAY: Todo el día
+  FRONTEND_LOCATION: Ubicación
+  FRONTEND_SOURCE: Fuente
+  FRONTEND_READ_MORE: Read more
+  FRONTEND_RESULTS: '%1 events found'
+  FRONTEND_PAGE: 'Page %1 of %2'
+  FRONTEND_PAGINATION: Event pagination
+  FRONTEND_CLOSE: Cerrar
+  FRONTEND_DATE: Fecha
+  FRONTEND_TIME: Hora
+  FRONTEND_ORGANIZER: Organizador
+  FRONTEND_CATEGORIES: Categorías
+  FRONTEND_ATTACHMENTS: Attachments
+  FRONTEND_ATTACHMENT: Attachment
+  FRONTEND_DESCRIPTION: Descripción
+  FRONTEND_URL: Sitio web
+  ERROR_SYNC_FAILED: 'Falló la sincronización de la fuente «%s».'
+  ERROR_SOURCE_DISABLED: 'La fuente «%s» está desactivada.'
+  ERROR_SOURCE_NOT_FOUND: Fuente de calendario no encontrada.
+  ERROR_INVALID_URL: Invalid source URL or path.
+  ERROR_HTTP: HTTP error while fetching calendar data.
+  ERROR_PARSE: Failed to parse calendar data.
+  ERROR_STORAGE: Database error. Check permissions and disk space.
+  ERROR_API_DISABLED: La API de OpenCalendar está desactivada.
+  ERROR_RATE_LIMIT: Demasiadas solicitudes. Inténtelo más tarde.
+  ERROR_SEARCH_DISABLED: La búsqueda está desactivada.
+  ERROR_QUERY_TOO_SHORT: La consulta de búsqueda es demasiado corta.

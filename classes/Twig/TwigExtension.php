@@ -31,7 +31,40 @@ class TwigExtension extends AbstractExtension
             new TwigFunction('opencalendar_events', [$this, 'events']),
             new TwigFunction('opencalendar_calendars', [$this, 'calendars']),
             new TwigFunction('opencalendar_categories', [$this, 'categories']),
+            new TwigFunction('opencalendar_export_url', [$this, 'exportUrl']),
         ];
+    }
+
+    /**
+     * Public ICS export URL (empty string when export is disabled).
+     *
+     * @param array<string, scalar|null> $query
+     */
+    public function exportUrl(array $query = []): string
+    {
+        $export = $this->config['export'] ?? [];
+        if (is_array($export) && array_key_exists('enabled', $export) && !$export['enabled']) {
+            return '';
+        }
+
+        $route = '/opencalendar/calendar.ics';
+        if (is_array($export) && !empty($export['route'])) {
+            $route = (string) $export['route'];
+        }
+
+        if ($query === []) {
+            return $route;
+        }
+
+        $parts = [];
+        foreach ($query as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $parts[] = rawurlencode((string) $key) . '=' . rawurlencode((string) $value);
+        }
+
+        return $parts === [] ? $route : $route . '?' . implode('&', $parts);
     }
 
     /**

@@ -7,6 +7,8 @@ namespace Grav\Plugin\OpenCalendar\Services;
 use Grav\Plugin\OpenCalendar\Dto\SourceConfig;
 use Grav\Plugin\OpenCalendar\Enum\CleanupPolicy;
 use Grav\Plugin\OpenCalendar\Enum\SyncInterval;
+use Grav\Plugin\OpenCalendar\Events\EventDispatcherInterface;
+use Grav\Plugin\OpenCalendar\Events\NullEventDispatcher;
 use Grav\Plugin\OpenCalendar\Http\CurlHttpClient;
 use Grav\Plugin\OpenCalendar\Http\HttpClientInterface;
 use Grav\Plugin\OpenCalendar\Logging\LoggerInterface;
@@ -40,6 +42,7 @@ final class Container
         private readonly LoggerInterface $logger = new NullLogger(),
         private readonly ?HttpClientInterface $httpClient = null,
         private readonly ?string $userDataPath = null,
+        private readonly EventDispatcherInterface $dispatcher = new NullEventDispatcher(),
     ) {
     }
 
@@ -135,6 +138,7 @@ final class Container
             $this->calendarRepository(),
             $this->eventRepository(),
             $this->logger,
+            $this->dispatcher,
         );
 
         $this->syncService = new SyncService(
@@ -146,6 +150,7 @@ final class Container
             cleanup: CleanupPolicy::fromConfig($this->config['cleanup'] ?? 30),
             vacuumOnCleanup: (bool) ($this->config['storage']['vacuum_on_cleanup'] ?? false),
             logger: $this->logger,
+            dispatcher: $this->dispatcher,
         );
 
         return $this->syncService;

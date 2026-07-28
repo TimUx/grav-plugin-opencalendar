@@ -215,11 +215,11 @@ Guide: [docs/FAQ.md](docs/FAQ.md)
 
 - [x] CalDAV discovery and multi-collection sync
 - [x] JSON API and local file source adapters
-- [ ] Admin dashboard widget with sync status
-- [ ] Webhook-triggered sync for push updates
-- [ ] Export to ICS
-- [ ] Additional language packs
-- [ ] Event pipeline hooks for custom processing
+- [x] Admin dashboard widget with sync status
+- [x] Webhook-triggered sync for push updates
+- [x] Export to ICS
+- [x] Additional language packs
+- [x] Event pipeline hooks for custom processing
 
 Track progress on [GitHub Issues](https://github.com/TimUx/grav-plugin-opencalendar/issues).
 

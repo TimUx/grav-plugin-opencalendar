@@ -36,6 +36,12 @@ class Event implements \ArrayAccess
     /** @var array<string, mixed> */
     private array $data = [];
 
+    /** @param array<string, mixed> $data */
+    public function __construct(array $data = [])
+    {
+        $this->data = $data;
+    }
+
     public function offsetExists(mixed $offset): bool
     {
         return isset($this->data[$offset]);

@@ -78,13 +78,38 @@ GET /opencalendar/api/events?from=2026-07-01&to=2026-07-31&limit=50
 
 Single event by UID.
 
-### `GET /sources`
+### `GET /calendars` (alias: `/sources`)
 
 List configured sources (names, colors, enabled — no credentials).
 
 ### `GET /categories`
 
 Distinct categories across all events.
+
+### `GET /export.ics` (alias: `/calendar.ics`)
+
+Aggregated ICS feed of stored events. Same filters as `/events` (`from`, `to`, `source`, `category`, `q`, `limit`). Returns `text/calendar`.
+
+Also available as a dedicated route when `export.enabled` is true (default `/opencalendar/calendar.ics`) — this works even if the JSON API is disabled.
+
+## Webhook sync
+
+Independent of the JSON API. Enable under `webhook:`:
+
+```yaml
+webhook:
+  enabled: true
+  route: /opencalendar/webhook
+  secret: 'change-me'
+  allow_source_param: true
+```
+
+```
+POST /opencalendar/webhook
+X-OpenCalendar-Token: change-me
+```
+
+Optional: `?source=my-calendar` or JSON body `{"source":"my-calendar"}` to sync one source. Accepts `Authorization: Bearer …` or `?token=` as well.
 
 ## Rate limiting
 

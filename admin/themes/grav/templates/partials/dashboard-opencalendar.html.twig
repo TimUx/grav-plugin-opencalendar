@@ -1,0 +1,48 @@
+{% if authorize(['admin.login', 'admin.super']) %}
+{% set status = opencalendar_status|default({ calendars: [], event_count: 0, source_count: 0, error_count: 0 }) %}
+{% set calendars = status.calendars|default([]) %}
+{% set error_count = status.error_count|default(0) %}
+
+<div class="dashboard-item dashboard-opencalendar">
+  <div class="secondary-accent default-box-shadow">
+    <h1>
+      <i class="fa fa-calendar"></i>
+      {{ 'PLUGIN_OPENCALENDAR.DASHBOARD_WIDGET_TITLE'|t }}
+    </h1>
+
+    <div class="oc-dashboard-widget">
+      <p class="oc-dashboard-widget__stats">
+        <strong>{{ status.event_count|default(0) }}</strong>
+        {{ 'PLUGIN_OPENCALENDAR.DASHBOARD_EVENTS'|t }}
+        ·
+        <strong>{{ status.source_count|default(calendars|length) }}</strong>
+        {{ 'PLUGIN_OPENCALENDAR.DASHBOARD_SOURCES'|t }}
+        {% if error_count > 0 %}
+          · <span class="oc-dashboard-widget__errors">{{ error_count }} {{ 'PLUGIN_OPENCALENDAR.DASHBOARD_ERRORS'|t }}</span>
+        {% endif %}
+      </p>
+
+      {% if calendars is empty %}
+        <p class="oc-dashboard-widget__empty">{{ 'PLUGIN_OPENCALENDAR.SYNC_NO_CALENDARS'|t }}</p>
+      {% else %}
+        <ul class="oc-dashboard-widget__list">
+          {% for cal in calendars|slice(0, 6) %}
+            <li>
+              <span class="oc-sync-status oc-sync-status--{{ cal.status|e }}">{{ cal.status }}</span>
+              <strong>{{ cal.name }}</strong>
+              <em>{{ cal.last_sync_at|default('—') }}</em>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="flush-bottom button-bar">
+        <a class="button" href="{{ base_url_relative|default('/admin') }}/plugins/opencalendar">
+          <i class="fa fa-cog"></i>
+          {{ 'PLUGIN_OPENCALENDAR.DASHBOARD_OPEN_PLUGIN'|t }}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}

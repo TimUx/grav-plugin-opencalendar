@@ -138,15 +138,24 @@ final class AdminController
             $message = sprintf('OK — removed %d orphaned calendar(s) no longer in Sources.', $pruned);
         }
 
+        $calendars = $this->container->calendarService()->listCalendars();
+        $errorCount = 0;
+        foreach ($calendars as $calendar) {
+            if ($calendar->status === SyncStatus::Error) {
+                ++$errorCount;
+            }
+        }
+
         return [
             'ok' => true,
             'message' => $message,
             'calendars' => array_map(
                 static fn ($c) => $c->toArray(),
-                $this->container->calendarService()->listCalendars()
+                $calendars
             ),
             'event_count' => $this->container->calendarService()->eventCount(),
             'source_count' => count($this->container->sourceConfigs()),
+            'error_count' => $errorCount,
             'pruned' => $pruned,
         ];
     }

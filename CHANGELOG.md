@@ -1,3 +1,16 @@
+# v1.1.0
+## 07/29/2026
+
+1. [](#new)
+    * Admin home dashboard widget with sync status summary
+    * Webhook endpoint for push-triggered forced sync (shared secret)
+    * Public ICS export feed (`export.route` and `/export.ics` via API)
+    * Event pipeline hooks for custom processing (`opencalendar.*` Grav events)
+    * Language packs: French, Spanish, Dutch, and Italian
+2. [](#improved)
+    * Optional sync on Grav cache clear (`advanced.scheduler.on_cache_clear`)
+    * Twig helper `opencalendar_export_url()` for subscribe links
+
 # v1.0.1
 ## 07/29/2026
 

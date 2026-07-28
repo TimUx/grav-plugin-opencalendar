@@ -124,6 +124,20 @@ api:
     default_limit: 50
     max_limit: 200
 
+# Push-triggered sync (independent of JSON API). Requires a shared secret.
+webhook:
+  enabled: false
+  route: /opencalendar/webhook
+  secret: ''
+  allow_source_param: true
+
+# Public ICS feed of aggregated events
+export:
+  enabled: true
+  route: /opencalendar/calendar.ics
+  calendar_name: OpenCalendar
+  max_events: 5000
+
 advanced:
   debug: false
   log_level: warning

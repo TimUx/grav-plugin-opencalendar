@@ -67,7 +67,8 @@ Integration tests that need Grav should be tagged and documented separately when
 
 1. Add defaults to `opencalendar.yaml`
 2. Add Admin fields to `blueprints.yaml`
-3. Add translation keys to `languages/en.yaml` and `languages/de.yaml`
+3. Add translation keys to all packs under `languages/` (`en`, `de`, `fr`, `es`, `nl`, `it`)
+
 4. Document in `docs/Configuration.md`
 
 Keep YAML and blueprint field paths synchronized.

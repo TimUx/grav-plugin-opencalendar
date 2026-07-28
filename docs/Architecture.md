@@ -92,15 +92,18 @@ Runtime behavior is driven by `opencalendar.yaml` with no hard-coded feed URLs. 
 |-----------|-------|
 | `onPluginsInitialized` | Register services, routes |
 | `onTwigExtensions` | Add filters/functions |
-| `onPageInitialized` | Shortcode processing |
+| `onPageContentProcessed` | Shortcode processing |
+| `onPagesInitialized` | API, webhook, ICS export routes |
 | `onSchedulerInitialized` | Register sync/cleanup jobs |
-| `onAssetsInitialized` | Register CSS/JS |
+| `onCacheClear` | Optional sync when Grav cache is cleared |
+| `onAdminDashboard` | Home dashboard sync-status widget |
+| `onAdminTwigTemplatePaths` | Admin templates (sync field, dashboard) |
 
 ## Dependencies
 
 | Package | Role |
 |---------|------|
-| `sabre/vobject` | ICS/iCalendar parsing and validation |
+| `sabre/vobject` | ICS/iCalendar parsing and export |
 
 Grav core provides HTTP client utilities, caching, logging, and Twig.
 
@@ -108,7 +111,34 @@ Grav core provides HTTP client utilities, caching, logging, and Twig.
 
 - **Custom source types** — implement adapter + register in source factory
 - **Twig filters** — documented in [Twig.md](Twig.md)
-- **Event pipeline hooks** — future hooks before/after import (planned)
+- **Event pipeline hooks** — other plugins can subscribe to:
+
+| Event | When | Mutable payload |
+|-------|------|-----------------|
+| `opencalendar.events.parsed` | After parse, before persist | `events`, `source`, `calendar`, `fetch` |
+| `opencalendar.events.before_persist` | Immediately before SQLite upsert | `events`, `source`, `calendar` |
+| `opencalendar.sync.source.completed` | After each source finishes | `result`, `source`, `calendar` |
+| `opencalendar.sync.completed` | After syncAll / syncOne | `results`, `sources`, `force` |
+
+Example listener (in another Grav plugin):
+
+```php
+public static function getSubscribedEvents(): array
+{
+    return [
+        'opencalendar.events.before_persist' => ['filterEvents', 0],
+    ];
+}
+
+public function filterEvents(\RocketTheme\Toolbox\Event\Event $event): void
+{
+    $events = $event['events'] ?? [];
+    $event['events'] = array_values(array_filter(
+        $events,
+        static fn ($e) => !str_contains(strtolower((string) $e->title), 'internal')
+    ));
+}
+```
 
 ## Testing strategy
 
