@@ -76,6 +76,7 @@ class OpenCalendarPlugin extends Plugin
         if ($this->isAdmin()) {
             $this->enable([
                 'onTwigSiteVariables' => ['onAdminTwigSiteVariables', 0],
+                'onAdminTwigTemplatePaths' => ['onAdminTwigTemplatePaths', 0],
                 'onAdminMenu' => ['onAdminMenu', 0],
                 'onPagesInitialized' => ['onAdminPagesInitialized', 0],
                 'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
@@ -108,6 +109,24 @@ class OpenCalendarPlugin extends Plugin
     public function onTwigTemplatePaths(): void
     {
         $this->grav['twig']->twig_paths[] = __DIR__ . '/templates';
+
+        if ($this->isAdmin()) {
+            $this->grav['twig']->twig_paths[] = __DIR__ . '/admin/themes/grav/templates';
+        }
+    }
+
+    /**
+     * @param Event $event
+     */
+    public function onAdminTwigTemplatePaths($event): void
+    {
+        $paths = $event['paths'] ?? [];
+        if (!is_array($paths)) {
+            $paths = [];
+        }
+
+        $paths[] = __DIR__ . '/admin/themes/grav/templates';
+        $event['paths'] = $paths;
     }
 
     public function onTwigExtensions(): void
@@ -137,6 +156,11 @@ class OpenCalendarPlugin extends Plugin
 
     public function onAdminTwigSiteVariables(): void
     {
+        $assets = $this->grav['assets'];
+        $base = 'plugin://opencalendar';
+        $assets->addCss($base . '/assets/admin/opencalendar-admin.css');
+        $assets->addJs($base . '/assets/admin/opencalendar-admin.js', ['group' => 'bottom']);
+
         try {
             $status = (new AdminController($this->container()))->status();
             $this->grav['twig']->twig_vars['opencalendar_status'] = $status;
@@ -223,15 +247,16 @@ class OpenCalendarPlugin extends Plugin
     public function onAdminPagesInitialized(): void
     {
         $uri = $this->grav['uri'];
-        $paths = $uri->paths();
+        $paths = array_values($uri->paths());
 
-        // /admin/plugins/opencalendar/sync|rebuild|clear-cache
-        if (($paths[0] ?? '') !== 'admin' || ($paths[1] ?? '') !== 'plugins' || ($paths[2] ?? '') !== 'opencalendar') {
+        // Support both /admin/plugins/opencalendar/... and paths without the admin prefix.
+        $pluginIndex = array_search('opencalendar', $paths, true);
+        if ($pluginIndex === false || ($paths[$pluginIndex - 1] ?? '') !== 'plugins') {
             return;
         }
 
-        $action = $paths[3] ?? null;
-        if ($action === null) {
+        $action = $paths[$pluginIndex + 1] ?? null;
+        if ($action === null || $action === '') {
             return;
         }
 
@@ -240,7 +265,7 @@ class OpenCalendarPlugin extends Plugin
             'sync' => $admin->syncNow(isset($_GET['source']) ? (string) $_GET['source'] : null),
             'rebuild' => $admin->rebuildDatabase(),
             'clear-cache' => $admin->clearCache(),
-            'status' => ['ok' => true, 'message' => 'OK'] + $admin->status(),
+            'status' => array_merge(['ok' => true, 'message' => 'OK'], $admin->status()),
             default => null,
         };
 

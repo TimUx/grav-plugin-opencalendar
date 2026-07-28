@@ -81,13 +81,15 @@ final class AdminController
     }
 
     /**
-     * @return array{calendars: list<array<string, mixed>>, event_count: int}
+     * @return array{ok: bool, message: string, calendars: list<array<string, mixed>>, event_count: int}
      */
     public function status(): array
     {
         $this->container->boot();
 
         return [
+            'ok' => true,
+            'message' => 'OK',
             'calendars' => array_map(
                 static fn ($c) => $c->toArray(),
                 $this->container->calendarService()->listCalendars()

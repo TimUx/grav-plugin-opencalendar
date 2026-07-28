@@ -1,0 +1,109 @@
+{% extends "forms/field.html.twig" %}
+
+{% block field %}
+{% set status = opencalendar_status|default({ calendars: [], event_count: 0 }) %}
+{% set calendars = status.calendars|default([]) %}
+{% set admin_base = base_url_relative|default('/admin') %}
+
+<div class="form-field grid vertical oc-sync-dashboard">
+  <div class="form-data block size-1-1">
+    <p class="oc-sync-dashboard__help">{{ 'PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_HELP'|t }}</p>
+
+    <p class="oc-sync-dashboard__count">
+      <strong>{{ 'PLUGIN_OPENCALENDAR.SYNC_EVENT_COUNT'|t }}:</strong>
+      <span data-oc-event-count>{{ status.event_count|default(0) }}</span>
+    </p>
+
+    <div class="oc-sync-dashboard__actions">
+      <button type="button" class="button" data-oc-admin-action="sync">
+        {{ 'PLUGIN_OPENCALENDAR.SYNC_NOW'|t }}
+      </button>
+      <button type="button" class="button" data-oc-admin-action="rebuild">
+        {{ 'PLUGIN_OPENCALENDAR.REBUILD_DATABASE'|t }}
+      </button>
+      <button type="button" class="button" data-oc-admin-action="clear-cache">
+        {{ 'PLUGIN_OPENCALENDAR.CLEAR_CACHE'|t }}
+      </button>
+      <button type="button" class="button secondary" data-oc-admin-action="status">
+        {{ 'PLUGIN_OPENCALENDAR.REFRESH_STATUS'|t }}
+      </button>
+    </div>
+
+    <div class="oc-sync-dashboard__message" data-oc-admin-message hidden></div>
+
+    <div class="oc-sync-dashboard__table-wrap">
+      <table class="oc-sync-dashboard__table" data-oc-sync-table>
+        <thead>
+          <tr>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_SOURCE'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_STATUS'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_LAST_SYNC'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_DURATION'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_IMPORTED'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_UPDATED'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_DELETED'|t }}</th>
+            <th>{{ 'PLUGIN_OPENCALENDAR.SYNC_COL_ERROR'|t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if calendars is empty %}
+            <tr>
+              <td colspan="9">{{ 'PLUGIN_OPENCALENDAR.SYNC_NO_CALENDARS'|t }}</td>
+            </tr>
+          {% else %}
+            {% for cal in calendars %}
+              <tr>
+                <td>
+                  <strong>{{ cal.name }}</strong>
+                  <div class="oc-sync-dashboard__key">{{ cal.source_key }}</div>
+                </td>
+                <td><span class="oc-sync-status oc-sync-status--{{ cal.status|e }}">{{ cal.status }}</span></td>
+                <td>{{ cal.last_sync_at|default('—') }}</td>
+                <td>{% if cal.last_sync_duration_ms is not null %}{{ cal.last_sync_duration_ms }} ms{% else %}—{% endif %}</td>
+                <td>{{ cal.imported_count|default(0) }}</td>
+                <td>{{ cal.updated_count|default(0) }}</td>
+                <td>{{ cal.deleted_count|default(0) }}</td>
+                <td class="oc-sync-dashboard__error">{{ cal.last_error|default('') }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="button small"
+                    data-oc-admin-action="sync"
+                    data-oc-source="{{ cal.source_key|e('html_attr') }}"
+                  >
+                    {{ 'PLUGIN_OPENCALENDAR.SYNC_ONE'|t }}
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="oc-sync-admin-config">
+{{ {
+  base: admin_base ~ '/plugins/opencalendar',
+  labels: {
+    ok: 'PLUGIN_OPENCALENDAR.SYNC_ACTION_OK'|t,
+    error: 'PLUGIN_OPENCALENDAR.SYNC_ACTION_ERROR'|t,
+    running: 'PLUGIN_OPENCALENDAR.SYNC_ACTION_RUNNING'|t,
+    no_calendars: 'PLUGIN_OPENCALENDAR.SYNC_NO_CALENDARS'|t,
+    columns: {
+      source: 'PLUGIN_OPENCALENDAR.SYNC_COL_SOURCE'|t,
+      status: 'PLUGIN_OPENCALENDAR.SYNC_COL_STATUS'|t,
+      last_sync: 'PLUGIN_OPENCALENDAR.SYNC_COL_LAST_SYNC'|t,
+      duration: 'PLUGIN_OPENCALENDAR.SYNC_COL_DURATION'|t,
+      imported: 'PLUGIN_OPENCALENDAR.SYNC_COL_IMPORTED'|t,
+      updated: 'PLUGIN_OPENCALENDAR.SYNC_COL_UPDATED'|t,
+      deleted: 'PLUGIN_OPENCALENDAR.SYNC_COL_DELETED'|t,
+      error: 'PLUGIN_OPENCALENDAR.SYNC_COL_ERROR'|t,
+      sync_one: 'PLUGIN_OPENCALENDAR.SYNC_ONE'|t
+    }
+  }
+}|json_encode|raw }}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+.oc-sync-dashboard {
+  margin: 0.5rem 0 1.5rem;
+}
+
+.oc-sync-dashboard__help {
+  margin: 0 0 1rem;
+  color: #666;
+}
+
+.oc-sync-dashboard__count {
+  margin: 0 0 1rem;
+}
+
+.oc-sync-dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.oc-sync-dashboard__message {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: #eef6ff;
+  border: 1px solid #c5dbf5;
+}
+
+.oc-sync-dashboard__message.is-error {
+  background: #fff1f0;
+  border-color: #f5c2c0;
+  color: #8a1f11;
+}
+
+.oc-sync-dashboard__message.is-ok {
+  background: #f0fff4;
+  border-color: #b7e4c7;
+  color: #1b4332;
+}
+
+.oc-sync-dashboard__table-wrap {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.oc-sync-dashboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.oc-sync-dashboard__table th,
+.oc-sync-dashboard__table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.oc-sync-dashboard__table th {
+  background: #f7f7f7;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oc-sync-dashboard__key {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.oc-sync-dashboard__error {
+  color: #8a1f11;
+  max-width: 16rem;
+  word-break: break-word;
+}
+
+.oc-sync-status {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #eee;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.oc-sync-status--success {
+  background: #d8f3dc;
+  color: #1b4332;
+}
+
+.oc-sync-status--error {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.oc-sync-status--skipped,
+.oc-sync-status--running {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+.oc-sync-status--idle {
+  background: #e9ecef;
+  color: #495057;
+}

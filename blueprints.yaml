@@ -721,26 +721,6 @@ form:
           title: PLUGIN_OPENCALENDAR.TAB_SYNC
 
           fields:
-            sync_dashboard_help:
-              type: display
-              markdown: true
-              content: "PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_HELP"
-
-            sync_dashboard_status:
-              type: display
-              markdown: true
-              content: |
-                **PLUGIN_OPENCALENDAR.SYNC_EVENT_COUNT:** {{ opencalendar_status.event_count|default(0) }}
-
-                | Source | Status | Last Sync | Duration | Imported | Updated | Deleted | Error |
-                | --- | --- | --- | --- | --- | --- | --- | --- |
-                {% for cal in opencalendar_status.calendars|default([]) %}
-                | {{ cal.name }} | {{ cal.status }} | {{ cal.last_sync_at|default('—') }} | {{ cal.last_sync_duration_ms|default('—') }} ms | {{ cal.imported_count }} | {{ cal.updated_count }} | {{ cal.deleted_count }} | {{ cal.last_error|default('') }} |
-                {% else %}
-                | — | — | — | — | — | — | — | — |
-                {% endfor %}
-
-            sync_dashboard_actions:
-              type: display
-              markdown: true
-              content: "PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_ACTIONS"
+            sync_panel:
+              type: opencalendar_sync
+              label: PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_TITLE
