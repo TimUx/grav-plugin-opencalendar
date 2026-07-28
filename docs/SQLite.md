@@ -4,16 +4,25 @@ OpenCalendar persists normalized events in SQLite for fast queries, search, and 
 
 ## Database location
 
-Default path: `user/plugins/opencalendar/data/opencalendar.db`
+Default path: `user/data/opencalendar/opencalendar.db`
 
 Configure via:
+
+```yaml
+storage:
+  path: user-data://opencalendar/opencalendar.db
+```
+
+`user-data://` resolves to Grav’s writable `user/data/` directory (recommended).
+
+Legacy plugin-relative paths still work:
 
 ```yaml
 storage:
   path: data/opencalendar.db
 ```
 
-Paths relative to the plugin directory are recommended for standard Grav installs. Use absolute paths when deploying to read-only plugin directories with writable volumes.
+Those require the web server user (e.g. `www-data`) to own `user/plugins/opencalendar/data/`. Absolute paths are also supported for custom volumes.
 
 ## Schema overview
 

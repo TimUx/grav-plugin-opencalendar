@@ -150,7 +150,7 @@ form:
               type: text
               label: PLUGIN_OPENCALENDAR.STORAGE_PATH
               help: PLUGIN_OPENCALENDAR.STORAGE_PATH_HELP
-              default: data/opencalendar.db
+              default: user-data://opencalendar/opencalendar.db
               validate:
                 type: text
 

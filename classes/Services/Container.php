@@ -39,6 +39,7 @@ final class Container
         private readonly mixed $gravCache = null,
         private readonly LoggerInterface $logger = new NullLogger(),
         private readonly ?HttpClientInterface $httpClient = null,
+        private readonly ?string $userDataPath = null,
     ) {
     }
 
@@ -54,8 +55,8 @@ final class Container
             return $this->database;
         }
 
-        $relative = (string) ($this->config['storage']['path'] ?? 'data/opencalendar.db');
-        $path = $this->resolvePath($relative);
+        $configured = (string) ($this->config['storage']['path'] ?? 'user-data://opencalendar/opencalendar.db');
+        $path = $this->resolvePath($configured);
         $wal = (bool) ($this->config['storage']['wal_mode'] ?? true);
 
         $this->database = new Database($path, $wal);
@@ -220,10 +221,24 @@ final class Container
 
     private function resolvePath(string $path): string
     {
-        if ($path !== '' && ($path[0] === '/' || preg_match('#^[A-Za-z]:[/\\\\]#', $path) === 1)) {
+        $path = trim($path);
+        if ($path === '') {
+            $path = 'user-data://opencalendar/opencalendar.db';
+        }
+
+        if (str_starts_with($path, 'user-data://')) {
+            $relative = ltrim(substr($path, strlen('user-data://')), '/');
+            $base = $this->userDataPath
+                ?? (dirname($this->pluginPath, 2) . '/data');
+
+            return rtrim($base, '/') . '/' . $relative;
+        }
+
+        if ($path[0] === '/' || preg_match('#^[A-Za-z]:[/\\\\]#', $path) === 1) {
             return $path;
         }
 
+        // Legacy relative paths remain under the plugin directory.
         return rtrim($this->pluginPath, '/') . '/' . ltrim($path, '/');
     }
 }

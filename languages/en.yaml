@@ -74,7 +74,7 @@ PLUGIN_OPENCALENDAR:
 
   # Storage
   STORAGE_PATH: Database path
-  STORAGE_PATH_HELP: 'Relative to the plugin folder unless an absolute path is given.'
+  STORAGE_PATH_HELP: 'Preferred: user-data://opencalendar/opencalendar.db (writable Grav user data). Plugin-relative paths like data/opencalendar.db still work but need write permissions for the web server.'
   WAL_MODE: SQLite WAL mode
   WAL_MODE_HELP: 'Write-Ahead Logging improves read concurrency. Recommended for production.'
   VACUUM_ON_CLEANUP: VACUUM on cleanup

@@ -24,8 +24,11 @@ cleanup: 30
 sync_interval: 15
 
 storage:
-  # Relative to plugin directory unless absolute path
-  path: data/opencalendar.db
+  # Prefer Grav user data (writable). Legacy plugin-relative paths still work.
+  # Examples:
+  #   user-data://opencalendar/opencalendar.db
+  #   data/opencalendar.db   (relative to plugin directory)
+  path: user-data://opencalendar/opencalendar.db
   # WAL mode improves concurrent read performance
   wal_mode: true
   # Run VACUUM during scheduled maintenance
