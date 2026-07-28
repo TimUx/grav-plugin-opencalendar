@@ -11,15 +11,16 @@ use Twig\TwigFunction;
 
 /**
  * Twig helpers: {{ opencalendar() }}, {{ opencalendar_events() }}, etc.
- *
- * Extends Twig\Extension\AbstractExtension when Twig is available; otherwise
- * provides a compatible callable API used by the plugin renderer.
  */
 class TwigExtension extends AbstractExtension
 {
+    /**
+     * @param callable(string, array<int|string, scalar|null>=): string|null $translator
+     */
     public function __construct(
         private readonly CalendarService $calendarService,
         private readonly array $config = [],
+        private readonly mixed $translator = null,
     ) {
     }
 
@@ -72,7 +73,7 @@ class TwigExtension extends AbstractExtension
 
         $instanceId = 'oc-' . bin2hex(random_bytes(4));
         $theme = (string) ($options['theme'] ?? $this->config['theme'] ?? 'auto');
-        $locale = (string) ($options['locale'] ?? $this->config['locale'] ?? 'auto');
+        $locale = $this->resolveLocale((string) ($options['locale'] ?? $this->config['locale'] ?? 'auto'));
         $timezone = (string) ($this->config['timezone'] ?? 'UTC');
 
         $calendarConfig = is_array($this->config['display']['calendar'] ?? null)
@@ -82,12 +83,15 @@ class TwigExtension extends AbstractExtension
             ? $this->config['display']['list']
             : [];
 
+        $i18n = $this->frontendI18n();
+
         $payload = [
             'instanceId' => $instanceId,
             'view' => $view,
             'theme' => $theme,
             'locale' => $locale,
             'timezone' => $timezone,
+            'i18n' => $i18n,
             'events' => array_map(static fn ($e) => $e->toCalendarEvent(), $result->items),
             'eventsList' => array_map(static fn ($e) => $e->toArray(), $result->items),
             'meta' => [
@@ -136,8 +140,9 @@ class TwigExtension extends AbstractExtension
         $instanceEsc = htmlspecialchars($instanceId, ENT_QUOTES, 'UTF-8');
         $themeEsc = htmlspecialchars($theme, ENT_QUOTES, 'UTF-8');
         $viewEsc = htmlspecialchars($view, ENT_QUOTES, 'UTF-8');
+        $localeEsc = htmlspecialchars($locale, ENT_QUOTES, 'UTF-8');
 
-        $filtersHtml = $this->renderFilters($payload, $instanceId);
+        $filtersHtml = $this->renderFilters($payload);
         $listHtml = $showList ? $this->renderList($payload) : '';
         $calendarHtml = !$showList
             ? '<div class="oc-calendar" data-oc-calendar data-initial-view="'
@@ -145,8 +150,16 @@ class TwigExtension extends AbstractExtension
                 . '" style="height:' . $height . '"></div>'
             : '';
 
+        $close = htmlspecialchars($i18n['close'], ENT_QUOTES, 'UTF-8');
+        $date = htmlspecialchars($i18n['date'], ENT_QUOTES, 'UTF-8');
+        $time = htmlspecialchars($i18n['time'], ENT_QUOTES, 'UTF-8');
+        $location = htmlspecialchars($i18n['location'], ENT_QUOTES, 'UTF-8');
+        $organizer = htmlspecialchars($i18n['organizer'], ENT_QUOTES, 'UTF-8');
+        $calendar = htmlspecialchars($i18n['source'], ENT_QUOTES, 'UTF-8');
+        $categoriesLabel = htmlspecialchars($i18n['categories'], ENT_QUOTES, 'UTF-8');
+
         return <<<HTML
-<div class="opencalendar oc-root" id="{$instanceEsc}" data-oc-root data-theme="{$themeEsc}" data-view="{$viewEsc}" data-config="{$instanceEsc}-cfg">
+<div class="opencalendar oc-root" id="{$instanceEsc}" data-oc-root data-theme="{$themeEsc}" data-view="{$viewEsc}" data-locale="{$localeEsc}" data-config="{$instanceEsc}-cfg">
   {$filtersHtml}
   <div class="oc-body">
     {$calendarHtml}
@@ -155,15 +168,15 @@ class TwigExtension extends AbstractExtension
   <div class="oc-modal" data-oc-modal hidden>
     <div class="oc-modal__backdrop" data-oc-modal-close></div>
     <div class="oc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="{$instanceEsc}-title" tabindex="-1">
-      <button type="button" class="oc-modal__close" data-oc-modal-close aria-label="Close">&times;</button>
+      <button type="button" class="oc-modal__close" data-oc-modal-close aria-label="{$close}">&times;</button>
       <h2 class="oc-modal__title" id="{$instanceEsc}-title" data-oc-field="title"></h2>
       <dl class="oc-modal__meta">
-        <div><dt>Date</dt><dd data-oc-field="date"></dd></div>
-        <div><dt>Time</dt><dd data-oc-field="time"></dd></div>
-        <div><dt>Location</dt><dd data-oc-field="location"></dd></div>
-        <div><dt>Organizer</dt><dd data-oc-field="organizer"></dd></div>
-        <div><dt>Calendar</dt><dd data-oc-field="calendar"></dd></div>
-        <div><dt>Categories</dt><dd data-oc-field="categories"></dd></div>
+        <div><dt>{$date}</dt><dd data-oc-field="date"></dd></div>
+        <div><dt>{$time}</dt><dd data-oc-field="time"></dd></div>
+        <div><dt>{$location}</dt><dd data-oc-field="location"></dd></div>
+        <div><dt>{$organizer}</dt><dd data-oc-field="organizer"></dd></div>
+        <div><dt>{$calendar}</dt><dd data-oc-field="calendar"></dd></div>
+        <div><dt>{$categoriesLabel}</dt><dd data-oc-field="categories"></dd></div>
       </dl>
       <div class="oc-modal__description" data-oc-field="description"></div>
       <p class="oc-modal__url"><a data-oc-field="url" href="#" target="_blank" rel="noopener noreferrer"></a></p>
@@ -206,23 +219,29 @@ HTML;
     /**
      * @param array<string, mixed> $payload
      */
-    private function renderFilters(array $payload, string $instanceId): string
+    private function renderFilters(array $payload): string
     {
         $filters = is_array($payload['filters'] ?? null) ? $payload['filters'] : [];
         if (!($filters['enabled'] ?? true)) {
             return '';
         }
 
+        $i18n = is_array($payload['i18n'] ?? null) ? $payload['i18n'] : $this->frontendI18n();
         $searchEnabled = (bool) (($payload['search']['enabled'] ?? true));
         $html = '<form class="oc-filters" data-oc-filters method="get" role="search">';
 
         if ($searchEnabled) {
-            $html .= '<label class="oc-filters__search"><span class="oc-visually-hidden">Search</span>'
-                . '<input type="search" name="q" placeholder="Search events" data-oc-search autocomplete="off"></label>';
+            $html .= '<label class="oc-filters__search"><span class="oc-visually-hidden">'
+                . htmlspecialchars((string) $i18n['search'], ENT_QUOTES, 'UTF-8') . '</span>'
+                . '<input type="search" name="q" placeholder="'
+                . htmlspecialchars((string) $i18n['search_placeholder'], ENT_QUOTES, 'UTF-8')
+                . '" data-oc-search autocomplete="off"></label>';
         }
 
         if ($filters['show_source_filter'] ?? true) {
-            $html .= '<label>Calendar<select name="source" data-oc-filter-source><option value="">All</option>';
+            $html .= '<label>' . htmlspecialchars((string) $i18n['filter_sources'], ENT_QUOTES, 'UTF-8')
+                . '<select name="source" data-oc-filter-source><option value="">'
+                . htmlspecialchars((string) $i18n['all'], ENT_QUOTES, 'UTF-8') . '</option>';
             foreach ($payload['calendars'] as $cal) {
                 if (!($cal['enabled'] ?? true)) {
                     continue;
@@ -234,7 +253,9 @@ HTML;
         }
 
         if (($filters['show_category_filter'] ?? true) && ($payload['categories'] ?? []) !== []) {
-            $html .= '<label>Category<select name="category" data-oc-filter-category><option value="">All</option>';
+            $html .= '<label>' . htmlspecialchars((string) $i18n['filter_categories'], ENT_QUOTES, 'UTF-8')
+                . '<select name="category" data-oc-filter-category><option value="">'
+                . htmlspecialchars((string) $i18n['all'], ENT_QUOTES, 'UTF-8') . '</option>';
             foreach ($payload['categories'] as $cat) {
                 $html .= '<option value="' . htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') . '">'
                     . htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') . '</option>';
@@ -254,10 +275,13 @@ HTML;
     {
         $events = $payload['eventsList'] ?? [];
         $meta = $payload['meta'] ?? [];
+        $i18n = is_array($payload['i18n'] ?? null) ? $payload['i18n'] : $this->frontendI18n();
         $html = '<div class="oc-list" data-oc-list>';
 
         if ($events === []) {
-            $html .= '<p class="oc-list__empty">No events found.</p></div>';
+            $html .= '<p class="oc-list__empty">'
+                . htmlspecialchars((string) $i18n['no_events'], ENT_QUOTES, 'UTF-8')
+                . '</p></div>';
 
             return $html;
         }
@@ -270,7 +294,8 @@ HTML;
                 if ($currentGroup !== null) {
                     $html .= '</ul>';
                 }
-                $html .= '<h3 class="oc-list__group">' . htmlspecialchars($group, ENT_QUOTES, 'UTF-8') . '</h3><ul class="oc-list__items">';
+                $html .= '<h3 class="oc-list__group">' . htmlspecialchars($group, ENT_QUOTES, 'UTF-8')
+                    . '</h3><ul class="oc-list__items">';
                 $currentGroup = $group;
             }
 
@@ -278,7 +303,7 @@ HTML;
             $title = htmlspecialchars((string) ($event['title'] ?? ''), ENT_QUOTES, 'UTF-8');
             $location = htmlspecialchars((string) ($event['location'] ?? ''), ENT_QUOTES, 'UTF-8');
             $id = htmlspecialchars((string) ($event['id'] ?? $event['uid'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $when = htmlspecialchars($start, ENT_QUOTES, 'UTF-8');
+            $when = htmlspecialchars($this->formatListWhen($start, !empty($event['all_day']), (string) ($payload['locale'] ?? 'de')), ENT_QUOTES, 'UTF-8');
 
             $html .= '<li class="oc-list__item" style="--oc-event-color:' . $color . '">'
                 . '<button type="button" class="oc-list__button" data-oc-event-id="' . $id . '">'
@@ -295,12 +320,139 @@ HTML;
         $page = (int) ($meta['page'] ?? 1);
         $pages = (int) ($meta['pages'] ?? 1);
         if ($pages > 1) {
-            $html .= '<nav class="oc-pagination" aria-label="Event pagination" data-oc-pagination>'
-                . '<span>Page ' . $page . ' of ' . $pages . '</span></nav>';
+            $pageLabel = str_replace(
+                ['%1', '%2'],
+                [(string) $page, (string) $pages],
+                (string) $i18n['page']
+            );
+            $html .= '<nav class="oc-pagination" aria-label="'
+                . htmlspecialchars((string) $i18n['pagination'], ENT_QUOTES, 'UTF-8')
+                . '" data-oc-pagination><span>'
+                . htmlspecialchars($pageLabel, ENT_QUOTES, 'UTF-8')
+                . '</span></nav>';
         }
 
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function frontendI18n(): array
+    {
+        return [
+            'search' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SEARCH'),
+            'search_placeholder' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SEARCH_PLACEHOLDER'),
+            'filter_sources' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_FILTER_SOURCES'),
+            'filter_categories' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_FILTER_CATEGORIES'),
+            'all' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_ALL'),
+            'no_events' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS'),
+            'page' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_PAGE'),
+            'pagination' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_PAGINATION'),
+            'close' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_CLOSE'),
+            'date' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_DATE'),
+            'time' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_TIME'),
+            'location' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_LOCATION'),
+            'organizer' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_ORGANIZER'),
+            'source' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SOURCE'),
+            'categories' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_CATEGORIES'),
+            'all_day' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_ALL_DAY'),
+            'attachment' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_ATTACHMENT'),
+            'today' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_TODAY'),
+            'month' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_MONTH'),
+            'week' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_WEEK'),
+            'day' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_DAY'),
+            'list' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_LIST'),
+        ];
+    }
+
+    /**
+     * @param array<int|string, scalar|null> $replace
+     */
+    private function t(string $key, array $replace = []): string
+    {
+        if (is_callable($this->translator)) {
+            return (string) ($this->translator)($key, $replace);
+        }
+
+        $fallback = [
+            'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH' => 'Search',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SEARCH_PLACEHOLDER' => 'Search events…',
+            'PLUGIN_OPENCALENDAR.FRONTEND_FILTER_SOURCES' => 'Calendar',
+            'PLUGIN_OPENCALENDAR.FRONTEND_FILTER_CATEGORIES' => 'Category',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ALL' => 'All',
+            'PLUGIN_OPENCALENDAR.FRONTEND_NO_EVENTS' => 'No events found.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PAGE' => 'Page %1 of %2',
+            'PLUGIN_OPENCALENDAR.FRONTEND_PAGINATION' => 'Event pagination',
+            'PLUGIN_OPENCALENDAR.FRONTEND_CLOSE' => 'Close',
+            'PLUGIN_OPENCALENDAR.FRONTEND_DATE' => 'Date',
+            'PLUGIN_OPENCALENDAR.FRONTEND_TIME' => 'Time',
+            'PLUGIN_OPENCALENDAR.FRONTEND_LOCATION' => 'Location',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ORGANIZER' => 'Organizer',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SOURCE' => 'Calendar',
+            'PLUGIN_OPENCALENDAR.FRONTEND_CATEGORIES' => 'Categories',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ALL_DAY' => 'All day',
+            'PLUGIN_OPENCALENDAR.FRONTEND_ATTACHMENT' => 'Attachment',
+            'PLUGIN_OPENCALENDAR.FRONTEND_TODAY' => 'Today',
+            'PLUGIN_OPENCALENDAR.FRONTEND_MONTH' => 'Month',
+            'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Week',
+            'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Day',
+            'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'List',
+        ];
+
+        return $fallback[$key] ?? $key;
+    }
+
+    private function resolveLocale(string $locale): string
+    {
+        if ($locale !== '' && $locale !== 'auto') {
+            return $locale;
+        }
+
+        if (is_callable($this->translator)) {
+            // Prefer active Grav language when locale is auto.
+            try {
+                if (class_exists(\Grav\Common\Grav::class)) {
+                    $grav = \Grav\Common\Grav::instance();
+                    $lang = $grav['language'] ?? null;
+                    if (is_object($lang) && method_exists($lang, 'getLanguage')) {
+                        $active = (string) $lang->getLanguage();
+                        if ($active !== '') {
+                            return $active;
+                        }
+                    }
+                }
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
+
+        return 'en';
+    }
+
+    private function formatListWhen(string $start, bool $allDay, string $locale): string
+    {
+        if ($start === '') {
+            return '';
+        }
+
+        try {
+            if (!class_exists(\IntlDateFormatter::class)) {
+                return $start;
+            }
+
+            $dt = new \DateTimeImmutable($start);
+            $formatter = new \IntlDateFormatter(
+                $locale !== '' ? $locale : 'en',
+                \IntlDateFormatter::MEDIUM,
+                $allDay ? \IntlDateFormatter::NONE : \IntlDateFormatter::SHORT
+            );
+
+            return (string) $formatter->format($dt);
+        } catch (\Throwable) {
+            return $start;
+        }
     }
 }

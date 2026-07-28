@@ -14,6 +14,10 @@
     }
   }
 
+  function i18n(config) {
+    return config.i18n || {};
+  }
+
   function findEvent(config, id) {
     var list = config.eventsList || [];
     for (var i = 0; i < list.length; i++) {
@@ -39,7 +43,7 @@
     return null;
   }
 
-  function formatDate(value, allDay) {
+  function formatDate(value, allDay, locale) {
     if (!value) {
       return '';
     }
@@ -48,20 +52,23 @@
       if (Number.isNaN(d.getTime())) {
         return String(value);
       }
-      if (allDay) {
-        return d.toLocaleDateString(undefined, { dateStyle: 'full' });
-      }
-      return d.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' });
+      var opts = allDay
+        ? { dateStyle: 'full' }
+        : { dateStyle: 'full', timeStyle: 'short' };
+      return d.toLocaleString(locale || undefined, opts);
     } catch (e) {
       return String(value);
     }
   }
 
-  function openModal(root, event) {
+  function openModal(root, config, event) {
     var modal = root.querySelector('[data-oc-modal]');
     if (!modal || !event) {
       return;
     }
+    var labels = i18n(config);
+    var locale = config.locale && config.locale !== 'auto' ? config.locale : undefined;
+
     var set = function (name, value) {
       var el = modal.querySelector('[data-oc-field="' + name + '"]');
       if (!el) {
@@ -87,7 +94,7 @@
           a.href = att.uri || '#';
           a.target = '_blank';
           a.rel = 'noopener noreferrer';
-          a.textContent = att.filename || att.uri || 'Attachment';
+          a.textContent = att.filename || att.uri || labels.attachment || 'Attachment';
           li.appendChild(a);
           el.appendChild(li);
         });
@@ -96,9 +103,10 @@
       el.textContent = value || '—';
     };
 
+    var allDay = !!(event.all_day || event.allDay);
     set('title', event.title || '');
-    set('date', formatDate(event.start, event.all_day || event.allDay));
-    set('time', event.all_day || event.allDay ? 'All day' : formatDate(event.start, false));
+    set('date', formatDate(event.start, allDay, locale));
+    set('time', allDay ? (labels.all_day || 'All day') : formatDate(event.start, false, locale));
     set('location', event.location || '');
     set('organizer', event.organizer || '');
     set('calendar', event.calendar_name || (event.calendar && event.calendar.name) || event.calendar || '');
@@ -129,6 +137,7 @@
 
     var initialView = mount.getAttribute('data-initial-view') || 'dayGridMonth';
     var calendarOpts = config.calendar || {};
+    var labels = i18n(config);
 
     EventCalendar.create(mount, {
       view: initialView,
@@ -137,14 +146,20 @@
         center: 'title',
         end: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
       },
+      buttonText: {
+        today: labels.today || 'Today',
+        dayGridMonth: labels.month || 'Month',
+        timeGridWeek: labels.week || 'Week',
+        timeGridDay: labels.day || 'Day',
+        listWeek: labels.list || 'List'
+      },
       firstDay: typeof calendarOpts.first_day === 'number' ? calendarOpts.first_day : 1,
-      height: 'auto',
+      height: calendarOpts.height || 'auto',
       events: config.events || [],
       locale: config.locale && config.locale !== 'auto' ? config.locale : undefined,
-          weekNumbers: !!calendarOpts.week_numbers,
-          weekends: calendarOpts.weekends !== false,
-          height: calendarOpts.height || 'auto',
-          nowIndicator: calendarOpts.show_now_indicator !== false,
+      weekNumbers: !!calendarOpts.week_numbers,
+      weekends: calendarOpts.weekends !== false,
+      nowIndicator: calendarOpts.show_now_indicator !== false,
       eventClick: function (info) {
         info.jsEvent.preventDefault();
         var event = findEvent(config, info.event.id);
@@ -164,7 +179,7 @@
             calendar: info.event.extendedProps && info.event.extendedProps.calendar
           };
         }
-        openModal(root, event);
+        openModal(root, config, event);
       }
     });
   }
@@ -173,7 +188,7 @@
     root.querySelectorAll('[data-oc-event-id]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var event = findEvent(config, btn.getAttribute('data-oc-event-id'));
-        openModal(root, event);
+        openModal(root, config, event);
       });
     });
   }
@@ -271,6 +286,10 @@
     var config = parseConfig(root);
     if (!config) {
       return;
+    }
+
+    if (!config.locale || config.locale === 'auto') {
+      config.locale = root.getAttribute('data-locale') || 'en';
     }
 
     root.querySelectorAll('[data-oc-modal-close]').forEach(function (el) {

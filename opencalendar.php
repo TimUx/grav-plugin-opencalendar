@@ -136,7 +136,8 @@ class OpenCalendarPlugin extends Plugin
             $container = $this->container();
             $extension = new TwigExtension(
                 $container->calendarService(),
-                $this->pluginConfig()
+                $this->pluginConfig(),
+                $this->translator()
             );
             $this->grav['twig']->twig->addExtension($extension);
         } catch (\Throwable $e) {
@@ -194,7 +195,8 @@ class OpenCalendarPlugin extends Plugin
         try {
             $extension = new TwigExtension(
                 $this->container()->calendarService(),
-                $this->pluginConfig()
+                $this->pluginConfig(),
+                $this->translator()
             );
             $processor = new ShortcodeProcessor($extension);
             $page->setRawContent($processor->process($content));
@@ -313,6 +315,25 @@ class OpenCalendarPlugin extends Plugin
         } catch (\Throwable $e) {
             $this->grav['log']->warning('OpenCalendar scheduler registration failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * @return callable(string, array<int|string, scalar|null>=): string
+     */
+    private function translator(): callable
+    {
+        return function (string $key, array $replace = []): string {
+            $language = $this->grav['language'] ?? null;
+            if (!is_object($language) || !method_exists($language, 'translate')) {
+                return $key;
+            }
+
+            if ($replace === []) {
+                return (string) $language->translate($key);
+            }
+
+            return (string) $language->translate(array_merge([$key], array_values($replace)));
+        };
     }
 
     private function pluginConfig(?string $key = null, mixed $default = null): mixed
