@@ -209,6 +209,7 @@ Guide: [docs/FAQ.md](docs/FAQ.md)
 | [Migration](docs/Migration.md) | Upgrades |
 | [Troubleshooting](docs/Troubleshooting.md) | Problem solving |
 | [FAQ](docs/FAQ.md) | Common questions |
+| [Publishing / GPM](docs/Publishing-GPM.md) | Official Grav repository listing |
 
 ## Roadmap
 
