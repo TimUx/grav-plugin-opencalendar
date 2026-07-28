@@ -108,8 +108,22 @@ class TwigExtension extends AbstractExtension
             'locale' => $locale,
             'timezone' => $timezone,
             'i18n' => $i18n,
-            'events' => array_map(static fn ($e) => $e->toCalendarEvent(), $result->items),
-            'eventsList' => array_map(static fn ($e) => $e->toArray(), $result->items),
+            'events' => array_map(function ($e) use ($locale, $timezone): array {
+                $calendarEvent = $e->toCalendarEvent();
+                $calendarEvent['extendedProps'] = array_merge(
+                    is_array($calendarEvent['extendedProps'] ?? null) ? $calendarEvent['extendedProps'] : [],
+                    $this->displayFields($e->toArray(), $locale, $timezone)
+                );
+
+                return $calendarEvent;
+            }, $result->items),
+            'eventsList' => array_map(
+                fn ($e): array => array_merge(
+                    $e->toArray(),
+                    $this->displayFields($e->toArray(), $locale, $timezone)
+                ),
+                $result->items
+            ),
             'meta' => [
                 'total' => $result->total,
                 'limit' => $result->limit,
@@ -158,6 +172,7 @@ class TwigExtension extends AbstractExtension
         $themeEsc = htmlspecialchars($theme, ENT_QUOTES, 'UTF-8');
         $viewEsc = htmlspecialchars($view, ENT_QUOTES, 'UTF-8');
         $localeEsc = htmlspecialchars($locale, ENT_QUOTES, 'UTF-8');
+        $timezoneEsc = htmlspecialchars($timezone, ENT_QUOTES, 'UTF-8');
 
         $filtersHtml = $this->renderFilters($payload);
         $listHtml = $showList ? $this->renderList($payload) : '';
@@ -176,7 +191,7 @@ class TwigExtension extends AbstractExtension
         $categoriesLabel = htmlspecialchars($i18n['categories'], ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
-<div class="opencalendar oc-root" id="{$instanceEsc}" data-oc-root data-theme="{$themeEsc}" data-view="{$viewEsc}" data-locale="{$localeEsc}" data-config="{$instanceEsc}-cfg">
+<div class="opencalendar oc-root" id="{$instanceEsc}" data-oc-root data-theme="{$themeEsc}" data-view="{$viewEsc}" data-locale="{$localeEsc}" data-timezone="{$timezoneEsc}" data-config="{$instanceEsc}-cfg">
   {$filtersHtml}
   <div class="oc-body">
     {$calendarHtml}
@@ -624,6 +639,68 @@ HTML;
         }
 
         return 'en';
+    }
+
+    private function displayFields(array $event, string $locale, string $timezone): array
+    {
+        $start = (string) ($event['start'] ?? '');
+        $allDay = !empty($event['all_day']);
+
+        return [
+            'display_date' => $this->formatModalDate($start, $locale, $timezone),
+            'display_time' => $allDay
+                ? $this->t('PLUGIN_OPENCALENDAR.FRONTEND_ALL_DAY')
+                : $this->formatModalTime($start, $locale, $timezone),
+        ];
+    }
+
+    private function formatModalDate(string $start, string $locale, string $timezone): string
+    {
+        if ($start === '') {
+            return '';
+        }
+
+        try {
+            $dt = $this->toDisplayDateTime($start, $timezone);
+            $isDe = str_starts_with(strtolower($locale), 'de');
+            if ($isDe) {
+                static $weekdays = [
+                    1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag',
+                    5 => 'Freitag', 6 => 'Samstag', 7 => 'Sonntag',
+                ];
+                static $months = [
+                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
+                ];
+                $weekday = $weekdays[(int) $dt->format('N')] ?? '';
+                $month = $months[(int) $dt->format('n')] ?? $dt->format('F');
+
+                return $weekday . ', ' . $dt->format('j') . '. ' . $month . ' ' . $dt->format('Y');
+            }
+
+            return $dt->format('l, F j, Y');
+        } catch (\Throwable) {
+            return $start;
+        }
+    }
+
+    private function formatModalTime(string $start, string $locale, string $timezone): string
+    {
+        if ($start === '') {
+            return '';
+        }
+
+        try {
+            $dt = $this->toDisplayDateTime($start, $timezone);
+            if (str_starts_with(strtolower($locale), 'de')) {
+                return $dt->format('H:i') . ' Uhr';
+            }
+
+            return $dt->format('H:i');
+        } catch (\Throwable) {
+            return $start;
+        }
     }
 
     private function formatListWhen(string $start, bool $allDay, string $locale, string $timezone = 'Europe/Berlin'): string
