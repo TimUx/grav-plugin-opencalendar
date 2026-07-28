@@ -1,0 +1,96 @@
+# Installation
+
+This guide covers installing OpenCalendar on a Grav CMS site.
+
+## Requirements
+
+| Requirement | Version |
+|-------------|---------|
+| Grav | 1.7.0 or higher |
+| PHP | 8.2 or higher |
+| Extensions | `pdo`, `pdo_sqlite`, `json`, `mbstring` |
+
+Optional but recommended:
+
+- [Grav Scheduler](https://github.com/trilbymedia/grav-plugin-scheduler) for reliable background sync
+- HTTPS for remote calendar sources
+
+## Install via GPM (recommended)
+
+When OpenCalendar is published to the Grav Plugin Repository:
+
+```bash
+bin/gpm install opencalendar
+bin/gpm direct-install -y TimUx/grav-plugin-opencalendar
+```
+
+Or from the Admin panel: **Plugins → Add** and search for OpenCalendar.
+
+## Manual installation
+
+1. Download or clone the repository:
+
+   ```bash
+   git clone https://github.com/TimUx/grav-plugin-opencalendar.git
+   ```
+
+2. Copy or symlink into your Grav plugins folder:
+
+   ```bash
+   cp -R grav-plugin-opencalendar /path/to/grav/user/plugins/opencalendar
+   ```
+
+3. Install PHP dependencies:
+
+   ```bash
+   cd /path/to/grav/user/plugins/opencalendar
+   composer install --no-dev --optimize-autoloader
+   ```
+
+   For development, omit `--no-dev` to include PHPUnit, PHPStan, and PHPCS.
+
+4. Clear Grav cache:
+
+   ```bash
+   cd /path/to/grav
+   bin/grav cache
+   ```
+
+5. Enable the plugin in **Admin → Plugins → OpenCalendar**, or add to `user/config/plugins/opencalendar.yaml`:
+
+   ```yaml
+   enabled: true
+   ```
+
+## File permissions
+
+Ensure the web server can write to:
+
+- `user/plugins/opencalendar/data/` (SQLite database)
+- `logs/` (plugin log file when configured)
+
+Example:
+
+```bash
+chown -R www-data:www-data user/plugins/opencalendar/data
+chmod 775 user/plugins/opencalendar/data
+```
+
+## Verify installation
+
+1. Open **Admin → Plugins** — OpenCalendar should appear as enabled.
+2. Add at least one calendar source under the **Sources** tab.
+3. Trigger a manual sync (CLI or scheduler) once implementation is available.
+4. Add a calendar page using Twig or shortcodes (see [Twig.md](Twig.md) and [Shortcodes.md](Shortcodes.md)).
+
+## Upgrading
+
+See the main [README](../README.md#updating) and [Migration.md](Migration.md) when moving between major versions.
+
+## Uninstalling
+
+1. Disable the plugin in Admin.
+2. Remove `user/plugins/opencalendar`.
+3. Optionally delete `user/config/plugins/opencalendar.yaml` and the SQLite database.
+
+Cached events in Grav's general cache are cleared when the plugin is disabled.

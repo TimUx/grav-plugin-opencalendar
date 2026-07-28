@@ -1,0 +1,746 @@
+name: OpenCalendar
+slug: opencalendar
+type: plugin
+version: 1.0.0
+description: "Aggregate calendars from ICS, CalDAV, JSON, and local sources with SQLite storage, search, filtering, and flexible Twig display."
+icon: calendar
+author:
+  name: TimUx
+  url: https://github.com/TimUx
+keywords: calendar, ics, caldav, events, schedule, opencalendar
+homepage: https://github.com/TimUx/grav-plugin-opencalendar
+demo: https://github.com/TimUx/grav-plugin-opencalendar
+bugs: https://github.com/TimUx/grav-plugin-opencalendar/issues
+docs: https://github.com/TimUx/grav-plugin-opencalendar/tree/main/docs
+license: MIT
+
+dependencies:
+  - { name: grav, version: '>=1.7.0' }
+
+form:
+  validation: loose
+  fields:
+    tabs:
+      type: tabs
+      active: 1
+
+      fields:
+        general:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_GENERAL
+
+          fields:
+            enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.ENABLED
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            locale:
+              type: select
+              label: PLUGIN_OPENCALENDAR.LOCALE
+              help: PLUGIN_OPENCALENDAR.LOCALE_HELP
+              default: auto
+              options:
+                auto: PLUGIN_OPENCALENDAR.LOCALE_AUTO
+                en: English
+                de: Deutsch
+
+            timezone:
+              type: text
+              label: PLUGIN_OPENCALENDAR.TIMEZONE
+              help: PLUGIN_OPENCALENDAR.TIMEZONE_HELP
+              placeholder: UTC
+              default: UTC
+              validate:
+                type: text
+
+            theme:
+              type: select
+              label: PLUGIN_OPENCALENDAR.THEME
+              help: PLUGIN_OPENCALENDAR.THEME_HELP
+              default: auto
+              options:
+                auto: PLUGIN_OPENCALENDAR.THEME_AUTO
+                light: PLUGIN_OPENCALENDAR.THEME_LIGHT
+                dark: PLUGIN_OPENCALENDAR.THEME_DARK
+
+            sync_interval:
+              type: select
+              label: PLUGIN_OPENCALENDAR.SYNC_INTERVAL
+              help: PLUGIN_OPENCALENDAR.SYNC_INTERVAL_HELP
+              default: 15
+              options:
+                5: PLUGIN_OPENCALENDAR.SYNC_5MIN
+                10: PLUGIN_OPENCALENDAR.SYNC_10MIN
+                15: PLUGIN_OPENCALENDAR.SYNC_15MIN
+                30: PLUGIN_OPENCALENDAR.SYNC_30MIN
+                60: PLUGIN_OPENCALENDAR.SYNC_60MIN
+                daily: PLUGIN_OPENCALENDAR.SYNC_DAILY
+
+            cleanup:
+              type: select
+              label: PLUGIN_OPENCALENDAR.CLEANUP
+              help: PLUGIN_OPENCALENDAR.CLEANUP_HELP
+              default: 30
+              options:
+                never: PLUGIN_OPENCALENDAR.CLEANUP_NEVER
+                immediate: PLUGIN_OPENCALENDAR.CLEANUP_IMMEDIATE
+                1: PLUGIN_OPENCALENDAR.CLEANUP_1DAY
+                7: PLUGIN_OPENCALENDAR.CLEANUP_7DAYS
+                30: PLUGIN_OPENCALENDAR.CLEANUP_30DAYS
+                90: PLUGIN_OPENCALENDAR.CLEANUP_90DAYS
+
+            cache_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_CACHE
+              underline: true
+
+            cache.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.CACHE_ENABLED
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            cache.ttl:
+              type: number
+              label: PLUGIN_OPENCALENDAR.CACHE_TTL
+              help: PLUGIN_OPENCALENDAR.CACHE_TTL_HELP
+              default: 3600
+              validate:
+                type: number
+                min: 0
+
+            cache.parse_cache:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.PARSE_CACHE
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            cache.parse_ttl:
+              type: number
+              label: PLUGIN_OPENCALENDAR.PARSE_CACHE_TTL
+              help: PLUGIN_OPENCALENDAR.PARSE_CACHE_TTL_HELP
+              default: 86400
+              validate:
+                type: number
+                min: 0
+
+        storage:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_STORAGE
+
+          fields:
+            storage.path:
+              type: text
+              label: PLUGIN_OPENCALENDAR.STORAGE_PATH
+              help: PLUGIN_OPENCALENDAR.STORAGE_PATH_HELP
+              default: data/opencalendar.db
+              validate:
+                type: text
+
+            storage.wal_mode:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.WAL_MODE
+              help: PLUGIN_OPENCALENDAR.WAL_MODE_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            storage.vacuum_on_cleanup:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.VACUUM_ON_CLEANUP
+              help: PLUGIN_OPENCALENDAR.VACUUM_ON_CLEANUP_HELP
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+        sources:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_SOURCES
+
+          fields:
+            sources:
+              type: list
+              label: PLUGIN_OPENCALENDAR.SOURCES
+              help: PLUGIN_OPENCALENDAR.SOURCES_HELP
+              style: vertical
+              btnLabel: PLUGIN_OPENCALENDAR.ADD_SOURCE
+              fields:
+                .name:
+                  type: text
+                  label: PLUGIN_OPENCALENDAR.SOURCE_NAME
+                  validate:
+                    required: true
+                    type: text
+
+                .enabled:
+                  type: toggle
+                  label: PLUGIN_OPENCALENDAR.SOURCE_ENABLED
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: PLUGIN_ADMIN.YES
+                    0: PLUGIN_ADMIN.NO
+                  validate:
+                    type: bool
+
+                .type:
+                  type: select
+                  label: PLUGIN_OPENCALENDAR.SOURCE_TYPE
+                  help: PLUGIN_OPENCALENDAR.SOURCE_TYPE_HELP
+                  default: ics
+                  options:
+                    ics: PLUGIN_OPENCALENDAR.SOURCE_TYPE_ICS
+                    caldav: PLUGIN_OPENCALENDAR.SOURCE_TYPE_CALDAV
+                    json: PLUGIN_OPENCALENDAR.SOURCE_TYPE_JSON
+                    local: PLUGIN_OPENCALENDAR.SOURCE_TYPE_LOCAL
+
+                .url:
+                  type: text
+                  label: PLUGIN_OPENCALENDAR.SOURCE_URL
+                  help: PLUGIN_OPENCALENDAR.SOURCE_URL_HELP
+                  placeholder: 'https://example.com/calendar.ics'
+                  validate:
+                    type: text
+
+                .refresh:
+                  type: select
+                  label: PLUGIN_OPENCALENDAR.SOURCE_REFRESH
+                  help: PLUGIN_OPENCALENDAR.SOURCE_REFRESH_HELP
+                  default: inherit
+                  options:
+                    inherit: PLUGIN_OPENCALENDAR.REFRESH_INHERIT
+                    5: PLUGIN_OPENCALENDAR.SYNC_5MIN
+                    10: PLUGIN_OPENCALENDAR.SYNC_10MIN
+                    15: PLUGIN_OPENCALENDAR.SYNC_15MIN
+                    30: PLUGIN_OPENCALENDAR.SYNC_30MIN
+                    60: PLUGIN_OPENCALENDAR.SYNC_60MIN
+                    daily: PLUGIN_OPENCALENDAR.SYNC_DAILY
+
+                .color:
+                  type: colorpicker
+                  label: PLUGIN_OPENCALENDAR.SOURCE_COLOR
+                  default: '#3788d8'
+
+                .description:
+                  type: textarea
+                  label: PLUGIN_OPENCALENDAR.SOURCE_DESCRIPTION
+                  rows: 2
+
+                .auth.type:
+                  type: select
+                  label: PLUGIN_OPENCALENDAR.AUTH_TYPE
+                  help: PLUGIN_OPENCALENDAR.AUTH_TYPE_HELP
+                  default: none
+                  options:
+                    none: PLUGIN_OPENCALENDAR.AUTH_NONE
+                    basic: PLUGIN_OPENCALENDAR.AUTH_BASIC
+                    bearer: PLUGIN_OPENCALENDAR.AUTH_BEARER
+
+                .auth.username:
+                  type: text
+                  label: PLUGIN_OPENCALENDAR.AUTH_USERNAME
+                  placeholder: ''
+
+                .auth.password:
+                  type: password
+                  label: PLUGIN_OPENCALENDAR.AUTH_PASSWORD
+                  placeholder: ''
+
+        display:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_DISPLAY
+
+          fields:
+            display.default_view:
+              type: select
+              label: PLUGIN_OPENCALENDAR.DEFAULT_VIEW
+              default: calendar
+              options:
+                calendar: PLUGIN_OPENCALENDAR.VIEW_CALENDAR
+                list: PLUGIN_OPENCALENDAR.VIEW_LIST
+
+            calendar_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_CALENDAR_VIEW
+              underline: true
+
+            display.calendar.initial_view:
+              type: select
+              label: PLUGIN_OPENCALENDAR.CALENDAR_INITIAL_VIEW
+              default: dayGridMonth
+              options:
+                dayGridMonth: PLUGIN_OPENCALENDAR.CAL_MONTH
+                timeGridWeek: PLUGIN_OPENCALENDAR.CAL_WEEK
+                timeGridDay: PLUGIN_OPENCALENDAR.CAL_DAY
+                listWeek: PLUGIN_OPENCALENDAR.CAL_LIST_WEEK
+
+            display.calendar.first_day:
+              type: select
+              label: PLUGIN_OPENCALENDAR.FIRST_DAY
+              default: 1
+              options:
+                0: PLUGIN_OPENCALENDAR.SUNDAY
+                1: PLUGIN_OPENCALENDAR.MONDAY
+                6: PLUGIN_OPENCALENDAR.SATURDAY
+
+            display.calendar.week_numbers:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.WEEK_NUMBERS
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.calendar.show_now_indicator:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_NOW_INDICATOR
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.calendar.nav_links:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.NAV_LINKS
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            list_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_LIST_VIEW
+              underline: true
+
+            display.list.group_by:
+              type: select
+              label: PLUGIN_OPENCALENDAR.LIST_GROUP_BY
+              default: month
+              options:
+                none: PLUGIN_OPENCALENDAR.GROUP_NONE
+                day: PLUGIN_OPENCALENDAR.GROUP_DAY
+                week: PLUGIN_OPENCALENDAR.GROUP_WEEK
+                month: PLUGIN_OPENCALENDAR.GROUP_MONTH
+
+            display.list.sort:
+              type: select
+              label: PLUGIN_OPENCALENDAR.LIST_SORT
+              default: asc
+              options:
+                asc: PLUGIN_OPENCALENDAR.SORT_ASC
+                desc: PLUGIN_OPENCALENDAR.SORT_DESC
+
+            display.list.limit:
+              type: number
+              label: PLUGIN_OPENCALENDAR.LIST_LIMIT
+              default: 50
+              validate:
+                type: number
+                min: 1
+
+            display.list.show_past:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_PAST
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.list.past_days:
+              type: number
+              label: PLUGIN_OPENCALENDAR.PAST_DAYS
+              help: PLUGIN_OPENCALENDAR.PAST_DAYS_HELP
+              default: 30
+              validate:
+                type: number
+                min: 0
+
+            display.list.show_description:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_DESCRIPTION
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.list.show_location:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_LOCATION
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            event_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_EVENT
+              underline: true
+
+            display.event.link_external:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.LINK_EXTERNAL
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.event.open_in_new_tab:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.OPEN_NEW_TAB
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            display.event.truncate_description:
+              type: number
+              label: PLUGIN_OPENCALENDAR.TRUNCATE_DESCRIPTION
+              help: PLUGIN_OPENCALENDAR.TRUNCATE_DESCRIPTION_HELP
+              default: 200
+              validate:
+                type: number
+                min: 0
+
+            display.event.show_source_badge:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_SOURCE_BADGE
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+        search:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_SEARCH
+
+          fields:
+            search.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SEARCH_ENABLED
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            search.min_query_length:
+              type: number
+              label: PLUGIN_OPENCALENDAR.MIN_QUERY_LENGTH
+              default: 2
+              validate:
+                type: number
+                min: 1
+
+            search.max_results:
+              type: number
+              label: PLUGIN_OPENCALENDAR.MAX_RESULTS
+              default: 25
+              validate:
+                type: number
+                min: 1
+
+            search.fields:
+              type: selectize
+              label: PLUGIN_OPENCALENDAR.SEARCH_FIELDS
+              help: PLUGIN_OPENCALENDAR.SEARCH_FIELDS_HELP
+              classes: fancy
+              validate:
+                type: commalist
+              selectize:
+                options:
+                  - title
+                  - description
+                  - location
+                  - categories
+
+            search.highlight:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SEARCH_HIGHLIGHT
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+        filters:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_FILTERS
+
+          fields:
+            filters.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.FILTERS_ENABLED
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            filters.show_source_filter:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_SOURCE_FILTER
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            filters.show_category_filter:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_CATEGORY_FILTER
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            filters.show_date_range_filter:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SHOW_DATE_RANGE_FILTER
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            filters.persist_in_url:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.PERSIST_IN_URL
+              help: PLUGIN_OPENCALENDAR.PERSIST_IN_URL_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+        advanced:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_ADVANCED
+
+          fields:
+            api_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_API
+              underline: true
+
+            api.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.API_ENABLED
+              help: PLUGIN_OPENCALENDAR.API_ENABLED_HELP
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            api.route:
+              type: text
+              label: PLUGIN_OPENCALENDAR.API_ROUTE
+              default: /opencalendar/api
+              validate:
+                type: text
+
+            api.rate_limit.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.RATE_LIMIT
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            api.rate_limit.max_requests:
+              type: number
+              label: PLUGIN_OPENCALENDAR.RATE_LIMIT_MAX
+              default: 60
+              validate:
+                type: number
+                min: 1
+
+            advanced_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_ADVANCED
+              underline: true
+
+            advanced.debug:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.DEBUG
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            advanced.log_level:
+              type: select
+              label: PLUGIN_OPENCALENDAR.LOG_LEVEL
+              default: warning
+              options:
+                debug: Debug
+                info: Info
+                warning: Warning
+                error: Error
+
+            advanced.http.timeout:
+              type: number
+              label: PLUGIN_OPENCALENDAR.HTTP_TIMEOUT
+              default: 30
+              validate:
+                type: number
+                min: 1
+
+            advanced.http.verify_ssl:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.VERIFY_SSL
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            advanced.scheduler.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.SCHEDULER_ENABLED
+              help: PLUGIN_OPENCALENDAR.SCHEDULER_ENABLED_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            advanced.deduplicate.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.DEDUPLICATE
+              help: PLUGIN_OPENCALENDAR.DEDUPLICATE_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            advanced.import.expand_recurring:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.EXPAND_RECURRING
+              help: PLUGIN_OPENCALENDAR.EXPAND_RECURRING_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            advanced.import.recurring_horizon_days:
+              type: number
+              label: PLUGIN_OPENCALENDAR.RECURRING_HORIZON
+              default: 365
+              validate:
+                type: number
+                min: 1
+
+        sync_dashboard:
+          type: tab
+          title: PLUGIN_OPENCALENDAR.TAB_SYNC
+
+          fields:
+            sync_dashboard_help:
+              type: display
+              markdown: true
+              content: "PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_HELP"
+
+            sync_dashboard_status:
+              type: display
+              markdown: true
+              content: |
+                **PLUGIN_OPENCALENDAR.SYNC_EVENT_COUNT:** {{ opencalendar_status.event_count|default(0) }}
+
+                | Source | Status | Last Sync | Duration | Imported | Updated | Deleted | Error |
+                | --- | --- | --- | --- | --- | --- | --- | --- |
+                {% for cal in opencalendar_status.calendars|default([]) %}
+                | {{ cal.name }} | {{ cal.status }} | {{ cal.last_sync_at|default('—') }} | {{ cal.last_sync_duration_ms|default('—') }} ms | {{ cal.imported_count }} | {{ cal.updated_count }} | {{ cal.deleted_count }} | {{ cal.last_error|default('') }} |
+                {% else %}
+                | — | — | — | — | — | — | — | — |
+                {% endfor %}
+
+            sync_dashboard_actions:
+              type: display
+              markdown: true
+              content: "PLUGIN_OPENCALENDAR.SYNC_DASHBOARD_ACTIONS"

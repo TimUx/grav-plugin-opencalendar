@@ -1,0 +1,212 @@
+PLUGIN_OPENCALENDAR:
+  # Plugin metadata
+  PLUGIN_NAME: OpenCalendar
+  PLUGIN_DESCRIPTION: 'Aggregate calendars from ICS, CalDAV, JSON, and local sources.'
+
+  # Admin tabs
+  TAB_GENERAL: General
+  TAB_STORAGE: Storage
+  TAB_SOURCES: Sources
+  TAB_DISPLAY: Display
+  TAB_SEARCH: Search
+  TAB_FILTERS: Filters
+  TAB_ADVANCED: Advanced
+  TAB_SYNC: Sync Dashboard
+
+  # Sync dashboard
+  SYNC_DASHBOARD_TITLE: Synchronization Dashboard
+  SYNC_DASHBOARD_HELP: 'Monitor source synchronization status. Trigger actions via the Admin endpoints listed below.'
+  SYNC_DASHBOARD_ACTIONS: |
+    **Actions (Admin session required):**
+
+    - `/admin/plugins/opencalendar/sync` — Synchronize Now
+    - `/admin/plugins/opencalendar/rebuild` — Rebuild Database
+    - `/admin/plugins/opencalendar/clear-cache` — Clear Cache
+    - `/admin/plugins/opencalendar/status` — JSON status
+  SYNC_EVENT_COUNT: Events in database
+  SYNC_ACTIONS: Actions
+
+  # General
+  ENABLED: Plugin enabled
+  LOCALE: Locale
+  LOCALE_HELP: 'Use auto to follow the Grav site language, or pick a fixed locale for date formatting.'
+  LOCALE_AUTO: Auto (site language)
+  TIMEZONE: Default timezone
+  TIMEZONE_HELP: 'IANA timezone name used when events do not specify TZID (e.g. Europe/Berlin).'
+  THEME: Color theme
+  THEME_HELP: 'Frontend calendar color scheme. Auto follows the visitor system preference.'
+  THEME_AUTO: Auto
+  THEME_LIGHT: Light
+  THEME_DARK: Dark
+  SYNC_INTERVAL: Sync interval
+  SYNC_INTERVAL_HELP: 'How often background jobs fetch updates from remote sources.'
+  SYNC_5MIN: Every 5 minutes
+  SYNC_10MIN: Every 10 minutes
+  SYNC_15MIN: Every 15 minutes
+  SYNC_30MIN: Every 30 minutes
+  SYNC_60MIN: Every 60 minutes
+  SYNC_DAILY: Once daily
+  CLEANUP: Event cleanup
+  CLEANUP_HELP: 'How long to retain removed or superseded events before permanent deletion.'
+  CLEANUP_NEVER: Never delete
+  CLEANUP_IMMEDIATE: Delete immediately
+  CLEANUP_1DAY: After 1 day
+  CLEANUP_7DAYS: After 7 days
+  CLEANUP_30DAYS: After 30 days
+  CLEANUP_90DAYS: After 90 days
+  SECTION_CACHE: Cache
+  CACHE_ENABLED: Enable caching
+  CACHE_TTL: Render cache TTL (seconds)
+  CACHE_TTL_HELP: 'How long rendered event collections are cached. 0 clears on next sync.'
+  PARSE_CACHE: Cache parsed feeds
+  PARSE_CACHE_TTL: Parse cache TTL (seconds)
+  PARSE_CACHE_TTL_HELP: 'Reuse parsed ICS/JSON between sync runs to reduce CPU usage.'
+
+  # Storage
+  STORAGE_PATH: Database path
+  STORAGE_PATH_HELP: 'Relative to the plugin folder unless an absolute path is given.'
+  WAL_MODE: SQLite WAL mode
+  WAL_MODE_HELP: 'Write-Ahead Logging improves read concurrency. Recommended for production.'
+  VACUUM_ON_CLEANUP: VACUUM on cleanup
+  VACUUM_ON_CLEANUP_HELP: 'Reclaim disk space after cleanup runs. May briefly lock the database.'
+
+  # Sources
+  SOURCES: Calendar sources
+  SOURCES_HELP: 'Define one or more feeds. Disabled sources are skipped during sync.'
+  ADD_SOURCE: Add source
+  SOURCE_NAME: Name
+  SOURCE_ENABLED: Enabled
+  SOURCE_TYPE: Type
+  SOURCE_TYPE_HELP: 'ICS for public feeds, CalDAV for authenticated servers, JSON for custom APIs, local for files in the plugin data folder.'
+  SOURCE_TYPE_ICS: ICS (iCalendar)
+  SOURCE_TYPE_CALDAV: CalDAV
+  SOURCE_TYPE_JSON: JSON API
+  SOURCE_TYPE_LOCAL: Local file
+  SOURCE_URL: URL or path
+  SOURCE_URL_HELP: 'Remote URL for ICS/CalDAV/JSON, or relative path under the plugin for local sources.'
+  SOURCE_REFRESH: Refresh interval
+  SOURCE_REFRESH_HELP: 'Override global sync interval for this source, or inherit the default.'
+  REFRESH_INHERIT: Inherit global interval
+  SOURCE_COLOR: Event color
+  SOURCE_DESCRIPTION: Description
+  AUTH_TYPE: Authentication
+  AUTH_TYPE_HELP: 'Credentials are stored in config. Use environment overrides for production secrets.'
+  AUTH_NONE: None
+  AUTH_BASIC: HTTP Basic
+  AUTH_BEARER: Bearer token
+
+  # Display
+  DEFAULT_VIEW: Default view
+  VIEW_CALENDAR: Calendar
+  VIEW_LIST: List
+  SECTION_CALENDAR_VIEW: Calendar view
+  CALENDAR_INITIAL_VIEW: Initial calendar layout
+  CAL_MONTH: Month grid
+  CAL_WEEK: Week timeline
+  CAL_DAY: Day timeline
+  CAL_LIST_WEEK: List (week)
+  FIRST_DAY: First day of week
+  SUNDAY: Sunday
+  MONDAY: Monday
+  SATURDAY: Saturday
+  WEEK_NUMBERS: Show week numbers
+  SHOW_NOW_INDICATOR: Show current time indicator
+  NAV_LINKS: Clickable day/week links
+  SECTION_LIST_VIEW: List view
+  LIST_GROUP_BY: Group events by
+  GROUP_NONE: No grouping
+  GROUP_DAY: Day
+  GROUP_WEEK: Week
+  GROUP_MONTH: Month
+  LIST_SORT: Sort order
+  SORT_ASC: Ascending (earliest first)
+  SORT_DESC: Descending (latest first)
+  LIST_LIMIT: Maximum events per page
+  SHOW_PAST: Show past events
+  PAST_DAYS: Past events window (days)
+  PAST_DAYS_HELP: 'When showing past events, limit how far back to query.'
+  SHOW_DESCRIPTION: Show descriptions
+  SHOW_LOCATION: Show locations
+  SECTION_EVENT: Event display
+  LINK_EXTERNAL: Link to external URLs
+  OPEN_NEW_TAB: Open links in new tab
+  TRUNCATE_DESCRIPTION: Truncate description at (characters)
+  TRUNCATE_DESCRIPTION_HELP: '0 disables truncation.'
+  SHOW_SOURCE_BADGE: Show source badge
+
+  # Search
+  TAB_SEARCH_LABEL: Search
+  SEARCH_ENABLED: Enable search
+  MIN_QUERY_LENGTH: Minimum query length
+  MAX_RESULTS: Maximum results
+  SEARCH_FIELDS: Searchable fields
+  SEARCH_FIELDS_HELP: 'Event fields included in full-text search.'
+  SEARCH_HIGHLIGHT: Highlight matches
+
+  # Filters
+  FILTERS_ENABLED: Enable filters
+  SHOW_SOURCE_FILTER: Source filter
+  SHOW_CATEGORY_FILTER: Category filter
+  SHOW_DATE_RANGE_FILTER: Date range filter
+  PERSIST_IN_URL: Persist filters in URL
+  PERSIST_IN_URL_HELP: 'Allows sharing filtered views via query parameters.'
+
+  # Advanced / API
+  SECTION_API: REST API
+  API_ENABLED: Enable API
+  API_ENABLED_HELP: 'Expose read-only JSON endpoints. Restrict access on public sites.'
+  API_ROUTE: API route prefix
+  RATE_LIMIT: Rate limiting
+  RATE_LIMIT_MAX: Max requests per window
+  SECTION_ADVANCED: Advanced options
+  DEBUG: Debug mode
+  LOG_LEVEL: Log level
+  HTTP_TIMEOUT: HTTP timeout (seconds)
+  VERIFY_SSL: Verify SSL certificates
+  SCHEDULER_ENABLED: Grav scheduler integration
+  SCHEDULER_ENABLED_HELP: 'Register sync and cleanup jobs with the Grav Scheduler plugin.'
+  DEDUPLICATE: Deduplicate events
+  DEDUPLICATE_HELP: 'Merge identical events from multiple sources using UID and timestamps.'
+  EXPAND_RECURRING: Expand recurring events
+  EXPAND_RECURRING_HELP: 'Materialize RRULE occurrences into individual rows for querying.'
+  RECURRING_HORIZON: Recurring horizon (days)
+
+  # Frontend
+  FRONTEND_TITLE: Calendar
+  FRONTEND_NO_EVENTS: No events found.
+  FRONTEND_LOADING: Loading events…
+  FRONTEND_ERROR: Unable to load calendar events.
+  FRONTEND_SEARCH_PLACEHOLDER: Search events…
+  FRONTEND_FILTER_SOURCES: Sources
+  FRONTEND_FILTER_CATEGORIES: Categories
+  FRONTEND_FILTER_FROM: From
+  FRONTEND_FILTER_TO: To
+  FRONTEND_FILTER_APPLY: Apply filters
+  FRONTEND_FILTER_RESET: Reset
+  FRONTEND_ALL_SOURCES: All sources
+  FRONTEND_ALL_CATEGORIES: All categories
+  FRONTEND_TODAY: Today
+  FRONTEND_PREVIOUS: Previous
+  FRONTEND_NEXT: Next
+  FRONTEND_MONTH: Month
+  FRONTEND_WEEK: Week
+  FRONTEND_DAY: Day
+  FRONTEND_LIST: List
+  FRONTEND_ALL_DAY: All day
+  FRONTEND_LOCATION: Location
+  FRONTEND_SOURCE: Source
+  FRONTEND_READ_MORE: Read more
+  FRONTEND_RESULTS: '%1 events found'
+
+  # Errors
+  ERROR_SYNC_FAILED: 'Synchronization failed for source "%s".'
+  ERROR_SOURCE_DISABLED: 'Source "%s" is disabled.'
+  ERROR_SOURCE_NOT_FOUND: 'Calendar source not found.'
+  ERROR_INVALID_URL: 'Invalid source URL or path.'
+  ERROR_HTTP: 'HTTP error while fetching calendar data.'
+  ERROR_PARSE: 'Failed to parse calendar data.'
+  ERROR_STORAGE: 'Database error. Check permissions and disk space.'
+  ERROR_API_DISABLED: 'The OpenCalendar API is disabled.'
+  ERROR_RATE_LIMIT: 'Too many requests. Please try again later.'
+  ERROR_SEARCH_DISABLED: 'Search is disabled.'
+  ERROR_QUERY_TOO_SHORT: 'Search query is too short.'

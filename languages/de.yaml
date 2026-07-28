@@ -1,0 +1,212 @@
+PLUGIN_OPENCALENDAR:
+  # Plugin-Metadaten
+  PLUGIN_NAME: OpenCalendar
+  PLUGIN_DESCRIPTION: 'Kalender aus ICS-, CalDAV-, JSON- und lokalen Quellen zusammenführen.'
+
+  # Admin-Tabs
+  TAB_GENERAL: Allgemein
+  TAB_STORAGE: Speicher
+  TAB_SOURCES: Quellen
+  TAB_DISPLAY: Anzeige
+  TAB_SEARCH: Suche
+  TAB_FILTERS: Filter
+  TAB_ADVANCED: Erweitert
+  TAB_SYNC: Sync-Dashboard
+
+  # Sync-Dashboard
+  SYNC_DASHBOARD_TITLE: Synchronisierungs-Dashboard
+  SYNC_DASHBOARD_HELP: 'Überwachen Sie den Sync-Status der Quellen. Aktionen über die unten genannten Admin-Endpunkte auslösen.'
+  SYNC_DASHBOARD_ACTIONS: |
+    **Aktionen (Admin-Sitzung erforderlich):**
+
+    - `/admin/plugins/opencalendar/sync` — Jetzt synchronisieren
+    - `/admin/plugins/opencalendar/rebuild` — Datenbank neu aufbauen
+    - `/admin/plugins/opencalendar/clear-cache` — Cache leeren
+    - `/admin/plugins/opencalendar/status` — JSON-Status
+  SYNC_EVENT_COUNT: Termine in der Datenbank
+  SYNC_ACTIONS: Aktionen
+
+  # Allgemein
+  ENABLED: Plugin aktiviert
+  LOCALE: Gebietsschema
+  LOCALE_HELP: 'Auto verwendet die Grav-Sitesprache, oder wählen Sie ein festes Gebietsschema für Datumsformatierung.'
+  LOCALE_AUTO: Auto (Sitesprache)
+  TIMEZONE: Standard-Zeitzone
+  TIMEZONE_HELP: 'IANA-Zeitzonenname, wenn Termine keine TZID angeben (z. B. Europe/Berlin).'
+  THEME: Farbschema
+  THEME_HELP: 'Farbschema des Frontend-Kalenders. Auto folgt der Systemeinstellung des Besuchers.'
+  THEME_AUTO: Auto
+  THEME_LIGHT: Hell
+  THEME_DARK: Dunkel
+  SYNC_INTERVAL: Sync-Intervall
+  SYNC_INTERVAL_HELP: 'Wie oft Hintergrundjobs Updates von Remote-Quellen abrufen.'
+  SYNC_5MIN: Alle 5 Minuten
+  SYNC_10MIN: Alle 10 Minuten
+  SYNC_15MIN: Alle 15 Minuten
+  SYNC_30MIN: Alle 30 Minuten
+  SYNC_60MIN: Alle 60 Minuten
+  SYNC_DAILY: Einmal täglich
+  CLEANUP: Termin-Bereinigung
+  CLEANUP_HELP: 'Wie lange entfernte oder überholte Termine vor endgültiger Löschung aufbewahrt werden.'
+  CLEANUP_NEVER: Nie löschen
+  CLEANUP_IMMEDIATE: Sofort löschen
+  CLEANUP_1DAY: Nach 1 Tag
+  CLEANUP_7DAYS: Nach 7 Tagen
+  CLEANUP_30DAYS: Nach 30 Tagen
+  CLEANUP_90DAYS: Nach 90 Tagen
+  SECTION_CACHE: Cache
+  CACHE_ENABLED: Caching aktivieren
+  CACHE_TTL: Render-Cache-TTL (Sekunden)
+  CACHE_TTL_HELP: 'Wie lange gerenderte Terminlisten gecacht werden. 0 = bei nächstem Sync leeren.'
+  PARSE_CACHE: Geparste Feeds cachen
+  PARSE_CACHE_TTL: Parse-Cache-TTL (Sekunden)
+  PARSE_CACHE_TTL_HELP: 'Geparstes ICS/JSON zwischen Sync-Läufen wiederverwenden, um CPU zu sparen.'
+
+  # Speicher
+  STORAGE_PATH: Datenbankpfad
+  STORAGE_PATH_HELP: 'Relativ zum Plugin-Ordner, sofern kein absoluter Pfad angegeben ist.'
+  WAL_MODE: SQLite-WAL-Modus
+  WAL_MODE_HELP: 'Write-Ahead Logging verbessert Lese-Parallelität. Für Produktion empfohlen.'
+  VACUUM_ON_CLEANUP: VACUUM bei Bereinigung
+  VACUUM_ON_CLEANUP_HELP: 'Speicherplatz nach Bereinigung freigeben. Kann die Datenbank kurz sperren.'
+
+  # Quellen
+  SOURCES: Kalenderquellen
+  SOURCES_HELP: 'Eine oder mehrere Feeds definieren. Deaktivierte Quellen werden beim Sync übersprungen.'
+  ADD_SOURCE: Quelle hinzufügen
+  SOURCE_NAME: Name
+  SOURCE_ENABLED: Aktiviert
+  SOURCE_TYPE: Typ
+  SOURCE_TYPE_HELP: 'ICS für öffentliche Feeds, CalDAV für authentifizierte Server, JSON für eigene APIs, local für Dateien im Plugin-Datenordner.'
+  SOURCE_TYPE_ICS: ICS (iCalendar)
+  SOURCE_TYPE_CALDAV: CalDAV
+  SOURCE_TYPE_JSON: JSON-API
+  SOURCE_TYPE_LOCAL: Lokale Datei
+  SOURCE_URL: URL oder Pfad
+  SOURCE_URL_HELP: 'Remote-URL für ICS/CalDAV/JSON oder relativer Pfad unter dem Plugin für lokale Quellen.'
+  SOURCE_REFRESH: Aktualisierungsintervall
+  SOURCE_REFRESH_HELP: 'Globales Sync-Intervall für diese Quelle überschreiben oder Standard übernehmen.'
+  REFRESH_INHERIT: Globales Intervall übernehmen
+  SOURCE_COLOR: Terminfarbe
+  SOURCE_DESCRIPTION: Beschreibung
+  AUTH_TYPE: Authentifizierung
+  AUTH_TYPE_HELP: 'Zugangsdaten werden in der Konfiguration gespeichert. Für Produktion Umgebungs-Overrides verwenden.'
+  AUTH_NONE: Keine
+  AUTH_BASIC: HTTP Basic
+  AUTH_BEARER: Bearer-Token
+
+  # Anzeige
+  DEFAULT_VIEW: Standardansicht
+  VIEW_CALENDAR: Kalender
+  VIEW_LIST: Liste
+  SECTION_CALENDAR_VIEW: Kalenderansicht
+  CALENDAR_INITIAL_VIEW: Initiales Kalenderlayout
+  CAL_MONTH: Monatsraster
+  CAL_WEEK: Wochenansicht
+  CAL_DAY: Tagesansicht
+  CAL_LIST_WEEK: Liste (Woche)
+  FIRST_DAY: Erster Wochentag
+  SUNDAY: Sonntag
+  MONDAY: Montag
+  SATURDAY: Samstag
+  WEEK_NUMBERS: Kalenderwochen anzeigen
+  SHOW_NOW_INDICATOR: Aktuelle Zeit anzeigen
+  NAV_LINKS: Klickbare Tag-/Wochenlinks
+  SECTION_LIST_VIEW: Listenansicht
+  LIST_GROUP_BY: Termine gruppieren nach
+  GROUP_NONE: Keine Gruppierung
+  GROUP_DAY: Tag
+  GROUP_WEEK: Woche
+  GROUP_MONTH: Monat
+  LIST_SORT: Sortierreihenfolge
+  SORT_ASC: Aufsteigend (früheste zuerst)
+  SORT_DESC: Absteigend (späteste zuerst)
+  LIST_LIMIT: Maximale Termine pro Seite
+  SHOW_PAST: Vergangene Termine anzeigen
+  PAST_DAYS: Fenster vergangener Termine (Tage)
+  PAST_DAYS_HELP: 'Bei Anzeige vergangener Termine begrenzen, wie weit zurück gesucht wird.'
+  SHOW_DESCRIPTION: Beschreibungen anzeigen
+  SHOW_LOCATION: Orte anzeigen
+  SECTION_EVENT: Termindarstellung
+  LINK_EXTERNAL: Externe URLs verlinken
+  OPEN_NEW_TAB: Links in neuem Tab öffnen
+  TRUNCATE_DESCRIPTION: Beschreibung kürzen bei (Zeichen)
+  TRUNCATE_DESCRIPTION_HELP: '0 deaktiviert Kürzung.'
+  SHOW_SOURCE_BADGE: Quellen-Badge anzeigen
+
+  # Suche
+  TAB_SEARCH_LABEL: Suche
+  SEARCH_ENABLED: Suche aktivieren
+  MIN_QUERY_LENGTH: Mindestlänge der Suchanfrage
+  MAX_RESULTS: Maximale Ergebnisse
+  SEARCH_FIELDS: Durchsuchbare Felder
+  SEARCH_FIELDS_HELP: 'Terminfelder, die in der Volltextsuche enthalten sind.'
+  SEARCH_HIGHLIGHT: Treffer hervorheben
+
+  # Filter
+  FILTERS_ENABLED: Filter aktivieren
+  SHOW_SOURCE_FILTER: Quellenfilter
+  SHOW_CATEGORY_FILTER: Kategoriefilter
+  SHOW_DATE_RANGE_FILTER: Datumsbereichsfilter
+  PERSIST_IN_URL: Filter in URL speichern
+  PERSIST_IN_URL_HELP: 'Ermöglicht das Teilen gefilterter Ansichten über Query-Parameter.'
+
+  # Erweitert / API
+  SECTION_API: REST-API
+  API_ENABLED: API aktivieren
+  API_ENABLED_HELP: 'Schreibgeschützte JSON-Endpunkte bereitstellen. Zugriff auf öffentlichen Sites einschränken.'
+  API_ROUTE: API-Routenpräfix
+  RATE_LIMIT: Ratenbegrenzung
+  RATE_LIMIT_MAX: Max. Anfragen pro Zeitfenster
+  SECTION_ADVANCED: Erweiterte Optionen
+  DEBUG: Debug-Modus
+  LOG_LEVEL: Log-Level
+  HTTP_TIMEOUT: HTTP-Timeout (Sekunden)
+  VERIFY_SSL: SSL-Zertifikate prüfen
+  SCHEDULER_ENABLED: Grav-Scheduler-Integration
+  SCHEDULER_ENABLED_HELP: 'Sync- und Bereinigungsjobs beim Grav-Scheduler registrieren.'
+  DEDUPLICATE: Termine deduplizieren
+  DEDUPLICATE_HELP: 'Identische Termine aus mehreren Quellen anhand UID und Zeitstempel zusammenführen.'
+  EXPAND_RECURRING: Wiederkehrende Termine expandieren
+  EXPAND_RECURRING_HELP: 'RRULE-Vorkommen in einzelne Datensätze für Abfragen materialisieren.'
+  RECURRING_HORIZON: Wiederholungs-Horizont (Tage)
+
+  # Frontend
+  FRONTEND_TITLE: Kalender
+  FRONTEND_NO_EVENTS: Keine Termine gefunden.
+  FRONTEND_LOADING: Termine werden geladen…
+  FRONTEND_ERROR: Kalendertermine konnten nicht geladen werden.
+  FRONTEND_SEARCH_PLACEHOLDER: Termine suchen…
+  FRONTEND_FILTER_SOURCES: Quellen
+  FRONTEND_FILTER_CATEGORIES: Kategorien
+  FRONTEND_FILTER_FROM: Von
+  FRONTEND_FILTER_TO: Bis
+  FRONTEND_FILTER_APPLY: Filter anwenden
+  FRONTEND_FILTER_RESET: Zurücksetzen
+  FRONTEND_ALL_SOURCES: Alle Quellen
+  FRONTEND_ALL_CATEGORIES: Alle Kategorien
+  FRONTEND_TODAY: Heute
+  FRONTEND_PREVIOUS: Zurück
+  FRONTEND_NEXT: Weiter
+  FRONTEND_MONTH: Monat
+  FRONTEND_WEEK: Woche
+  FRONTEND_DAY: Tag
+  FRONTEND_LIST: Liste
+  FRONTEND_ALL_DAY: Ganztägig
+  FRONTEND_LOCATION: Ort
+  FRONTEND_SOURCE: Quelle
+  FRONTEND_READ_MORE: Mehr lesen
+  FRONTEND_RESULTS: '%1 Termine gefunden'
+
+  # Fehler
+  ERROR_SYNC_FAILED: 'Synchronisation für Quelle „%s“ fehlgeschlagen.'
+  ERROR_SOURCE_DISABLED: 'Quelle „%s“ ist deaktiviert.'
+  ERROR_SOURCE_NOT_FOUND: 'Kalenderquelle nicht gefunden.'
+  ERROR_INVALID_URL: 'Ungültige Quellen-URL oder Pfad.'
+  ERROR_HTTP: 'HTTP-Fehler beim Abrufen der Kalenderdaten.'
+  ERROR_PARSE: 'Kalenderdaten konnten nicht geparst werden.'
+  ERROR_STORAGE: 'Datenbankfehler. Berechtigungen und Speicherplatz prüfen.'
+  ERROR_API_DISABLED: 'Die OpenCalendar-API ist deaktiviert.'
+  ERROR_RATE_LIMIT: 'Zu viele Anfragen. Bitte später erneut versuchen.'
+  ERROR_SEARCH_DISABLED: 'Suche ist deaktiviert.'
+  ERROR_QUERY_TOO_SHORT: 'Suchanfrage ist zu kurz.'
