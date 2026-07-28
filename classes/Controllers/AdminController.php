@@ -24,9 +24,16 @@ final class AdminController
         $sources = $this->container->sourceConfigs();
 
         if ($sources === []) {
-            return array_merge($this->status(), [
-                'ok' => false,
-                'message' => 'No sources found in plugin config. Open the Sources tab, configure at least one source, click Save, then sync again.',
+            $removed = 0;
+            if ($this->container->hasExplicitSourcesConfig()) {
+                $removed = $this->container->calendarService()->reconcileCalendars([]);
+            }
+
+            return array_merge($this->status(false), [
+                'ok' => true,
+                'message' => $removed > 0
+                    ? sprintf('No sources configured. Removed %d orphaned calendar(s) from the database.', $removed)
+                    : 'No sources found in plugin config. Open the Sources tab, configure at least one source, click Save, then sync again.',
             ]);
         }
 
@@ -49,13 +56,13 @@ final class AdminController
 
             $results = $this->container->calendarService()->synchronize($sources, true);
 
-            return array_merge($this->status(), [
+            return array_merge($this->status(false), [
                 'ok' => true,
                 'message' => $this->summarizeResults($results),
                 'results' => array_map(static fn ($r) => $r->toArray(), $results),
             ]);
         } catch (\Throwable $e) {
-            return array_merge($this->status(), [
+            return array_merge($this->status(false), [
                 'ok' => false,
                 'message' => $e->getMessage(),
             ]);
@@ -78,13 +85,13 @@ final class AdminController
         try {
             $results = $this->container->calendarService()->rebuild($sources);
 
-            return array_merge($this->status(), [
+            return array_merge($this->status(false), [
                 'ok' => true,
                 'message' => 'Database rebuilt. ' . $this->summarizeResults($results),
                 'results' => array_map(static fn ($r) => $r->toArray(), $results),
             ]);
         } catch (\Throwable $e) {
-            return array_merge($this->status(), [
+            return array_merge($this->status(false), [
                 'ok' => false,
                 'message' => $e->getMessage(),
             ]);
@@ -92,7 +99,7 @@ final class AdminController
     }
 
     /**
-     * @return array{ok: bool, message: string}
+     * @return array<string, mixed>
      */
     public function clearCache(): array
     {
@@ -109,21 +116,38 @@ final class AdminController
     }
 
     /**
-     * @return array{ok: bool, message: string, calendars: list<array<string, mixed>>, event_count: int, source_count: int}
+     * @return array{ok: bool, message: string, calendars: list<array<string, mixed>>, event_count: int, source_count: int, pruned?: int}
      */
-    public function status(): array
+    public function status(bool $reconcile = true): array
     {
         $this->container->boot();
 
+        $pruned = 0;
+        if ($reconcile && $this->container->hasExplicitSourcesConfig()) {
+            try {
+                $pruned = $this->container->calendarService()->reconcileCalendars(
+                    $this->container->sourceConfigs()
+                );
+            } catch (\Throwable) {
+                $pruned = 0;
+            }
+        }
+
+        $message = 'OK';
+        if ($pruned > 0) {
+            $message = sprintf('OK — removed %d orphaned calendar(s) no longer in Sources.', $pruned);
+        }
+
         return [
             'ok' => true,
-            'message' => 'OK',
+            'message' => $message,
             'calendars' => array_map(
                 static fn ($c) => $c->toArray(),
                 $this->container->calendarService()->listCalendars()
             ),
             'event_count' => $this->container->calendarService()->eventCount(),
             'source_count' => count($this->container->sourceConfigs()),
+            'pruned' => $pruned,
         ];
     }
 

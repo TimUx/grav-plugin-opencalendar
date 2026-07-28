@@ -60,7 +60,7 @@ final class SyncService
         }
 
         try {
-            $this->calendars->deleteMissingKeys($keepKeys);
+            $this->calendars->pruneToKeys($keepKeys);
         } catch (\Throwable $e) {
             $this->logger->warning('OpenCalendar failed pruning calendars: {message}', [
                 'message' => $e->getMessage(),
@@ -80,6 +80,16 @@ final class SyncService
         foreach ($sources as $source) {
             if ($source->key === $sourceKey) {
                 $result = $this->job->run($source, $force);
+                try {
+                    $this->calendars->pruneToKeys(array_map(
+                        static fn (SourceConfig $item): string => $item->key,
+                        $sources
+                    ));
+                } catch (\Throwable $e) {
+                    $this->logger->warning('OpenCalendar failed pruning calendars: {message}', [
+                        'message' => $e->getMessage(),
+                    ]);
+                }
                 $this->runCleanup();
 
                 return $result;
@@ -87,6 +97,21 @@ final class SyncService
         }
 
         return null;
+    }
+
+    /**
+     * Remove DB calendars that are no longer present in the configured source list.
+     *
+     * @param list<SourceConfig> $sources
+     */
+    public function reconcileCalendars(array $sources): int
+    {
+        $keepKeys = array_map(
+            static fn (SourceConfig $source): string => $source->key,
+            $sources
+        );
+
+        return $this->calendars->pruneToKeys($keepKeys);
     }
 
     public function runCleanup(): int

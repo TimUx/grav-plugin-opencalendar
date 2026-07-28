@@ -207,11 +207,19 @@ final class CalendarRepository
         );
     }
 
-    public function deleteMissingKeys(array $keepKeys): int
+    /**
+     * Make the calendars table match the configured source keys exactly.
+     *
+     * An empty $keepKeys list deletes all calendars (caller must ensure config was read correctly).
+     *
+     * @param list<string> $keepKeys
+     */
+    public function pruneToKeys(array $keepKeys): int
     {
-        // Never wipe the whole calendars table because of an empty/misread config.
         if ($keepKeys === []) {
-            return 0;
+            $stmt = $this->db->execute('DELETE FROM calendars');
+
+            return $stmt->rowCount();
         }
 
         $placeholders = [];
@@ -226,6 +234,19 @@ final class CalendarRepository
         $stmt = $this->db->execute($sql, $params);
 
         return $stmt->rowCount();
+    }
+
+    /**
+     * @deprecated Use pruneToKeys(); kept for clarity at call sites that never wipe-all.
+     * @param list<string> $keepKeys
+     */
+    public function deleteMissingKeys(array $keepKeys): int
+    {
+        if ($keepKeys === []) {
+            return 0;
+        }
+
+        return $this->pruneToKeys($keepKeys);
     }
 
     /**

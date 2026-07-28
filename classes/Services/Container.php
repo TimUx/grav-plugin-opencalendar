@@ -219,6 +219,11 @@ final class Container
         return $configs;
     }
 
+    public function hasExplicitSourcesConfig(): bool
+    {
+        return array_key_exists('sources', $this->config);
+    }
+
     private function resolvePath(string $path): string
     {
         $path = trim($path);
