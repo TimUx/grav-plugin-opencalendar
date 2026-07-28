@@ -38,11 +38,39 @@ class OpenCalendarPlugin extends Plugin
 
     public function autoload(): ClassLoader
     {
-        return require __DIR__ . '/vendor/autoload.php';
+        $autoload = __DIR__ . '/vendor/autoload.php';
+
+        // Never fatal Grav when Composer deps are missing — disable in onPluginsInitialized instead.
+        if (!is_file($autoload)) {
+            return new ClassLoader();
+        }
+
+        /** @var ClassLoader $loader */
+        $loader = require $autoload;
+
+        return $loader;
     }
 
     public function onPluginsInitialized(): void
     {
+        if (!$this->dependenciesInstalled()) {
+            $message = 'OpenCalendar: missing vendor/autoload.php. '
+                . 'Run: cd user/plugins/opencalendar && composer install --no-dev --optimize-autoloader';
+
+            if (isset($this->grav['log'])) {
+                $this->grav['log']->error($message);
+            }
+
+            if ($this->isAdmin() && isset($this->grav['messages'])) {
+                $this->grav['messages']->add(
+                    'OpenCalendar is not ready: run <code>composer install --no-dev</code> in <code>user/plugins/opencalendar</code>.',
+                    'error'
+                );
+            }
+
+            return;
+        }
+
         if ($this->isAdmin()) {
             $this->enable([
                 'onTwigSiteVariables' => ['onAdminTwigSiteVariables', 0],
@@ -68,6 +96,11 @@ class OpenCalendarPlugin extends Plugin
         } catch (\Throwable $e) {
             $this->grav['log']->warning('OpenCalendar boot failed: ' . $e->getMessage());
         }
+    }
+
+    private function dependenciesInstalled(): bool
+    {
+        return is_file(__DIR__ . '/vendor/autoload.php');
     }
 
     public function onTwigTemplatePaths(): void
