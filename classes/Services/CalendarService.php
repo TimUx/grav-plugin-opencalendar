@@ -126,6 +126,21 @@ final class CalendarService
     }
 
     /**
+     * Drop calendar rows that no longer exist in the given source configuration.
+     *
+     * @param list<SourceConfig> $sources
+     */
+    public function reconcileCalendars(array $sources): int
+    {
+        $removed = $this->sync->reconcileCalendars($sources);
+        if ($removed > 0) {
+            $this->cache->clear();
+        }
+
+        return $removed;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function config(): array
