@@ -96,24 +96,14 @@
       .then(function (result) {
         if (!result.ok || result.body.ok === false) {
           showMessage((result.body && result.body.message) || cfg.labels.error, 'is-error');
+          if (result.body && result.body.calendars) {
+            renderTable(cfg, result.body);
+          }
           return;
         }
 
         showMessage(result.body.message || cfg.labels.ok, 'is-ok');
-
-        if (action === 'status' || result.body.calendars) {
-          renderTable(cfg, result.body);
-          return;
-        }
-
-        return fetch(cfg.base.replace(/\/$/, '') + '/status', {
-          credentials: 'same-origin',
-          headers: { Accept: 'application/json' }
-        })
-          .then(function (r) { return r.json(); })
-          .then(function (statusBody) {
-            renderTable(cfg, statusBody);
-          });
+        renderTable(cfg, result.body);
       })
       .catch(function () {
         showMessage(cfg.labels.error, 'is-error');
