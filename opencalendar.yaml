@@ -4,7 +4,7 @@ enabled: true
 locale: auto
 
 # Default timezone for events without TZID (IANA name, e.g. Europe/Berlin)
-timezone: UTC
+timezone: Europe/Berlin
 
 # Frontend color scheme: auto | light | dark
 theme: auto

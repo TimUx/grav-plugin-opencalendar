@@ -56,7 +56,7 @@ form:
               label: PLUGIN_OPENCALENDAR.TIMEZONE
               help: PLUGIN_OPENCALENDAR.TIMEZONE_HELP
               placeholder: UTC
-              default: UTC
+              default: Europe/Berlin
               validate:
                 type: text
 

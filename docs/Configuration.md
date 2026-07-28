@@ -17,7 +17,7 @@ Always override sensitive values (CalDAV passwords, API tokens) in the site conf
 ```yaml
 enabled: true
 locale: auto          # auto | en | de
-timezone: UTC         # IANA timezone
+timezone: Europe/Berlin         # IANA timezone
 theme: auto           # auto | light | dark
 sync_interval: 15     # 5 | 10 | 15 | 30 | 60 | daily
 cleanup: 30           # never | immediate | 1 | 7 | 30 | 90
