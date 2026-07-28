@@ -122,11 +122,30 @@ final class IntegrationApiTwigTest extends TestCase
         self::assertStringContainsString('opencalendar', $html);
         self::assertStringContainsString('oc-list', $html);
 
+        $hiddenUi = $twig->render([
+            'view' => 'list',
+            'limit' => 10,
+            'show_filters' => 'false',
+            'show_search' => 'false',
+            'from' => 'now',
+            'to' => '+30 days',
+            'show_past' => 'false',
+        ]);
+        self::assertStringNotContainsString('data-oc-filters', $hiddenUi);
+        self::assertStringNotContainsString('data-oc-search', $hiddenUi);
+        self::assertStringNotContainsString('data-oc-filter-source', $hiddenUi);
+
         $processor = new ShortcodeProcessor($twig);
         $processed = $processor->process('Before [opencalendar view="month"] After');
         self::assertStringContainsString('oc-calendar', $processed);
         self::assertStringContainsString('Before ', $processed);
         self::assertStringContainsString(' After', $processed);
+
+        $processedHidden = $processor->process(
+            '[opencalendar view="list" limit="10" from="now" to="+30 days" show_past="false" show_filters="false" show_search="false" /]'
+        );
+        self::assertStringContainsString('oc-list', $processedHidden);
+        self::assertStringNotContainsString('data-oc-filters', $processedHidden);
 
         $query = EventQuery::fromRequest([
             'from' => '2026-07-01',
