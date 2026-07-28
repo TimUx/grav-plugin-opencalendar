@@ -169,55 +169,61 @@
 
 .opencalendar .oc-pagination {
   display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.opencalendar ul.pagination {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
   flex-wrap: wrap;
-  margin-top: 1.25rem;
-  color: var(--oc-muted);
 }
 
-.opencalendar .oc-pagination__status {
-  min-width: 7.5rem;
-  text-align: center;
-  font-size: 0.95rem;
+.opencalendar ul.pagination li {
+  margin: 0;
 }
 
-.opencalendar .oc-pagination__btn {
-  appearance: none;
-  -webkit-appearance: none;
+.opencalendar ul.pagination a,
+.opencalendar ul.pagination span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 2.25rem;
   min-height: 2.25rem;
-  padding: 0.45rem 1rem;
+  padding: 0.35rem 0.7rem;
   border: 1px solid var(--oc-border);
   border-radius: 999px;
   background: var(--oc-bg);
   color: var(--oc-text);
-  font: inherit;
-  font-size: 0.92rem;
+  text-decoration: none;
   font-weight: 600;
   line-height: 1;
-  text-decoration: none;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.opencalendar .oc-pagination__btn:hover,
-.opencalendar .oc-pagination__btn:focus-visible {
+.opencalendar ul.pagination a:hover,
+.opencalendar ul.pagination a:focus-visible {
   border-color: var(--oc-accent);
   color: var(--oc-accent);
   outline: none;
 }
 
-.opencalendar .oc-pagination__btn--disabled,
-.opencalendar .oc-pagination__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
-  box-shadow: none;
+.opencalendar ul.pagination span.active {
+  background: var(--oc-accent);
+  border-color: var(--oc-accent);
+  color: #fff;
+}
+
+.opencalendar ul.pagination li.gap span,
+.opencalendar ul.pagination li span[aria-hidden] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--oc-muted);
+  cursor: default;
 }
 
 .opencalendar.oc-root.oc-loading {

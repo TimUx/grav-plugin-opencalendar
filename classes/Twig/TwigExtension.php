@@ -40,7 +40,7 @@ class TwigExtension extends AbstractExtension
     public function render(array $options = []): string
     {
         $view = (string) ($options['view'] ?? $this->config['display']['default_view'] ?? 'calendar');
-        // Grav page cache ignores many query strings; list pagination must re-render.
+        // List pagination must not be served from a stale Grav page-cache entry.
         if ($view === 'list') {
             $this->disablePageCache();
         }
@@ -58,11 +58,8 @@ class TwigExtension extends AbstractExtension
             $calendarKeys = [$requestFilters['source']];
         }
 
-        $limit = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
+        $perPage = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
         $page = $this->resolvePage($options);
-        $offset = isset($options['offset'])
-            ? max(0, (int) $options['offset'])
-            : ($page - 1) * $limit;
         $futureOnly = filter_var(
             $options['future_only'] ?? false,
             FILTER_VALIDATE_BOOLEAN
@@ -77,13 +74,23 @@ class TwigExtension extends AbstractExtension
             $categoriesFilter[] = $requestFilters['category'];
         }
 
+        $calendarKeys = array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== ''));
+        $sort = (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc');
+
+        // List view: load a full window of events and paginate with Grav's /page:N URLs
+        // (client-side slice), so Grav page-cache cannot pin the UI to page 1.
+        $fetchLimit = $view === 'list' ? max($perPage * 50, 500) : $perPage;
+        $fetchOffset = $view === 'list'
+            ? 0
+            : (isset($options['offset']) ? max(0, (int) $options['offset']) : ($page - 1) * $perPage);
+
         $query = new EventQuery(
-            calendarKeys: array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== '')),
+            calendarKeys: $calendarKeys,
             categories: $categoriesFilter,
             search: $requestFilters['q'] !== '' ? $requestFilters['q'] : null,
-            sort: (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc'),
-            limit: $limit,
-            offset: $offset,
+            sort: $sort,
+            limit: $fetchLimit,
+            offset: $fetchOffset,
             futureOnly: $futureOnly,
             includeExpired: $includeExpired,
         );
@@ -106,6 +113,21 @@ class TwigExtension extends AbstractExtension
 
         $i18n = $this->frontendI18n();
 
+        $allListEvents = array_map(
+            fn ($e): array => array_merge(
+                $e->toArray(),
+                $this->displayFields($e->toArray(), $locale, $timezone)
+            ),
+            $result->items
+        );
+
+        $total = $view === 'list' ? $result->total : $result->total;
+        $pages = $view === 'list' ? max(1, (int) ceil($total / $perPage)) : $result->totalPages();
+        $page = min(max(1, $page), $pages);
+        $pageEvents = $view === 'list'
+            ? array_slice($allListEvents, ($page - 1) * $perPage, $perPage)
+            : $allListEvents;
+
         $payload = [
             'instanceId' => $instanceId,
             'view' => $view,
@@ -122,19 +144,14 @@ class TwigExtension extends AbstractExtension
 
                 return $calendarEvent;
             }, $result->items),
-            'eventsList' => array_map(
-                fn ($e): array => array_merge(
-                    $e->toArray(),
-                    $this->displayFields($e->toArray(), $locale, $timezone)
-                ),
-                $result->items
-            ),
+            'eventsList' => $pageEvents,
+            'eventsListAll' => $view === 'list' ? $allListEvents : $pageEvents,
             'meta' => [
-                'total' => $result->total,
-                'limit' => $result->limit,
-                'offset' => $result->offset,
-                'page' => $result->page(),
-                'pages' => $result->totalPages(),
+                'total' => $total,
+                'limit' => $perPage,
+                'offset' => ($page - 1) * $perPage,
+                'page' => $page,
+                'pages' => $pages,
             ],
             'calendars' => array_map(static fn ($c) => [
                 'key' => $c->sourceKey,
@@ -374,45 +391,59 @@ HTML;
         $page = (int) ($meta['page'] ?? 1);
         $pages = (int) ($meta['pages'] ?? 1);
         if ($pages > 1) {
-            $pageLabel = str_replace(
-                ['%1', '%2'],
-                [(string) $page, (string) $pages],
-                (string) $i18n['page']
-            );
-            $prevLabel = htmlspecialchars((string) ($i18n['previous'] ?? 'Previous'), ENT_QUOTES, 'UTF-8');
-            $nextLabel = htmlspecialchars((string) ($i18n['next'] ?? 'Next'), ENT_QUOTES, 'UTF-8');
-            $prevPage = max(1, $page - 1);
-            $nextPage = min($pages, $page + 1);
-            $html .= '<nav class="oc-pagination" aria-label="'
-                . htmlspecialchars((string) $i18n['pagination'], ENT_QUOTES, 'UTF-8')
-                . '" data-oc-pagination data-oc-page="' . $page . '" data-oc-pages="' . $pages . '">';
-
-            if ($page <= 1) {
-                $html .= '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
-                    . $prevLabel . '</span>';
-            } else {
-                $html .= '<a class="oc-pagination__btn" href="'
-                    . htmlspecialchars($this->buildPageHref($prevPage), ENT_QUOTES, 'UTF-8')
-                    . '" data-oc-page-goto="' . $prevPage . '">' . $prevLabel . '</a>';
-            }
-
-            $html .= '<span class="oc-pagination__status" data-oc-page-status>'
-                . htmlspecialchars($pageLabel, ENT_QUOTES, 'UTF-8')
-                . '</span>';
-
-            if ($page >= $pages) {
-                $html .= '<span class="oc-pagination__btn oc-pagination__btn--disabled" aria-disabled="true">'
-                    . $nextLabel . '</span>';
-            } else {
-                $html .= '<a class="oc-pagination__btn" href="'
-                    . htmlspecialchars($this->buildPageHref($nextPage), ENT_QUOTES, 'UTF-8')
-                    . '" data-oc-page-goto="' . $nextPage . '">' . $nextLabel . '</a>';
-            }
-
-            $html .= '</nav>';
+            $html .= $this->renderGravPagination($page, $pages, $i18n);
         }
 
         $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Grav Pagination plugin compatible markup (ul.pagination + /page:N links).
+     *
+     * @param array<string, string> $i18n
+     */
+    private function renderGravPagination(int $page, int $pages, array $i18n): string
+    {
+        $label = htmlspecialchars((string) ($i18n['pagination'] ?? 'Pagination'), ENT_QUOTES, 'UTF-8');
+        $html = '<nav class="oc-pagination" aria-label="' . $label
+            . '" data-oc-pagination data-oc-page="' . $page . '" data-oc-pages="' . $pages . '">'
+            . '<ul class="pagination">';
+
+        if ($page > 1) {
+            $html .= '<li><a rel="prev" href="'
+                . htmlspecialchars($this->buildPageHref($page - 1), ENT_QUOTES, 'UTF-8')
+                . '" data-oc-page-goto="' . ($page - 1) . '">&laquo;</a></li>';
+        } else {
+            $html .= '<li><span aria-hidden="true">&laquo;</span></li>';
+        }
+
+        $delta = 2;
+        for ($i = 1; $i <= $pages; $i++) {
+            $inDelta = abs($i - $page) <= $delta || $i === 1 || $i === $pages;
+            $border = !$inDelta && (abs($i - $page) === $delta + 1);
+
+            if ($i === $page) {
+                $html .= '<li><span class="active">' . $i . '</span></li>';
+            } elseif ($inDelta) {
+                $html .= '<li><a href="'
+                    . htmlspecialchars($this->buildPageHref($i), ENT_QUOTES, 'UTF-8')
+                    . '" data-oc-page-goto="' . $i . '">' . $i . '</a></li>';
+            } elseif ($border) {
+                $html .= '<li class="gap"><span>&hellip;</span></li>';
+            }
+        }
+
+        if ($page < $pages) {
+            $html .= '<li><a rel="next" href="'
+                . htmlspecialchars($this->buildPageHref($page + 1), ENT_QUOTES, 'UTF-8')
+                . '" data-oc-page-goto="' . ($page + 1) . '">&raquo;</a></li>';
+        } else {
+            $html .= '<li><span aria-hidden="true">&raquo;</span></li>';
+        }
+
+        $html .= '</ul></nav>';
 
         return $html;
     }
@@ -604,7 +635,7 @@ HTML;
                 $uri = \Grav\Common\Grav::instance()['uri'] ?? null;
                 if (is_object($uri) && method_exists($uri, 'path')) {
                     $path = rtrim((string) $uri->path(), '/');
-                    $path = (string) preg_replace('#/oc_page:\d+#', '', $path);
+                    $path = (string) preg_replace('#/(?:oc_)?page:\d+#', '', $path);
 
                     return $path !== '' ? $path : '/';
                 }
@@ -616,7 +647,7 @@ HTML;
         $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
         $path = parse_url($uri, PHP_URL_PATH);
         $path = is_string($path) ? rtrim($path, '/') : '';
-        $path = (string) preg_replace('#/oc_page:\d+#', '', $path);
+        $path = (string) preg_replace('#/(?:oc_)?page:\d+#', '', $path);
 
         return $path !== '' ? $path : '/';
     }
@@ -633,8 +664,8 @@ HTML;
             }
         }
 
-        // Grav URL params participate in page-cache keys; query strings often do not.
-        $href = $path . '/oc_page:' . $page;
+        // Grav standard pagination parameter used by the Pagination plugin.
+        $href = $page > 1 ? ($path . '/page:' . $page) : $path;
         if ($query !== []) {
             $href .= '?' . http_build_query($query);
         }
@@ -651,16 +682,19 @@ HTML;
         try {
             if (class_exists(\Grav\Common\Grav::class)) {
                 $uri = \Grav\Common\Grav::instance()['uri'] ?? null;
-                if (is_object($uri) && method_exists($uri, 'param')) {
-                    $param = $uri->param('oc_page');
-                    if ($param !== false && $param !== null && $param !== '') {
-                        return max(1, (int) $param);
+                // Grav core helper used by the Pagination plugin.
+                if (is_object($uri) && method_exists($uri, 'currentPage')) {
+                    $current = (int) $uri->currentPage();
+                    if ($current > 0) {
+                        return $current;
                     }
                 }
-                if (is_object($uri) && method_exists($uri, 'query')) {
-                    $value = $uri->query('oc_page');
-                    if ($value !== null && $value !== false && $value !== '') {
-                        return max(1, (int) $value);
+                if (is_object($uri) && method_exists($uri, 'param')) {
+                    foreach (['page', 'oc_page'] as $name) {
+                        $param = $uri->param($name);
+                        if ($param !== false && $param !== null && $param !== '') {
+                            return max(1, (int) $param);
+                        }
                     }
                 }
             }
@@ -669,13 +703,15 @@ HTML;
         }
 
         $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
-        if (preg_match('#(?:^|/)oc_page:(\d+)(?:/|$|\?)#', $requestUri, $matches) === 1) {
+        if (preg_match('#(?:^|/)(?:oc_)?page:(\d+)(?:/|$|\?)#', $requestUri, $matches) === 1) {
             return max(1, (int) $matches[1]);
         }
 
-        $fromQuery = $_GET['oc_page'] ?? null;
-        if ($fromQuery !== null && $fromQuery !== '') {
-            return max(1, (int) $fromQuery);
+        foreach (['page', 'oc_page'] as $key) {
+            $fromQuery = $_GET[$key] ?? null;
+            if ($fromQuery !== null && $fromQuery !== '') {
+                return max(1, (int) $fromQuery);
+            }
         }
 
         return 1;

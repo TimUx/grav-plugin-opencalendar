@@ -226,6 +226,8 @@ class OpenCalendarPlugin extends Plugin
 
     public function onPagesInitialized(): void
     {
+        $this->disableCacheForOpenCalendarPages();
+
         if (!$this->pluginConfig('api.enabled', false)) {
             return;
         }
@@ -379,6 +381,34 @@ class OpenCalendarPlugin extends Plugin
         }
 
         return $value;
+    }
+
+    private function disableCacheForOpenCalendarPages(): void
+    {
+        try {
+            $page = $this->grav['page'] ?? null;
+            $uri = $this->grav['uri'] ?? null;
+            $hasPageParam = is_object($uri)
+                && method_exists($uri, 'param')
+                && ($uri->param('page') || $uri->param('oc_page'));
+
+            $raw = '';
+            if (is_object($page) && method_exists($page, 'getRawContent')) {
+                $raw = (string) $page->getRawContent();
+            }
+
+            $usesPlugin = $hasPageParam
+                || str_contains(strtolower($raw), '[opencalendar')
+                || str_contains($raw, 'opencalendar(');
+
+            if (!$usesPlugin || !is_object($page) || !method_exists($page, 'modifyHeader')) {
+                return;
+            }
+
+            $page->modifyHeader('cache_enable', false);
+        } catch (\Throwable) {
+            // ignore
+        }
     }
 
     private function container(bool $fresh = false): Container
