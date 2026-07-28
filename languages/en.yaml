@@ -94,6 +94,8 @@ PLUGIN_OPENCALENDAR:
   AUTH_NONE: None
   AUTH_BASIC: HTTP Basic
   AUTH_BEARER: Bearer token
+  AUTH_USERNAME: Username
+  AUTH_PASSWORD: Password / token
 
   # Display
   DEFAULT_VIEW: Default view
