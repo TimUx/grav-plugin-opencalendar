@@ -1,0 +1,145 @@
+enabled: true
+
+# Site locale for date/time formatting (falls back to Grav system language)
+locale: auto
+
+# Default timezone for events without TZID (IANA name, e.g. Europe/Berlin)
+timezone: UTC
+
+# Frontend color scheme: auto | light | dark
+theme: auto
+
+cache:
+  enabled: true
+  # Cache lifetime for rendered event collections (seconds). 0 = until next sync.
+  ttl: 3600
+  # Cache parsed ICS/JSON payloads between sync runs
+  parse_cache: true
+  parse_ttl: 86400
+
+# Retention for soft-deleted or superseded events: never | immediate | 1 | 7 | 30 | 90 (days)
+cleanup: 30
+
+# Background sync interval: 5 | 10 | 15 | 30 | 60 (minutes) or daily
+sync_interval: 15
+
+storage:
+  # Relative to plugin directory unless absolute path
+  path: data/opencalendar.db
+  # WAL mode improves concurrent read performance
+  wal_mode: true
+  # Run VACUUM during scheduled maintenance
+  vacuum_on_cleanup: false
+
+sources:
+  - name: Example Public Holidays
+    enabled: true
+    type: ics
+    url: 'https://calendar.google.com/calendar/ical/en.german%23holiday%40group.v.calendar.google.com/public/basic.ics'
+    refresh: inherit
+    color: '#4CAF50'
+    description: 'Public holidays (example ICS feed)'
+    auth:
+      type: none
+      username: ''
+      password: ''
+  - name: Disabled Legacy Calendar
+    enabled: false
+    type: ics
+    url: 'https://example.com/calendar.ics'
+    refresh: 60
+    color: '#9E9E9E'
+    description: 'Example disabled source — enable after replacing URL'
+    auth:
+      type: none
+      username: ''
+      password: ''
+
+display:
+  default_view: calendar
+  calendar:
+    initial_view: dayGridMonth
+    first_day: 1
+    week_numbers: false
+    weekends: true
+    height: auto
+    business_hours:
+      enabled: false
+      start: '09:00'
+      end: '17:00'
+    slot_duration: '00:30:00'
+    max_events_per_day: 0
+    show_now_indicator: true
+    nav_links: true
+  list:
+    group_by: month
+    sort: asc
+    limit: 50
+    show_past: true
+    past_days: 30
+    show_description: true
+    show_location: true
+    date_format: 'D, MMM j, YYYY'
+    time_format: 'HH:mm'
+  event:
+    link_external: true
+    open_in_new_tab: true
+    truncate_description: 200
+    show_source_badge: true
+
+search:
+  enabled: true
+  min_query_length: 2
+  max_results: 25
+  fields:
+    - title
+    - description
+    - location
+    - categories
+  highlight: true
+
+filters:
+  enabled: true
+  show_source_filter: true
+  show_category_filter: true
+  show_date_range_filter: true
+  default_sources: []
+  default_categories: []
+  persist_in_url: true
+
+api:
+  enabled: false
+  route: /opencalendar/api
+  cors:
+    enabled: false
+    allowed_origins: []
+  rate_limit:
+    enabled: true
+    max_requests: 60
+    per_minutes: 1
+  pagination:
+    default_limit: 50
+    max_limit: 200
+
+advanced:
+  debug: false
+  log_level: warning
+  log_file: logs/opencalendar.log
+  http:
+    timeout: 30
+    user_agent: 'OpenCalendar/1.0 Grav Plugin'
+    verify_ssl: true
+    max_redirects: 3
+  scheduler:
+    enabled: true
+    on_cache_clear: true
+  deduplicate:
+    enabled: true
+    match_fields:
+      - uid
+      - start
+      - end
+  import:
+    expand_recurring: true
+    recurring_horizon_days: 365
+    strip_html: false

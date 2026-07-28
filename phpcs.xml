@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="OpenCalendar">
+    <description>PSR-12 coding standard for OpenCalendar Grav plugin</description>
+
+    <file>classes</file>
+    <file>opencalendar.php</file>
+    <file>tests</file>
+
+    <rule ref="PSR12"/>
+
+    <config name="ignore_warnings_on_exit" value="1"/>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/tests/stubs/*</exclude-pattern>
+</ruleset>

@@ -1,0 +1,7 @@
+{# OpenCalendar embed partial. Usage: {% include 'partials/opencalendar.html.twig' with { options: { view: 'month' } } %} #}
+{% set oc_options = options|default({}) %}
+{% if opencalendar is defined %}
+  {{ opencalendar(oc_options) }}
+{% else %}
+  <div class="opencalendar oc-fallback">OpenCalendar Twig function unavailable.</div>
+{% endif %}
