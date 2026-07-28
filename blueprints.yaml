@@ -1,21 +1,25 @@
 name: OpenCalendar
 slug: opencalendar
 type: plugin
-version: 1.0.0
+version: 1.0.1
 description: "Aggregate calendars from ICS, CalDAV, JSON, and local sources with SQLite storage, search, filtering, and flexible Twig display."
 icon: calendar
 author:
   name: TimUx
   url: https://github.com/TimUx
-keywords: calendar, ics, caldav, events, schedule, opencalendar
+keywords: calendar, ics, caldav, events, schedule, opencalendar, json
 homepage: https://github.com/TimUx/grav-plugin-opencalendar
-demo: https://github.com/TimUx/grav-plugin-opencalendar
+demo: https://www.feuerwehr-willingshausen.de/de/termine
 bugs: https://github.com/TimUx/grav-plugin-opencalendar/issues
 docs: https://github.com/TimUx/grav-plugin-opencalendar/tree/main/docs
 license: MIT
 
 dependencies:
   - { name: grav, version: '>=1.7.0' }
+
+compatibility:
+  grav:
+    - '1.7'
 
 form:
   validation: loose

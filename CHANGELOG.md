@@ -1,3 +1,11 @@
+# v1.0.1
+## 07/29/2026
+
+1. [](#improved)
+    * Declared Grav 1.7 compatibility for GPM listing
+    * Documented CalDAV, JSON, and local source adapters
+    * Linked public demo site for the plugin listing
+
 # v1.0.0
 ## 07/28/2026
 
