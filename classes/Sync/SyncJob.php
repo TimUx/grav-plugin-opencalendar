@@ -8,6 +8,10 @@ use Grav\Plugin\OpenCalendar\Dto\SourceConfig;
 use Grav\Plugin\OpenCalendar\Dto\SyncResult;
 use Grav\Plugin\OpenCalendar\Enum\SyncInterval;
 use Grav\Plugin\OpenCalendar\Enum\SyncStatus;
+use Grav\Plugin\OpenCalendar\Events\EventDispatcherInterface;
+use Grav\Plugin\OpenCalendar\Events\NullEventDispatcher;
+use Grav\Plugin\OpenCalendar\Events\PipelineEvents;
+use Grav\Plugin\OpenCalendar\Models\Event;
 use Grav\Plugin\OpenCalendar\Source\SourceFactory;
 use Grav\Plugin\OpenCalendar\Storage\CalendarRepository;
 use Grav\Plugin\OpenCalendar\Storage\EventRepository;
@@ -24,6 +28,7 @@ final class SyncJob
         private readonly CalendarRepository $calendars,
         private readonly EventRepository $events,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly EventDispatcherInterface $dispatcher = new NullEventDispatcher(),
     ) {
     }
 
@@ -112,6 +117,8 @@ final class SyncJob
             }
 
             $parsed = $adapter->parse($fetch->body, $config, (int) $calendar->id);
+            $parsed = $this->filterEventsThroughPipeline($parsed, $config, $calendar, $fetch);
+
             $stats = $this->events->syncCalendarEvents((int) $calendar->id, $config->name, $parsed);
             $duration = $this->elapsedMs($started);
 
@@ -142,7 +149,7 @@ final class SyncJob
                 null
             );
 
-            return new SyncResult(
+            $result = new SyncResult(
                 sourceKey: $config->key,
                 status: SyncStatus::Success,
                 imported: $stats['imported'],
@@ -154,6 +161,9 @@ final class SyncJob
                 lastModified: $fetch->lastModified,
                 contentHash: $fetch->contentHash,
             );
+            $this->dispatchSourceCompleted($result, $config, $calendar);
+
+            return $result;
         } catch (\Throwable $e) {
             $duration = $this->elapsedMs($started);
             $this->logger->warning('OpenCalendar sync failed for {source}: {message}', [
@@ -189,14 +199,85 @@ final class SyncJob
                 $e->getMessage()
             );
 
-            return new SyncResult(
+            $result = new SyncResult(
                 sourceKey: $config->key,
                 status: SyncStatus::Error,
                 durationMs: $duration,
                 httpStatus: $httpStatus,
                 error: $e->getMessage(),
             );
+            $this->dispatchSourceCompleted($result, $config, $calendar);
+
+            return $result;
         }
+    }
+
+    /**
+     * @param list<Event> $parsed
+     * @return list<Event>
+     */
+    private function filterEventsThroughPipeline(
+        array $parsed,
+        SourceConfig $config,
+        mixed $calendar,
+        mixed $fetch,
+    ): array {
+        $parsedEvent = $this->dispatcher->dispatch(PipelineEvents::EVENTS_PARSED, [
+            'events' => $parsed,
+            'source' => $config,
+            'calendar' => $calendar,
+            'fetch' => $fetch,
+        ]);
+        $parsed = $this->extractEvents($this->eventArgument($parsedEvent, 'events', $parsed));
+
+        $beforePersist = $this->dispatcher->dispatch(PipelineEvents::EVENTS_BEFORE_PERSIST, [
+            'events' => $parsed,
+            'source' => $config,
+            'calendar' => $calendar,
+        ]);
+
+        return $this->extractEvents($this->eventArgument($beforePersist, 'events', $parsed));
+    }
+
+    /**
+     * @param list<Event> $fallback
+     * @return list<Event>|mixed
+     */
+    private function eventArgument(object $event, string $key, array $fallback): mixed
+    {
+        if ($event instanceof \ArrayAccess) {
+            return $event->offsetExists($key) ? $event->offsetGet($key) : $fallback;
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * @return list<Event>
+     */
+    private function extractEvents(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $events = [];
+        foreach ($value as $item) {
+            if ($item instanceof Event) {
+                $events[] = $item;
+            }
+        }
+
+        return $events;
+    }
+
+    private function dispatchSourceCompleted(SyncResult $result, SourceConfig $config, mixed $calendar): void
+    {
+        $this->dispatcher->dispatch(PipelineEvents::SYNC_SOURCE_COMPLETED, [
+            'result' => $result,
+            'source' => $config,
+            'calendar' => $calendar,
+        ]);
     }
 
     private function isDue(SourceConfig $config, ?\DateTimeImmutable $lastSyncAt): bool

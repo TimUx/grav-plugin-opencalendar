@@ -1,13 +1,13 @@
 name: OpenCalendar
 slug: opencalendar
 type: plugin
-version: 1.0.1
+version: 1.1.0
 description: "Aggregate calendars from ICS, CalDAV, JSON, and local sources with SQLite storage, search, filtering, and flexible Twig display."
 icon: calendar
 author:
   name: TimUx
   url: https://github.com/TimUx
-keywords: calendar, ics, caldav, events, schedule, opencalendar, json
+keywords: calendar, ics, caldav, events, schedule, opencalendar, json, webhook, export
 homepage: https://github.com/TimUx/grav-plugin-opencalendar
 demo: https://www.feuerwehr-willingshausen.de/de/termine
 bugs: https://github.com/TimUx/grav-plugin-opencalendar/issues
@@ -627,6 +627,87 @@ form:
               type: number
               label: PLUGIN_OPENCALENDAR.RATE_LIMIT_MAX
               default: 60
+              validate:
+                type: number
+                min: 1
+
+            webhook_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_WEBHOOK
+              underline: true
+
+            webhook.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.WEBHOOK_ENABLED
+              help: PLUGIN_OPENCALENDAR.WEBHOOK_ENABLED_HELP
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            webhook.route:
+              type: text
+              label: PLUGIN_OPENCALENDAR.WEBHOOK_ROUTE
+              default: /opencalendar/webhook
+              validate:
+                type: text
+
+            webhook.secret:
+              type: password
+              label: PLUGIN_OPENCALENDAR.WEBHOOK_SECRET
+              help: PLUGIN_OPENCALENDAR.WEBHOOK_SECRET_HELP
+              default: ''
+
+            webhook.allow_source_param:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.WEBHOOK_ALLOW_SOURCE
+              help: PLUGIN_OPENCALENDAR.WEBHOOK_ALLOW_SOURCE_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            export_section:
+              type: section
+              title: PLUGIN_OPENCALENDAR.SECTION_EXPORT
+              underline: true
+
+            export.enabled:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.EXPORT_ENABLED
+              help: PLUGIN_OPENCALENDAR.EXPORT_ENABLED_HELP
+              highlight: 1
+              default: 1
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
+            export.route:
+              type: text
+              label: PLUGIN_OPENCALENDAR.EXPORT_ROUTE
+              default: /opencalendar/calendar.ics
+              validate:
+                type: text
+
+            export.calendar_name:
+              type: text
+              label: PLUGIN_OPENCALENDAR.EXPORT_CALENDAR_NAME
+              default: OpenCalendar
+              validate:
+                type: text
+
+            export.max_events:
+              type: number
+              label: PLUGIN_OPENCALENDAR.EXPORT_MAX_EVENTS
+              default: 5000
               validate:
                 type: number
                 min: 1

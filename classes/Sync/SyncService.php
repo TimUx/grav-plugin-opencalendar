@@ -9,6 +9,9 @@ use Grav\Plugin\OpenCalendar\Dto\SyncResult;
 use Grav\Plugin\OpenCalendar\Enum\CleanupPolicy;
 use Grav\Plugin\OpenCalendar\Enum\SyncInterval;
 use Grav\Plugin\OpenCalendar\Enum\SyncStatus;
+use Grav\Plugin\OpenCalendar\Events\EventDispatcherInterface;
+use Grav\Plugin\OpenCalendar\Events\NullEventDispatcher;
+use Grav\Plugin\OpenCalendar\Events\PipelineEvents;
 use Grav\Plugin\OpenCalendar\Storage\CalendarRepository;
 use Grav\Plugin\OpenCalendar\Storage\Database;
 use Grav\Plugin\OpenCalendar\Storage\EventRepository;
@@ -29,6 +32,7 @@ final class SyncService
         private readonly CleanupPolicy $cleanup = CleanupPolicy::Days30,
         private readonly bool $vacuumOnCleanup = false,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly EventDispatcherInterface $dispatcher = new NullEventDispatcher(),
     ) {
         $this->job->setGlobalIntervalSeconds($this->interval->toSeconds());
     }
@@ -69,6 +73,12 @@ final class SyncService
 
         $this->runCleanup();
 
+        $this->dispatcher->dispatch(PipelineEvents::SYNC_COMPLETED, [
+            'results' => $results,
+            'sources' => $sources,
+            'force' => $force,
+        ]);
+
         return $results;
     }
 
@@ -91,6 +101,13 @@ final class SyncService
                     ]);
                 }
                 $this->runCleanup();
+
+                $this->dispatcher->dispatch(PipelineEvents::SYNC_COMPLETED, [
+                    'results' => [$result],
+                    'sources' => $sources,
+                    'force' => $force,
+                    'source_key' => $sourceKey,
+                ]);
 
                 return $result;
             }

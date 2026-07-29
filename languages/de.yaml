@@ -163,6 +163,13 @@ PLUGIN_OPENCALENDAR:
   PERSIST_IN_URL: Filter in URL speichern
   PERSIST_IN_URL_HELP: 'Ermöglicht das Teilen gefilterter Ansichten über Query-Parameter.'
 
+  # Admin-Dashboard-Widget
+  DASHBOARD_WIDGET_TITLE: OpenCalendar
+  DASHBOARD_EVENTS: Termine
+  DASHBOARD_SOURCES: Quellen
+  DASHBOARD_ERRORS: mit Fehlern
+  DASHBOARD_OPEN_PLUGIN: Plugin-Einstellungen öffnen
+
   # Erweitert / API
   SECTION_API: REST-API
   API_ENABLED: API aktivieren
@@ -170,6 +177,20 @@ PLUGIN_OPENCALENDAR:
   API_ROUTE: API-Routenpräfix
   RATE_LIMIT: Ratenbegrenzung
   RATE_LIMIT_MAX: Max. Anfragen pro Zeitfenster
+  SECTION_WEBHOOK: Webhook-Sync
+  WEBHOOK_ENABLED: Webhook aktivieren
+  WEBHOOK_ENABLED_HELP: 'Externe Systeme können über HTTP einen erzwungenen Sync auslösen (Secret erforderlich).'
+  WEBHOOK_ROUTE: Webhook-Route
+  WEBHOOK_SECRET: Gemeinsames Secret
+  WEBHOOK_SECRET_HELP: 'Als Header X-OpenCalendar-Token, Authorization: Bearer oder ?token= senden.'
+  WEBHOOK_ALLOW_SOURCE: Quellparameter erlauben
+  WEBHOOK_ALLOW_SOURCE_HELP: 'Akzeptiert ?source= oder JSON-Body source für den Sync einer einzelnen Quelle.'
+  SECTION_EXPORT: ICS-Export
+  EXPORT_ENABLED: ICS-Export aktivieren
+  EXPORT_ENABLED_HELP: 'Aggregierten text/calendar-Feed für Abonnements in anderen Kalender-Apps bereitstellen.'
+  EXPORT_ROUTE: Export-Route
+  EXPORT_CALENDAR_NAME: Kalendername
+  EXPORT_MAX_EVENTS: Maximale Termine
   SECTION_ADVANCED: Erweiterte Optionen
   DEBUG: Debug-Modus
   LOG_LEVEL: Log-Level

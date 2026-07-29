@@ -120,7 +120,7 @@ END:VCALENDAR</C:calendar-data>
 </D:multistatus>
 XML;
 
-        $http = new class($xml) implements HttpClientInterface {
+        $http = new class ($xml) implements HttpClientInterface {
             public function __construct(private readonly string $xml)
             {
             }
@@ -184,7 +184,7 @@ XML;
             ],
         ], JSON_THROW_ON_ERROR);
 
-        $http = new class($payload) implements HttpClientInterface {
+        $http = new class ($payload) implements HttpClientInterface {
             public function __construct(private readonly string $payload)
             {
             }

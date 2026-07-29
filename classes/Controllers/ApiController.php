@@ -22,10 +22,16 @@ final class ApiController
 
     /**
      * @param array<string, mixed> $query
-     * @return array{status: int, body: array<string, mixed>, headers: array<string, string>}
+     * @param array<string, mixed> $exportConfig
+     * @return array{status: int, body: array<string, mixed>|string, headers: array<string, string>}
      */
-    public function handle(string $path, array $query, string $clientIp = '0.0.0.0'): array
-    {
+    public function handle(
+        string $path,
+        array $query,
+        string $clientIp = '0.0.0.0',
+        string $method = 'GET',
+        array $exportConfig = [],
+    ): array {
         $headers = ['Content-Type' => 'application/json; charset=utf-8'];
 
         if (!empty($this->apiConfig['cors']['enabled'])) {
@@ -36,6 +42,11 @@ final class ApiController
                 $headers['Access-Control-Allow-Origin'] = '*';
             }
             $headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS';
+        }
+
+        $method = strtoupper($method);
+        if ($method === 'OPTIONS') {
+            return ['status' => 204, 'body' => '', 'headers' => $headers];
         }
 
         if (!$this->rateLimiter->allow($clientIp)) {
@@ -50,6 +61,16 @@ final class ApiController
         $path = '/' . trim($path, '/');
 
         try {
+            if ($path === '/export.ics' || $path === '/calendar.ics') {
+                $exporter = new ExportController($this->container, $exportConfig !== [] ? $exportConfig : [
+                    'enabled' => true,
+                    'calendar_name' => 'OpenCalendar',
+                    'max_events' => 5000,
+                ]);
+
+                return $exporter->handle($query);
+            }
+
             if ($path === '/events' || $path === '/') {
                 return ['status' => 200, 'body' => $api->listEvents($query), 'headers' => $headers];
             }
@@ -63,7 +84,7 @@ final class ApiController
                 return ['status' => 200, 'body' => ['data' => $event], 'headers' => $headers];
             }
 
-            if ($path === '/calendars') {
+            if ($path === '/calendars' || $path === '/sources') {
                 return ['status' => 200, 'body' => ['data' => $api->listCalendars()], 'headers' => $headers];
             }
 

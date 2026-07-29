@@ -2,7 +2,19 @@ parameters:
     level: 8
     paths:
         - classes
+    scanFiles:
+        - tests/stubs/grav.php
     excludePaths:
         - tests/*
+    ignoreErrors:
+        -
+            message: '#Cannot access offset .* on object#'
+            path: classes/Source/IcsParser.php
+        -
+            message: '#Access to an undefined property Sabre\\VObject\\Component\\VEvent::\$#'
+            path: classes/Export/IcsExporter.php
+        -
+            message: '#Cannot assign offset .* to Sabre\\VObject\\Node#'
+            path: classes/Export/IcsExporter.php
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false

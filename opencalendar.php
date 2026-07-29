@@ -9,7 +9,10 @@ use Grav\Common\Plugin;
 use Grav\Plugin\OpenCalendar\Api\RateLimiter;
 use Grav\Plugin\OpenCalendar\Controllers\AdminController;
 use Grav\Plugin\OpenCalendar\Controllers\ApiController;
+use Grav\Plugin\OpenCalendar\Controllers\ExportController;
 use Grav\Plugin\OpenCalendar\Controllers\ShortcodeProcessor;
+use Grav\Plugin\OpenCalendar\Controllers\WebhookController;
+use Grav\Plugin\OpenCalendar\Events\GravEventDispatcher;
 use Grav\Plugin\OpenCalendar\Logging\BridgeLogger;
 use Grav\Plugin\OpenCalendar\Logging\NullLogger;
 use Grav\Plugin\OpenCalendar\Services\ConfigNormalizer;
@@ -79,6 +82,7 @@ class OpenCalendarPlugin extends Plugin
                 'onTwigSiteVariables' => ['onAdminTwigSiteVariables', 0],
                 'onAdminTwigTemplatePaths' => ['onAdminTwigTemplatePaths', 0],
                 'onAdminMenu' => ['onAdminMenu', 0],
+                'onAdminDashboard' => ['onAdminDashboard', 0],
                 'onPagesInitialized' => ['onAdminPagesInitialized', 0],
                 'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
             ]);
@@ -94,6 +98,12 @@ class OpenCalendarPlugin extends Plugin
             'onPagesInitialized' => ['onPagesInitialized', 0],
             'onSchedulerInitialized' => ['onSchedulerInitialized', 0],
         ]);
+
+        if ($this->pluginConfig('advanced.scheduler.on_cache_clear', true)) {
+            $this->enable([
+                'onCacheClear' => ['onCacheClear', 0],
+            ]);
+        }
 
         try {
             $this->container()->boot();
@@ -199,6 +209,49 @@ class OpenCalendarPlugin extends Plugin
         // Configuration lives under Plugins → OpenCalendar; sync dashboard is a plugin blueprint tab.
     }
 
+    /**
+     * Register a compact sync-status widget on the Grav Admin home dashboard.
+     */
+    public function onAdminDashboard(): void
+    {
+        $widgetId = 'dashboard-opencalendar';
+        $path = 'plugins.admin.widgets_display.' . $widgetId;
+        if ($this->config->get($path) === null) {
+            $this->config->set($path, true);
+        }
+
+        $language = $this->grav['language'] ?? null;
+        $name = 'OpenCalendar';
+        if (is_object($language) && method_exists($language, 'translate')) {
+            $translated = (string) $language->translate('PLUGIN_OPENCALENDAR.DASHBOARD_WIDGET_TITLE');
+            if ($translated !== '' && $translated !== 'PLUGIN_OPENCALENDAR.DASHBOARD_WIDGET_TITLE') {
+                $name = $translated;
+            }
+        }
+
+        $this->grav['twig']->plugins_hooked_dashboard_widgets_bottom[] = [
+            'name' => $name,
+            'template' => $widgetId,
+        ];
+    }
+
+    /**
+     * Optional sync when Grav cache is cleared (advanced.scheduler.on_cache_clear).
+     */
+    public function onCacheClear(): void
+    {
+        if (!$this->pluginConfig('advanced.scheduler.enabled', true)) {
+            return;
+        }
+
+        try {
+            $container = $this->container();
+            $container->calendarService()->synchronize($container->sourceConfigs(), false);
+        } catch (\Throwable $e) {
+            $this->grav['log']->warning('OpenCalendar cache-clear sync failed: ' . $e->getMessage());
+        }
+    }
+
     public function onPageContentProcessed(Event $event): void
     {
         $page = $event['page'] ?? null;
@@ -228,22 +281,31 @@ class OpenCalendarPlugin extends Plugin
     {
         $this->disableCacheForOpenCalendarPages();
 
+        $path = $this->grav['uri']->path();
+        $query = $this->grav['uri']->query(null, true);
+        if (!is_array($query)) {
+            $query = [];
+        }
+
+        if ($this->maybeHandleWebhook($path, $query)) {
+            return;
+        }
+
+        if ($this->maybeHandleExport($path, $query)) {
+            return;
+        }
+
         if (!$this->pluginConfig('api.enabled', false)) {
             return;
         }
 
         $route = rtrim((string) $this->pluginConfig('api.route', '/opencalendar/api'), '/');
-        $path = $this->grav['uri']->path();
 
         if ($path !== $route && !str_starts_with($path, $route . '/')) {
             return;
         }
 
         $subPath = substr($path, strlen($route)) ?: '/';
-        $query = $this->grav['uri']->query(null, true);
-        if (!is_array($query)) {
-            $query = [];
-        }
 
         $apiConfig = $this->pluginConfig('api', []);
         if (!is_array($apiConfig)) {
@@ -258,7 +320,54 @@ class OpenCalendarPlugin extends Plugin
 
         $controller = new ApiController($this->container(), $apiConfig, $limiter);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        $response = $controller->handle($subPath, $query, is_string($ip) ? $ip : '0.0.0.0');
+        $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        $response = $controller->handle(
+            $subPath,
+            $query,
+            is_string($ip) ? $ip : '0.0.0.0',
+            $method,
+            $this->exportConfig(),
+        );
+
+        http_response_code($response['status']);
+        foreach ($response['headers'] as $name => $value) {
+            header($name . ': ' . $value);
+        }
+
+        $body = $response['body'];
+        if (is_string($body)) {
+            echo $body;
+        } else {
+            echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+        exit;
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    private function maybeHandleWebhook(string $path, array $query): bool
+    {
+        if (!$this->pluginConfig('webhook.enabled', false)) {
+            return false;
+        }
+
+        $route = rtrim((string) $this->pluginConfig('webhook.route', '/opencalendar/webhook'), '/');
+        if ($path !== $route && !str_starts_with($path, $route . '/')) {
+            return false;
+        }
+
+        $webhookConfig = $this->pluginConfig('webhook', []);
+        if (!is_array($webhookConfig)) {
+            $webhookConfig = [];
+        }
+
+        $token = $this->extractWebhookToken($query);
+        $rawBody = file_get_contents('php://input');
+        $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
+
+        $controller = new WebhookController($this->container(true), $webhookConfig);
+        $response = $controller->handle($method, $query, is_string($rawBody) ? $rawBody : null, $token);
 
         http_response_code($response['status']);
         foreach ($response['headers'] as $name => $value) {
@@ -266,6 +375,70 @@ class OpenCalendarPlugin extends Plugin
         }
         echo json_encode($response['body'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    private function maybeHandleExport(string $path, array $query): bool
+    {
+        if (!$this->pluginConfig('export.enabled', true)) {
+            return false;
+        }
+
+        $route = rtrim((string) $this->pluginConfig('export.route', '/opencalendar/calendar.ics'), '/');
+        if ($path !== $route) {
+            return false;
+        }
+
+        $controller = new ExportController($this->container(), $this->exportConfig());
+        $response = $controller->handle($query);
+
+        http_response_code($response['status']);
+        foreach ($response['headers'] as $name => $value) {
+            header($name . ': ' . $value);
+        }
+        echo $response['body'];
+        exit;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function exportConfig(): array
+    {
+        $config = $this->pluginConfig('export', []);
+
+        return is_array($config) ? $config : [];
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    private function extractWebhookToken(array $query): string
+    {
+        $headerCandidates = [
+            'HTTP_X_OPENCALENDAR_TOKEN',
+            'HTTP_X_WEBHOOK_TOKEN',
+            'HTTP_AUTHORIZATION',
+        ];
+
+        foreach ($headerCandidates as $header) {
+            $value = $_SERVER[$header] ?? null;
+            if (!is_string($value) || $value === '') {
+                continue;
+            }
+
+            if (str_starts_with(strtolower($value), 'bearer ')) {
+                return trim(substr($value, 7));
+            }
+
+            return trim($value);
+        }
+
+        $token = $query['token'] ?? $query['secret'] ?? '';
+
+        return is_string($token) ? $token : '';
     }
 
     public function onAdminPagesInitialized(): void
@@ -454,6 +627,7 @@ class OpenCalendarPlugin extends Plugin
             gravCache: is_object($cache) ? $cache : null,
             logger: $logger,
             userDataPath: $userDataPath,
+            dispatcher: new GravEventDispatcher($this->grav),
         );
 
         return $this->container;
