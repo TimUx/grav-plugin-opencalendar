@@ -1,5 +1,7 @@
 # FAQ
 
+> Deutsch: [FAQ](../de/FAQ.md)
+
 Frequently asked questions about OpenCalendar.
 
 ## General
@@ -40,7 +42,7 @@ Yes, using the public ICS address from Google Calendar settings. Private Google 
 
 Yes. Enable the ICS subscription feed under **Advanced → ICS export / subscription**. Visitors (or you) add the feed URL as a subscribed/network calendar.
 
-- German step-by-step (iPhone & Android): [Abonnieren.md](Abonnieren.md)
+- German step-by-step (iPhone & Android): [Subscribe (DE)](../de/Subscribe.md)
 - English overview: [Subscribe.md](Subscribe.md)
 
 Example URL: `https://your-site.example/opencalendar/calendar.ics`
@@ -67,7 +69,7 @@ Fast local queries, full-text search, no external database server, easy backups.
 
 ### Is the API secure?
 
-The API is **disabled by default**. Enable only with appropriate access controls. See [API.md](API.md) and [SECURITY.md](../SECURITY.md).
+The API is **disabled by default**. Enable only with appropriate access controls. See [API.md](API.md) and [SECURITY.md](../../SECURITY.md).
 
 ### Can I commit composer.lock?
 
@@ -80,5 +82,5 @@ OpenCalendar is released under the MIT License. Sabre VObject has its own licens
 ## Getting help
 
 - [GitHub Issues](https://github.com/TimUx/grav-plugin-opencalendar/issues)
-- [Documentation](../docs/)
+- [Documentation](../)
 - [Troubleshooting.md](Troubleshooting.md)

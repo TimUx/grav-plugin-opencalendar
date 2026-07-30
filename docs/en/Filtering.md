@@ -1,5 +1,7 @@
 # Filtering
 
+> Deutsch: [Filter](../de/Filtering.md)
+
 OpenCalendar provides frontend filters to narrow events by source, category, and date range.
 
 ## Enabling filters

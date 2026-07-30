@@ -1,5 +1,7 @@
 # Development
 
+> Deutsch: [Entwicklung](../de/Development.md)
+
 Guide for contributors working on OpenCalendar locally.
 
 ## Environment setup
@@ -69,7 +71,7 @@ Integration tests that need Grav should be tagged and documented separately when
 2. Add Admin fields to `blueprints.yaml`
 3. Add translation keys to all packs under `languages/` (`en`, `de`, `fr`, `es`, `nl`, `it`)
 
-4. Document in `docs/Configuration.md`
+4. Document in `docs/en/Configuration.md` (and German `docs/de/Configuration.md`)
 
 Keep YAML and blueprint field paths synchronized.
 
@@ -101,5 +103,5 @@ Logs write to `logs/opencalendar.log` relative to Grav root.
 ## Related documentation
 
 - [Architecture.md](Architecture.md)
-- [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)
 - [Migration.md](Migration.md)

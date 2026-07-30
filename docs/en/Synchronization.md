@@ -1,5 +1,7 @@
 # Synchronization
 
+> Deutsch: [Synchronisation](../de/Synchronization.md)
+
 OpenCalendar keeps a local SQLite copy of events synchronized with configured sources. This document explains sync triggers, intervals, error handling, and cleanup.
 
 ## Sync triggers

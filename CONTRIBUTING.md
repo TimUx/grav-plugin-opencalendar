@@ -1,10 +1,12 @@
 # Contributing to OpenCalendar
 
+> Deutsch: [CONTRIBUTING.de.md](CONTRIBUTING.de.md)
+
 Thank you for your interest in contributing to OpenCalendar! This document explains how to get started, what we expect from contributions, and how to submit changes.
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By participating, you agree to uphold a respectful and inclusive environment.
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md) ([DE](CODE_OF_CONDUCT.de.md)). By participating, you agree to uphold a respectful and inclusive environment.
 
 ## Getting Started
 
@@ -50,7 +52,7 @@ This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By particip
 | `composer phpcs` | PSR-12 code style check |
 | `composer check` | Run all quality gates |
 
-See [docs/Development.md](docs/Development.md) for architecture notes and coding conventions.
+See [docs/en/Development.md](docs/en/Development.md) ([DE](docs/de/Development.md)) for architecture notes and coding conventions.
 
 ## How to Contribute
 
@@ -96,7 +98,7 @@ Explain why the change is needed in the body when non-obvious.
 
 ### Documentation
 
-Update relevant files under `docs/` when you change user-facing behavior, configuration options, or API contracts. Keep `README.md` in sync with major feature additions.
+Update relevant files under `docs/en/` and `docs/de/` when you change user-facing behavior, configuration options, or API contracts. Keep `README.md` / `README.de.md` in sync with major feature additions.
 
 ## Release Process
 

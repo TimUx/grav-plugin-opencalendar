@@ -1,5 +1,7 @@
 # Migration
 
+> Deutsch: [Migration](../de/Migration.md)
+
 Guidelines for upgrading OpenCalendar and migrating data between environments.
 
 ## Version numbering
@@ -10,7 +12,7 @@ OpenCalendar follows [Semantic Versioning](https://semver.org/):
 - **Minor** (1.x.0) — new features, backward compatible config
 - **Major** (x.0.0) — breaking changes, read release notes
 
-Always read [CHANGELOG.md](../CHANGELOG.md) before upgrading.
+Always read [CHANGELOG.md](../../CHANGELOG.md) before upgrading.
 
 ## Standard upgrade procedure
 
@@ -96,4 +98,4 @@ Deprecation warnings appear in logs one minor release before removal when possib
 
 - [Installation.md](Installation.md)
 - [SQLite.md](SQLite.md)
-- [CHANGELOG.md](../CHANGELOG.md)
+- [CHANGELOG.md](../../CHANGELOG.md)

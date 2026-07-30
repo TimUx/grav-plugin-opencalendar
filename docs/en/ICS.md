@@ -1,5 +1,7 @@
 # ICS / iCalendar Support
 
+> Deutsch: [ICS / iCalendar-Unterstützung](../de/ICS.md)
+
 OpenCalendar uses [Sabre VObject](https://github.com/sabre-io/vobject) to parse ICS (iCalendar) feeds — the standard format for `.ics` files and many public calendar subscriptions.
 
 ## Supported components

@@ -1,0 +1,155 @@
+# Kalenderquellen
+
+> English: [Calendar Sources](../en/Sources.md)
+
+OpenCalendar aggregiert Ereignisse aus mehreren Quelltypen. Jede Quelle wird im `sources`-Array in der Konfiguration definiert.
+
+## Gemeinsame Felder
+
+| Feld | Erforderlich | Beschreibung |
+|------|--------------|--------------|
+| `name` | Ja | Lesbare Bezeichnung |
+| `enabled` | Ja | Bei `false` wird die Quelle vollständig übersprungen |
+| `type` | Ja | `ics`, `caldav`, `json` oder `local` |
+| `url` | Ja* | Remote-URL oder lokaler Pfad |
+| `refresh` | Nein | `inherit` oder Intervall-Override |
+| `color` | Nein | Hex-Farbe für die UI (#RRGGBB) |
+| `description` | Nein | Nur für Admins sichtbare Notizen |
+| `auth` | Nein | Authentifizierungsblock |
+
+*Lokale Quellen verwenden einen Pfad relativ zum Plugin-Verzeichnis.
+
+## ICS (iCalendar)
+
+Am besten für öffentliche `.ics`-Feeds (öffentliche Google-Calendar-URL, Outlook-Veröffentlichungslink usw.).
+
+```yaml
+- name: Team Holidays
+  enabled: true
+  type: ics
+  url: 'https://example.com/holidays.ics'
+  refresh: inherit
+  color: '#4CAF50'
+  auth:
+    type: none
+```
+
+Format-Hinweise und Fehlerbehebung: [ICS.md](ICS.md).
+
+## CalDAV
+
+Für authentifizierte Kalenderserver (Nextcloud, Radicale, Baikal, iCloud über App-Passwörter usw.).
+
+OpenCalendar sendet einen CalDAV-`REPORT calendar-query` gegen die Collection-URL, extrahiert `calendar-data` und parst Ereignisse mit der ICS-Engine (einschließlich RRULE-Expansion).
+
+```yaml
+- name: Personal Calendar
+  enabled: true
+  type: caldav
+  url: 'https://cloud.example.com/remote.php/dav/calendars/user/personal/'
+  refresh: 30
+  color: '#2196F3'
+  auth:
+    type: basic
+    username: 'calendar-user'
+    password: 'app-specific-password'
+```
+
+Empfehlungen:
+
+- Die **Kalender-Collection-URL** verwenden (endet mit dem Kalendernamen), nicht die DAV-Wurzel
+- App-spezifische Passwörter bevorzugen, keine Kontopasswörter
+- Zugangsdaten in `user/config/plugins/opencalendar.yaml` speichern, nicht in Git
+- CalDAV-Sync kann langsamer sein als ICS — längere Refresh-Intervalle verwenden
+- Wenn REPORT nicht unterstützt wird, fällt OpenCalendar auf einen einfachen GET zurück (ICS-Export-URLs)
+
+## JSON
+
+Für eigene HTTP-APIs, die JSON-Ereignisse zurückgeben.
+
+Akzeptierte Hüllen:
+
+- `{ "events": [ ... ] }`
+- `{ "data": [ ... ] }` / `{ "items": [ ... ] }` / `{ "results": [ ... ] }`
+- ein rohes JSON-Array `[ ... ]`
+
+Ereignisfelder (Aliase unterstützt):
+
+| Feld | Aliase |
+|------|--------|
+| `uid` | `id` |
+| `title` | `summary`, `name` |
+| `start` | `start_at`, `dtstart`, `begin` |
+| `end` | `end_at`, `dtend` |
+| `all_day` | `allDay` |
+| `description`, `location`, `organizer`, `url`, `status`, `categories`, `color`, `rrule` | |
+
+```yaml
+- name: Internal Events API
+  enabled: true
+  type: json
+  url: 'https://intranet.example.com/api/events'
+  auth:
+    type: bearer
+    token: 'your-api-token'
+```
+
+Bearer-Tokens können auch in `auth.password` stehen, wenn Admin-Formulare nur ein Passwortfeld anbieten.
+
+## Local
+
+Für ICS- oder JSON-Dateien unter dem konfigurierten lokalen Basispfad (Plugin-`data/` / User-Data).
+
+```yaml
+- name: Static Schedule
+  enabled: true
+  type: local
+  url: 'static-schedule.ics'
+  refresh: daily
+  color: '#FF9800'
+  auth:
+    type: none
+```
+
+- Pfade werden relativ zum lokalen Basisverzeichnis aufgelöst und können dieses nicht verlassen
+- `.ics` / `.ical` → ICS-Parser
+- `.json` → JSON-Parser
+- Content Sniffing wird verwendet, wenn die Erweiterung mehrdeutig ist
+
+Dateien unter `user/plugins/opencalendar/data/` ablegen (oder im konfigurierten Storage-/Data-Verzeichnis).
+
+## Deaktiviertes Beispiel
+
+Die Standardkonfiguration enthält einen deaktivierten Platzhalter:
+
+```yaml
+- name: Disabled Legacy Calendar
+  enabled: false
+  type: ics
+  url: 'https://example.com/calendar.ics'
+```
+
+Nach Ersetzen der URL durch einen gültigen Feed aktivieren.
+
+## Quellfarben
+
+Farben erscheinen in Kalenderansichten und Quell-Badges, wenn `display.event.show_source_badge` aktiviert ist. Bei vielen überlagerten Feeds unterschiedliche Farben wählen.
+
+## Refresh-Vererbung
+
+| `refresh`-Wert | Verhalten |
+|----------------|-----------|
+| `inherit` | Verwendet globales `sync_interval` |
+| `5`–`60`, `daily` | Quellspezifischer Zeitplan |
+
+## Sicherheit
+
+- URLs vor dem Hinzufügen nicht vertrauenswürdiger Feeds prüfen (SSRF-Risiko beim serverseitigen Abruf)
+- Echte Zugangsdaten niemals in die Versionskontrolle committen
+- In Produktion ausschließlich HTTPS-Endpunkte verwenden
+
+## Verwandte Dokumentation
+
+- [ICS.md](ICS.md)
+- [Synchronization.md](Synchronization.md)
+- [Configuration.md](Configuration.md)

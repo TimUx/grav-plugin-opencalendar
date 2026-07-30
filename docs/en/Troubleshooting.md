@@ -1,5 +1,7 @@
 # Troubleshooting
 
+> Deutsch: [Fehlerbehebung](../de/Troubleshooting.md)
+
 Solutions for common OpenCalendar problems.
 
 ## Plugin not visible in Admin

@@ -1,5 +1,7 @@
 # Installation
 
+> Deutsch: [Installation](../de/Installation.md)
+
 This guide covers installing OpenCalendar on a Grav CMS site.
 
 ## Requirements
@@ -85,7 +87,7 @@ chmod 775 user/plugins/opencalendar/data
 
 ## Upgrading
 
-See the main [README](../README.md#updating) and [Migration.md](Migration.md) when moving between major versions.
+See the main [README](../../README.md#updating) and [Migration.md](Migration.md) when moving between major versions.
 
 ## Uninstalling
 

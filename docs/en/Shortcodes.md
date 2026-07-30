@@ -1,5 +1,7 @@
 # Shortcodes
 
+> Deutsch: [Shortcodes](../de/Shortcodes.md)
+
 OpenCalendar provides a page shortcode for embedding calendars and event lists without writing Twig.
 
 ## Syntax
@@ -126,5 +128,5 @@ Setting `cache: false` (or using list pagination) avoids stale page cache for dy
 - [Twig.md](Twig.md)
 - [Searching.md](Searching.md)
 - [Filtering.md](Filtering.md)
-- [Abonnieren.md](Abonnieren.md) — Smartphone-Kalender abonnieren (DE)
+- [Subscribe (DE)](../de/Subscribe.md) — Smartphone-Kalender abonnieren
 - [Subscribe.md](Subscribe.md) — network calendar subscription (EN)

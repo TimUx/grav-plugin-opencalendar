@@ -1,5 +1,7 @@
 # Searching
 
+> Deutsch: [Suche](../de/Searching.md)
+
 OpenCalendar provides full-text search across normalized event fields stored in SQLite.
 
 ## Enabling search

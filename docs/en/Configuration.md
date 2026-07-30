@@ -1,5 +1,7 @@
 # Configuration
 
+> Deutsch: [Konfiguration](../de/Configuration.md)
+
 OpenCalendar is configured through `opencalendar.yaml` (plugin defaults) and `user/config/plugins/opencalendar.yaml` (site overrides). The Admin panel exposes all options via a tabbed form defined in `blueprints.yaml`.
 
 ## Configuration layers
