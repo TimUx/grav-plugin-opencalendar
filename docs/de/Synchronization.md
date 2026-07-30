@@ -12,6 +12,37 @@ Ereignisse werden aktualisiert durch:
 2. **Cache-Clear-Hook** — optionaler Sync beim Leeren des Grav-Caches (`advanced.scheduler.on_cache_clear`)
 3. **Manueller CLI-Befehl** — für Betrieb und Debugging (Implementierung ausstehend)
 4. **Admin-Aktion** — Synchronisierungs-Dashboard: Sync aller/einzelner Quellen, Rebuild, Cache leeren und Kalenderdateien hochladen
+5. **Webhook** — optionaler Push-Sync (`webhook.enabled`)
+
+## Admin-Dashboard
+
+Öffnen Sie **Admin → Plugins → OpenCalendar → Synchronization**.
+
+| Aktion | Wirkung |
+|--------|---------|
+| Jetzt synchronisieren | Erzwungener Sync aller aktivierten Quellen |
+| Sync (pro Zeile) | Erzwungener Sync einer Quelle |
+| Datenbank neu aufbauen | Kompletter Rebuild aus den konfigurierten Quellen |
+| Cache leeren | OpenCalendar-Caches verwerfen |
+| Status aktualisieren | Status-Tabelle neu laden |
+
+### Kalenderdatei hochladen
+
+Über **Kalenderdatei hochladen** auf demselben Tab importieren Sie eine Datei, ohne zuvor eine Remote-URL anzulegen.
+
+1. Optional einen **Quellnamen** eingeben (Standard: Dateiname).
+2. Eine `.ics`-, `.ical`- oder `.json`-Datei wählen (max. 10 MiB).
+3. **Hochladen und importieren** klicken.
+
+OpenCalendar:
+
+1. speichert die Datei unter `user/data/opencalendar/uploads/`
+2. schreibt/aktualisiert einen Eintrag `type: local` in `user/config/plugins/opencalendar.yaml` mit `url: uploads/…`
+3. importiert die Termine sofort in SQLite und aktualisiert die Status-Tabelle
+
+Erneutes Hochladen mit dem **selben Quellnamen** aktualisiert diese Quelle (neuer Dateipfad + Re-Import) statt ein Duplikat anzulegen. Nach dem Neuladen der Seite erscheint die Quelle auch unter **Sources**.
+
+Pfadregeln und Details: [Sources.md](Sources.md#admin-upload).
 
 ## Sync-Intervalle
 

@@ -28,6 +28,12 @@ By default every 15 minutes via the Grav Scheduler. Change `sync_interval` globa
 
 Yes. Each source entry has its own type and credentials.
 
+### Can I upload a calendar file in Admin?
+
+Yes. Open **Plugins → OpenCalendar → Synchronization**, use **Upload calendar file**, choose an `.ics` / `.ical` / `.json` file, and click **Upload and import**. The file is stored under `user/data/opencalendar/uploads/`, registered as a local source, and imported immediately.
+
+Details: [Synchronization.md](Synchronization.md#upload-calendar-file) and [Sources.md](Sources.md#admin-upload).
+
 ### Why are my events missing?
 
 Common causes: source disabled, sync error, date filter excluding events, or recurring horizon too short. See [Troubleshooting.md](Troubleshooting.md).

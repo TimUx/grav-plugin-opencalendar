@@ -100,6 +100,7 @@ Das Laufzeitverhalten wird über `opencalendar.yaml` gesteuert, ohne hart codier
 | `onCacheClear` | Optionaler Sync beim Leeren des Grav-Caches |
 | `onAdminDashboard` | Sync-Status-Widget auf dem Admin-Dashboard |
 | `onAdminTwigTemplatePaths` | Admin-Vorlagen (Sync-Feld, Dashboard) |
+| `onAdminPagesInitialized` | Admin-JSON-Aktionen (`sync`, `rebuild`, `clear-cache`, `status`, `upload`) |
 
 ## Abhängigkeiten
 

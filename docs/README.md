@@ -11,9 +11,9 @@ Documentation is available in English and German.
 | [Installation](en/Installation.md) | Setup and requirements |
 | [Configuration](en/Configuration.md) | All config options |
 | [Architecture](en/Architecture.md) | Code structure |
-| [Sources](en/Sources.md) | ICS, CalDAV, JSON, local |
+| [Sources](en/Sources.md) | ICS, CalDAV, JSON, local, Admin upload |
 | [ICS](en/ICS.md) | iCalendar specifics |
-| [Synchronization](en/Synchronization.md) | Sync and cleanup |
+| [Synchronization](en/Synchronization.md) | Sync, cleanup, Admin upload |
 | [SQLite](en/SQLite.md) | Database storage |
 | [Twig](en/Twig.md) | Template integration |
 | [Shortcodes](en/Shortcodes.md) | Page shortcodes |
@@ -37,9 +37,9 @@ Documentation is available in English and German.
 | [Installation](de/Installation.md) | Einrichtung und Voraussetzungen |
 | [Konfiguration](de/Configuration.md) | Alle Konfigurationsoptionen |
 | [Architektur](de/Architecture.md) | Code-Struktur |
-| [Quellen](de/Sources.md) | ICS, CalDAV, JSON, lokal |
+| [Quellen](de/Sources.md) | ICS, CalDAV, JSON, lokal, Admin-Upload |
 | [ICS](de/ICS.md) | iCalendar-Details |
-| [Synchronisation](de/Synchronization.md) | Sync und Cleanup |
+| [Synchronisation](de/Synchronization.md) | Sync, Cleanup, Admin-Upload |
 | [SQLite](de/SQLite.md) | Datenbankspeicher |
 | [Twig](de/Twig.md) | Template-Integration |
 | [Shortcodes](de/Shortcodes.md) | Seiten-Shortcodes |

@@ -120,15 +120,36 @@ Place files under `user/plugins/opencalendar/data/` **or** use Admin upload (bel
 
 ## Admin upload
 
-In **Plugins → OpenCalendar → Synchronization**, upload an `.ics` / `.ical` or `.json` file.
+In **Admin → Plugins → OpenCalendar → Synchronization**, use **Upload calendar file**.
 
-OpenCalendar will:
+| Detail | Value |
+|--------|--------|
+| Formats | `.ics`, `.ical`, `.json` |
+| Max size | 10 MiB |
+| Storage | `user/data/opencalendar/uploads/` (survives plugin updates) |
+| Config | Adds/updates a `type: local` source in `user/config/plugins/opencalendar.yaml` |
+| Import | Immediate forced sync into SQLite |
 
-1. Store it under `user/data/opencalendar/uploads/`
-2. Register (or update) a `type: local` source whose `url` looks like `uploads/your-file-….ics`
-3. Force-import events into SQLite immediately
+Example source row after upload:
 
-Re-uploading with the **same source name** replaces that source’s file path and imports again. The source also appears in the **Sources** tab after the next page reload.
+```yaml
+- name: Club calendar
+  enabled: true
+  type: local
+  url: 'uploads/club-calendar-20260730T210000Z-a1b2c3.ics'
+  refresh: inherit
+  description: 'Uploaded via Admin (club-calendar.ics)'
+  auth:
+    type: none
+```
+
+Notes:
+
+- ICS files must contain `BEGIN:VCALENDAR`; JSON must be valid event JSON (see [JSON](#json) above).
+- Re-upload with the **same source name** to replace the file and re-import.
+- Different names create additional local sources.
+- Uploaded files are not deleted automatically when you remove a source from the Sources tab — delete unused files under `uploads/` if needed.
+- Full dashboard steps: [Synchronization.md](Synchronization.md#upload-calendar-file).
 
 ## Disabled example
 

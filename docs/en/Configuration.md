@@ -57,7 +57,7 @@ Each source entry supports:
 | `name` | Display name in Admin and frontend badges |
 | `enabled` | Skip sync when `false` |
 | `type` | `ics`, `caldav`, `json`, or `local` |
-| `url` | Remote URL or local relative path |
+| `url` | Remote URL, plugin-relative path (e.g. `data/file.ics`), or `uploads/…` for Admin-uploaded files |
 | `refresh` | `inherit` or minutes/`daily` override |
 | `color` | Hex color for calendar rendering |
 | `description` | Optional admin note |
@@ -78,6 +78,8 @@ sources:
 ```
 
 See [Sources.md](Sources.md) for type-specific details.
+
+Admin can also **upload** ICS/JSON files on the Synchronization tab; that creates `type: local` sources with `url: uploads/…`. See [Synchronization.md](Synchronization.md#upload-calendar-file).
 
 ## Display
 

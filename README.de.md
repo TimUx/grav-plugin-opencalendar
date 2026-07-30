@@ -16,6 +16,7 @@ Entwickelt für PHP 8.2+ mit strikter Typisierung, PHPStan Level 8 und PSR-12-Co
 ## Features
 
 - **Mehrere Quelltypen** — ICS/iCalendar, CalDAV, JSON-APIs, lokale Dateien
+- **Admin-Datei-Upload** — `.ics` / `.json` im Synchronisierungs-Dashboard nach SQLite importieren
 - **SQLite-Speicher** — schnelle Abfragen, FTS-Suche, keine externe Datenbank nötig
 - **Hintergrund-Sync** — konfigurierbare Intervalle mit Grav-Scheduler-Integration
 - **Zwei Ansichten** — interaktiver Kalender (Monat/Woche/Tag) und gruppierte Listen
@@ -24,7 +25,7 @@ Entwickelt für PHP 8.2+ mit strikter Typisierung, PHPStan Level 8 und PSR-12-Co
 - **Optionale REST-API** — schreibgeschütztes JSON mit Rate Limiting
 - **Internationalisierung** — Admin- und Frontend-Strings auf Englisch und Deutsch
 - **Caching** — Parse- und Render-Cache für Produktionsleistung
-- **Admin-UI** — tabbed Konfiguration (General, Storage, Sources, Display, Search, Filters, Advanced)
+- **Admin-UI** — tabbed Konfiguration (General, Storage, Sources, Display, Search, Filters, Synchronization, Advanced)
 
 ## Architektur
 
@@ -87,7 +88,9 @@ sources:
     color: '#3788d8'
 ```
 
-Alles konfigurierbar unter **Admin → Plugins → OpenCalendar** mit Tabs für General, Storage, Sources, Display, Search, Filters und Advanced.
+Alles konfigurierbar unter **Admin → Plugins → OpenCalendar** mit Tabs für General, Storage, Sources, Display, Search, Filters, Synchronization und Advanced.
+
+Kalenderdatei manuell importieren: **Synchronization → Kalenderdatei hochladen** (`.ics` / `.ical` / `.json`). Leitfaden: [docs/de/Synchronization.md](docs/de/Synchronization.md#kalenderdatei-hochladen).
 
 Vollständige Referenz: [docs/de/Configuration.md](docs/de/Configuration.md)
 
@@ -145,7 +148,7 @@ Leitfaden: [docs/de/Filtering.md](docs/de/Filtering.md)
 
 ## Synchronisation
 
-Remote-Feeds synchronisieren nach Zeitplan (Standard: alle 15 Minuten). Pro-Quelle-Refresh-Overrides, Deduplizierung, Wiederholungs-Expansion und Cleanup-Richtlinien halten die Datenbank aktuell ohne unbegrenztes Wachstum.
+Remote-Feeds synchronisieren nach Zeitplan (Standard: alle 15 Minuten). Pro-Quelle-Refresh-Overrides, Deduplizierung, Wiederholungs-Expansion und Cleanup-Richtlinien halten die Datenbank aktuell ohne unbegrenztes Wachstum. Im Admin-Tab Synchronization sind außerdem Force-Sync, Rebuild und **manueller Kalender-Upload** möglich.
 
 Leitfaden: [docs/de/Synchronization.md](docs/de/Synchronization.md)
 
@@ -199,9 +202,9 @@ Vollständiger Index (DE + EN): [docs/README.md](docs/README.md)
 | [Installation](docs/de/Installation.md) | Einrichtung und Voraussetzungen |
 | [Configuration](docs/de/Configuration.md) | Alle Konfigurationsoptionen |
 | [Architecture](docs/de/Architecture.md) | Code-Struktur |
-| [Sources](docs/de/Sources.md) | ICS, CalDAV, JSON, lokal |
+| [Sources](docs/de/Sources.md) | ICS, CalDAV, JSON, lokal, Admin-Upload |
 | [ICS](docs/de/ICS.md) | iCalendar-Details |
-| [Synchronization](docs/de/Synchronization.md) | Sync und Cleanup |
+| [Synchronization](docs/de/Synchronization.md) | Sync, Cleanup, Admin-Upload |
 | [SQLite](docs/de/SQLite.md) | Datenbankspeicher |
 | [Twig](docs/de/Twig.md) | Template-Integration |
 | [Shortcodes](docs/de/Shortcodes.md) | Seiten-Shortcodes |

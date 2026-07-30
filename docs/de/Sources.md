@@ -120,15 +120,36 @@ Dateien unter `user/plugins/opencalendar/data/` ablegen **oder** den Admin-Uploa
 
 ## Admin-Upload
 
-Unter **Plugins → OpenCalendar → Synchronization** eine `.ics`-/`.ical`- oder `.json`-Datei hochladen.
+Unter **Admin → Plugins → OpenCalendar → Synchronization** den Bereich **Kalenderdatei hochladen** nutzen.
 
-OpenCalendar:
+| Detail | Wert |
+|--------|------|
+| Formate | `.ics`, `.ical`, `.json` |
+| Max. Größe | 10 MiB |
+| Speicherort | `user/data/opencalendar/uploads/` (übersteht Plugin-Updates) |
+| Konfiguration | Erstellt/aktualisiert eine Quelle `type: local` in `user/config/plugins/opencalendar.yaml` |
+| Import | Sofortiger erzwungener Sync nach SQLite |
 
-1. speichert sie unter `user/data/opencalendar/uploads/`
-2. registriert (oder aktualisiert) eine Quelle `type: local` mit `url` wie `uploads/ihre-datei-….ics`
-3. importiert die Termine sofort in SQLite
+Beispiel nach dem Upload:
 
-Erneutes Hochladen mit dem **selben Quellnamen** ersetzt den Dateipfad und importiert neu. Die Quelle erscheint nach Neuladen auch im Tab **Sources**.
+```yaml
+- name: Vereinskalender
+  enabled: true
+  type: local
+  url: 'uploads/vereinskalender-20260730T210000Z-a1b2c3.ics'
+  refresh: inherit
+  description: 'Uploaded via Admin (vereinskalender.ics)'
+  auth:
+    type: none
+```
+
+Hinweise:
+
+- ICS-Dateien müssen `BEGIN:VCALENDAR` enthalten; JSON muss gültiges Event-JSON sein (siehe [JSON](#json) oben).
+- Erneutes Hochladen mit dem **selben Quellnamen** ersetzt Datei und Import.
+- Andere Namen erzeugen zusätzliche lokale Quellen.
+- Hochgeladene Dateien werden beim Entfernen einer Quelle im Tab Sources nicht automatisch gelöscht — ungenutzte Dateien unter `uploads/` bei Bedarf manuell entfernen.
+- Dashboard-Schritte: [Synchronization.md](Synchronization.md#kalenderdatei-hochladen).
 
 ## Deaktiviertes Beispiel
 

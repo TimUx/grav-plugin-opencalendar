@@ -28,6 +28,12 @@ Standardmäßig alle 15 Minuten über den Grav Scheduler. `sync_interval` global
 
 Ja. Jeder Quelleneintrag hat eigenen Typ und eigene Anmeldedaten.
 
+### Kann ich im Admin eine Kalenderdatei hochladen?
+
+Ja. Unter **Plugins → OpenCalendar → Synchronization** den Bereich **Kalenderdatei hochladen** nutzen, eine `.ics`-/`.ical`-/`.json`-Datei wählen und **Hochladen und importieren** klicken. Die Datei landet unter `user/data/opencalendar/uploads/`, wird als lokale Quelle registriert und sofort importiert.
+
+Details: [Synchronization.md](Synchronization.md#kalenderdatei-hochladen) und [Sources.md](Sources.md#admin-upload).
+
 ### Warum fehlen meine Termine?
 
 Typische Ursachen: Quelle deaktiviert, Sync-Fehler, Datumsfilter schließt Termine aus oder Wiederholungs-Horizont zu kurz. Siehe [Troubleshooting.md](Troubleshooting.md).
