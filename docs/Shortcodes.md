@@ -1,40 +1,53 @@
 # Shortcodes
 
-OpenCalendar provides page shortcodes for embedding calendars and event lists without writing Twig.
+OpenCalendar provides a page shortcode for embedding calendars and event lists without writing Twig.
 
 ## Syntax
-
-Grav shortcodes use square brackets:
 
 ```
 [opencalendar /]
 ```
 
-Options are passed as key=value pairs:
+Options are quoted key/value pairs:
 
 ```
 [opencalendar view="list" limit="10" sources="Team Holidays,Personal Calendar" /]
 ```
 
-## `[opencalendar]`
+## `[opencalendar]` parameters
 
-Embeds the full calendar or list widget.
+All attributes below are optional. Defaults come from plugin config (`opencalendar.yaml` / Admin).
 
 | Attribute | Default | Description |
 |-----------|---------|-------------|
-| `view` | config default | `calendar` or `list` |
-| `calendar_view` | `dayGridMonth` | Initial calendar layout |
-| `limit` | config default | Max events (list view) |
-| `sources` | all enabled | Comma-separated source names |
-| `categories` | all | Comma-separated categories |
-| `from` | today | Start date (strtotime) |
-| `to` | +3 months | End date |
-| `show_filters` | config default | Enable filter UI |
-| `show_search` | config default | Enable search box |
-| `theme` | config default | `auto`, `light`, or `dark` |
-| `height` | auto | Calendar height in pixels |
+| `view` | `display.default_view` | `calendar` or `list`. Shortcuts: `month`, `week`, `day`, `agenda` (force calendar layouts). |
+| `calendar_view` | `display.calendar.initial_view` | Initial calendar layout: `dayGridMonth`, `timeGridWeek`, `timeGridDay`, `listWeek`. Alias: `view_mode`. |
+| `limit` | `display.list.limit` | Events **per page** in list view (page size). |
+| `max_events` | none (uncapped window) | Maximum **total** events to include. Caps the result set before paging. |
+| `no_pagination` | `false` | `true` hides page navigation. Shows a single page of up to `max_events` (or `limit` if `max_events` is omitted). |
+| `sources` | all enabled | Comma-separated source names/keys. Aliases: `source`, `calendar`. |
+| `categories` | all | Comma-separated category names. |
+| `from` | none | Range start (`strtotime` / relative, e.g. `now`, `2026-08-01`). |
+| `to` | none | Range end (e.g. `+30 days`). |
+| `show_past` | `display.list.show_past` | `true`/`false` — include events that already ended. Alias: `include_expired`. |
+| `future_only` | `false` | `true` — only events starting in the future. |
+| `sort` | `display.list.sort` | `asc` or `desc` by start time. |
+| `show_filters` | `filters.enabled` | `true`/`false` — show source/category/date filter UI. |
+| `show_search` | `search.enabled` | `true`/`false` — show search box. |
+| `theme` | `theme` | `auto`, `light`, or `dark`. |
+| `locale` | `locale` | Locale for date formatting (`auto` follows Grav language). |
+| `height` | `auto` | Calendar height (CSS value, e.g. `600` or `auto`). |
+| `offset` | `0` | Skip N events (mainly for non-list / API-style queries). |
 
-### Examples
+### Pagination rules (list view)
+
+1. `limit` = page size.
+2. `max_events` = hard cap on how many events enter the widget.
+3. Pagination links appear when **more than one page** is needed (`total > limit`) **and** `no_pagination` is not set.
+4. If `max_events <= limit`, there is only one page → no pagination UI.
+5. If `no_pagination="true"`, pagination is never shown; the list shows up to `max_events` (or `limit`).
+
+## Examples
 
 Month calendar with filters:
 
@@ -42,45 +55,47 @@ Month calendar with filters:
 [opencalendar view="calendar" calendar_view="dayGridMonth" show_filters="true" /]
 ```
 
-Upcoming events list:
+Upcoming events (10 per page, past hidden):
 
 ```
-[opencalendar view="list" limit="5" from="now" to="+30 days" show_past="false" /]
+[opencalendar view="list" limit="10" from="now" to="+30 days" show_past="false" /]
 ```
 
-Single source:
+At most 5 events, no pager:
 
 ```
-[opencalendar sources="Example Public Holidays" /]
+[opencalendar view="list" max_events="5" no_pagination="true" show_past="false" /]
 ```
 
-## `[opencalendar-event]`
-
-Renders a single event by UID.
+Up to 25 events, 10 per page (pagination shown):
 
 ```
-[opencalendar-event uid="abc123@example.com" /]
+[opencalendar view="list" limit="10" max_events="25" from="now" show_past="false" /]
 ```
 
-| Attribute | Required | Description |
-|-----------|----------|-------------|
-| `uid` | Yes | Event UID from ICS or API |
-| `show_description` | config | Show full description |
-| `show_location` | config | Show location line |
-
-## `[opencalendar-search]`
-
-Standalone search box that filters events on the same page.
+Single source, hide chrome:
 
 ```
-[opencalendar-search placeholder="Find events…" /]
+[opencalendar sources="Example Public Holidays" show_filters="false" show_search="false" /]
 ```
 
-Requires `search.enabled: true` in config.
+## Twig equivalent
+
+The same options work with the Twig helper:
+
+```twig
+{{ opencalendar({
+  view: 'list',
+  limit: 10,
+  max_events: 25,
+  no_pagination: false,
+  show_past: false,
+  from: 'now',
+  to: '+30 days'
+}) }}
+```
 
 ## Page front matter
-
-Combine shortcodes with page-level options:
 
 ```yaml
 title: Events
@@ -89,30 +104,14 @@ opencalendar:
   cache: false
 ```
 
-Setting `cache: false` on a page bypasses render cache for dynamic event pages.
-
-## Markdown vs HTML
-
-Shortcodes work in Markdown page content and HTML modules. In modular pages, place shortcodes in the module body.
+Setting `cache: false` (or using list pagination) avoids stale page cache for dynamic lists.
 
 ## Styling
 
-Shortcodes emit BEM-style classes:
-
-- `.opencalendar`
-- `.opencalendar--list`
-- `.opencalendar__event`
-- `.opencalendar__filters`
-
-Override in your theme SCSS/CSS.
-
-## Accessibility
-
-Rendered widgets include:
-
-- Keyboard navigation for calendar views
-- ARIA labels from language files
-- Focus management in filter dialogs
+- `.opencalendar` / `.oc-root`
+- `.opencalendar--list` / `.oc-list`
+- `.oc-pagination` / `ul.pagination`
+- `.oc-filters`
 
 ## Related documentation
 

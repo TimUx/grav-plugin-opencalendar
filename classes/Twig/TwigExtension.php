@@ -78,7 +78,7 @@ class TwigExtension extends AbstractExtension
             $this->disablePageCache();
         }
 
-        $source = $options['source'] ?? $options['calendar'] ?? null;
+        $source = $options['source'] ?? $options['sources'] ?? $options['calendar'] ?? null;
         $calendarKeys = [];
         if (is_string($source) && $source !== '') {
             $calendarKeys = array_map('trim', explode(',', $source));
@@ -92,6 +92,11 @@ class TwigExtension extends AbstractExtension
         }
 
         $perPage = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
+        $maxEvents = null;
+        if (isset($options['max_events']) && $options['max_events'] !== '' && $options['max_events'] !== null) {
+            $maxEvents = max(1, (int) $options['max_events']);
+        }
+        $noPagination = $this->toBool($options['no_pagination'] ?? false);
         $page = $this->resolvePage($options);
         $futureOnly = $this->toBool($options['future_only'] ?? false);
         if (array_key_exists('show_past', $options)) {
@@ -102,10 +107,7 @@ class TwigExtension extends AbstractExtension
             );
         }
 
-        $categoriesFilter = [];
-        if ($requestFilters['category'] !== '') {
-            $categoriesFilter[] = $requestFilters['category'];
-        }
+        $categoriesFilter = $this->resolveCategoryFilter($options, $requestFilters);
 
         $calendarKeys = array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== ''));
         $sort = (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc');
@@ -114,10 +116,15 @@ class TwigExtension extends AbstractExtension
 
         // List view: load a full window of events and paginate with Grav's /page:N URLs
         // (client-side slice), so Grav page-cache cannot pin the UI to page 1.
-        $fetchLimit = $view === 'list' ? max($perPage * 50, 500) : $perPage;
-        $fetchOffset = $view === 'list'
-            ? 0
-            : (isset($options['offset']) ? max(0, (int) $options['offset']) : ($page - 1) * $perPage);
+        if ($view === 'list') {
+            $fetchLimit = $maxEvents ?? max($perPage * 50, 500);
+            $fetchOffset = 0;
+        } else {
+            $fetchLimit = $maxEvents ?? $perPage;
+            $fetchOffset = isset($options['offset'])
+                ? max(0, (int) $options['offset'])
+                : ($page - 1) * $perPage;
+        }
 
         $query = new EventQuery(
             from: $from,
@@ -158,12 +165,48 @@ class TwigExtension extends AbstractExtension
             $result->items
         );
 
-        $total = $view === 'list' ? $result->total : $result->total;
-        $pages = $view === 'list' ? max(1, (int) ceil($total / $perPage)) : $result->totalPages();
-        $page = min(max(1, $page), $pages);
-        $pageEvents = $view === 'list'
-            ? array_slice($allListEvents, ($page - 1) * $perPage, $perPage)
-            : $allListEvents;
+        if ($maxEvents !== null) {
+            $allListEvents = array_slice($allListEvents, 0, $maxEvents);
+        }
+
+        if ($noPagination) {
+            // Single page: show up to max_events (preferred) or limit events, never paginate.
+            $displayCap = $maxEvents ?? $perPage;
+            $allListEvents = array_slice($allListEvents, 0, $displayCap);
+            $total = count($allListEvents);
+            $pages = 1;
+            $page = 1;
+            $pageEvents = $allListEvents;
+            $perPageMeta = max(1, $total > 0 ? $total : $perPage);
+        } else {
+            if ($view === 'list') {
+                $total = $maxEvents !== null ? count($allListEvents) : $result->total;
+                $pages = max(1, (int) ceil($total / $perPage));
+                $page = min(max(1, $page), $pages);
+                $pageEvents = array_slice($allListEvents, ($page - 1) * $perPage, $perPage);
+            } else {
+                $total = $maxEvents !== null ? count($allListEvents) : $result->total;
+                $pages = max(1, (int) ceil($total / max(1, $perPage)));
+                $page = min(max(1, $page), $pages);
+                $pageEvents = $allListEvents;
+            }
+            $perPageMeta = $perPage;
+        }
+
+        $paginationEnabled = !$noPagination && $pages > 1;
+
+        $calendarEvents = array_map(function ($e) use ($locale, $timezone): array {
+            $calendarEvent = $e->toCalendarEvent();
+            $calendarEvent['extendedProps'] = array_merge(
+                is_array($calendarEvent['extendedProps'] ?? null) ? $calendarEvent['extendedProps'] : [],
+                $this->displayFields($e->toArray(), $locale, $timezone)
+            );
+
+            return $calendarEvent;
+        }, $result->items);
+        if ($maxEvents !== null) {
+            $calendarEvents = array_slice($calendarEvents, 0, $maxEvents);
+        }
 
         $payload = [
             'instanceId' => $instanceId,
@@ -172,23 +215,18 @@ class TwigExtension extends AbstractExtension
             'locale' => $locale,
             'timezone' => $timezone,
             'i18n' => $i18n,
-            'events' => array_map(function ($e) use ($locale, $timezone): array {
-                $calendarEvent = $e->toCalendarEvent();
-                $calendarEvent['extendedProps'] = array_merge(
-                    is_array($calendarEvent['extendedProps'] ?? null) ? $calendarEvent['extendedProps'] : [],
-                    $this->displayFields($e->toArray(), $locale, $timezone)
-                );
-
-                return $calendarEvent;
-            }, $result->items),
+            'events' => $calendarEvents,
             'eventsList' => $pageEvents,
             'eventsListAll' => $view === 'list' ? $allListEvents : $pageEvents,
+            'pagination' => $paginationEnabled,
             'meta' => [
                 'total' => $total,
-                'limit' => $perPage,
-                'offset' => ($page - 1) * $perPage,
+                'limit' => $perPageMeta,
+                'offset' => ($page - 1) * $perPageMeta,
                 'page' => $page,
                 'pages' => $pages,
+                'max_events' => $maxEvents,
+                'pagination' => $paginationEnabled,
             ],
             'calendars' => array_map(static fn ($c) => [
                 'key' => $c->sourceKey,
@@ -214,7 +252,12 @@ class TwigExtension extends AbstractExtension
             JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
         );
 
-        $initialView = (string) ($options['view_mode'] ?? $calendarConfig['initial_view'] ?? 'dayGridMonth');
+        $initialView = (string) (
+            $options['calendar_view']
+            ?? $options['view_mode']
+            ?? $calendarConfig['initial_view']
+            ?? 'dayGridMonth'
+        );
         if (in_array($view, ['month', 'week', 'day', 'agenda'], true)) {
             $initialView = match ($view) {
                 'month' => 'dayGridMonth',
@@ -431,7 +474,8 @@ HTML;
 
         $page = (int) ($meta['page'] ?? 1);
         $pages = (int) ($meta['pages'] ?? 1);
-        if ($pages > 1) {
+        $paginationEnabled = (bool) ($payload['pagination'] ?? ($meta['pagination'] ?? true));
+        if ($paginationEnabled && $pages > 1) {
             $html .= $this->renderGravPagination($page, $pages, $i18n);
         }
 
@@ -645,6 +689,39 @@ HTML;
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @param array{source: string, category: string, q: string} $requestFilters
+     * @return list<string>
+     */
+    private function resolveCategoryFilter(array $options, array $requestFilters): array
+    {
+        $categories = [];
+        if (isset($options['categories']) && $options['categories'] !== '' && $options['categories'] !== null) {
+            if (is_array($options['categories'])) {
+                foreach ($options['categories'] as $category) {
+                    $category = trim((string) $category);
+                    if ($category !== '') {
+                        $categories[] = $category;
+                    }
+                }
+            } else {
+                foreach (explode(',', (string) $options['categories']) as $category) {
+                    $category = trim($category);
+                    if ($category !== '') {
+                        $categories[] = $category;
+                    }
+                }
+            }
+        }
+
+        if ($requestFilters['category'] !== '') {
+            $categories[] = $requestFilters['category'];
+        }
+
+        return array_values(array_unique($categories));
     }
 
     /**

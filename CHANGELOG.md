@@ -1,3 +1,12 @@
+# v1.1.1
+## 07/30/2026
+
+1. [](#new)
+    * Shortcode/Twig options `max_events` and `no_pagination` for list caps and pager control
+2. [](#improved)
+    * Documented every usable `[opencalendar]` parameter (including `show_past`)
+    * Accepted `sources` / `calendar_view` aliases and shortcode `categories`
+
 # v1.1.0
 ## 07/29/2026
 

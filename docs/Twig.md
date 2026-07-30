@@ -33,16 +33,30 @@ Returns a collection of event DTOs for the given query options.
 </ul>
 ```
 
-#### Options
+#### Options for `opencalendar()` / list helpers
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `from` | string\|DateTime | Range start (strtotime syntax) |
+| `view` | string | `calendar` or `list` (also `month`/`week`/`day`/`agenda`) |
+| `calendar_view` | string | Initial calendar layout (`dayGridMonth`, …) |
+| `from` | string\|DateTime | Range start (`strtotime` syntax) |
 | `to` | string\|DateTime | Range end |
-| `sources` | array | Filter by source name |
-| `categories` | array | Filter by category |
-| `limit` | int | Maximum results |
+| `sources` / `source` | string\|array | Filter by source name/key |
+| `categories` | string\|array | Filter by category |
+| `limit` | int | Events per page (list) |
+| `max_events` | int | Hard cap on total events shown |
+| `no_pagination` | bool | Hide list pagination; single page up to `max_events`/`limit` |
+| `show_past` | bool | Include ended events (`include_expired` alias) |
+| `future_only` | bool | Only future starts |
 | `sort` | `asc`\|`desc` | Sort by start time |
+| `show_filters` | bool | Toggle filter UI |
+| `show_search` | bool | Toggle search box |
+| `theme` | string | `auto` / `light` / `dark` |
+| `locale` | string | Date locale |
+| `height` | string\|int | Calendar height |
+
+See [Shortcodes.md](Shortcodes.md) for the full attribute list and pagination rules.
+
 
 ### `opencalendar_sources()`
 

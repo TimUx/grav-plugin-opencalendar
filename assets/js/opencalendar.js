@@ -378,21 +378,28 @@
     var all = config.eventsListAll || config.eventsList || [];
     var limit = Number((config.meta && config.meta.limit) || 50);
     var total = Number((config.meta && config.meta.total) || all.length);
-    var pages = Math.max(1, Number((config.meta && config.meta.pages) || Math.ceil(total / limit) || 1));
+    var paginationEnabled = !(config.pagination === false || (config.meta && config.meta.pagination === false));
+    var pages = paginationEnabled
+      ? Math.max(1, Number((config.meta && config.meta.pages) || Math.ceil(total / limit) || 1))
+      : 1;
     page = Math.max(1, Math.min(pages, Number(page) || 1));
     var offset = (page - 1) * limit;
-    config.eventsList = all.slice(offset, offset + limit);
+    config.eventsList = paginationEnabled ? all.slice(offset, offset + limit) : all;
     config.meta = Object.assign({}, config.meta || {}, {
       page: page,
       pages: pages,
       limit: limit,
-      offset: offset,
-      total: total
+      offset: paginationEnabled ? offset : 0,
+      total: total,
+      pagination: paginationEnabled
     });
     return config;
   }
 
   function renderGravPagination(config, root) {
+    if (config.pagination === false || (config.meta && config.meta.pagination === false)) {
+      return '';
+    }
     var labels = i18n(config);
     var meta = config.meta || {};
     var page = Number(meta.page || 1);
