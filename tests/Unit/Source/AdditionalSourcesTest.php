@@ -95,6 +95,30 @@ final class AdditionalSourcesTest extends TestCase
         $source->fetch($config);
     }
 
+    public function testLocalSourceReadsFromSecondaryBase(): void
+    {
+        $uploads = $this->tmpDir . '/opencalendar/uploads';
+        mkdir($uploads, 0777, true);
+        $file = $uploads . '/feed.ics';
+        file_put_contents($file, "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:u1\r\nDTSTART:20260801T100000Z\r\nSUMMARY:Upload\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n");
+
+        $pluginBase = $this->tmpDir . '/plugin';
+        mkdir($pluginBase, 0777, true);
+
+        $source = new LocalSource(
+            $this->unusedHttp(),
+            [$this->tmpDir . '/opencalendar', $pluginBase],
+            new IcsParser('UTC'),
+            new JsonParser('UTC'),
+        );
+        $config = $this->config('upload', SourceType::Local, 'uploads/feed.ics');
+        $fetch = $source->fetch($config);
+        $events = $source->parse($fetch->body, $config, 1);
+
+        self::assertCount(1, $events);
+        self::assertSame('Upload', $events[0]->title);
+    }
+
     public function testCalDavSourceParsesMultistatusCalendarData(): void
     {
         $xml = <<<'XML'

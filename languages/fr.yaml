@@ -30,6 +30,14 @@ PLUGIN_OPENCALENDAR:
   SYNC_COL_UPDATED: Mis à jour
   SYNC_COL_DELETED: Supprimés
   SYNC_COL_ERROR: Erreur
+  UPLOAD_TITLE: Téléverser un fichier calendrier
+  UPLOAD_HELP: Téléversez un calendrier .ics / .ical ou .json. Il est stocké sous user/data/opencalendar/uploads, enregistré comme source locale et importé immédiatement.
+  UPLOAD_NAME: Nom de la source
+  UPLOAD_NAME_PLACEHOLDER: ex. Calendrier du club
+  UPLOAD_FILE: Fichier calendrier
+  UPLOAD_SUBMIT: Téléverser et importer
+  UPLOAD_RUNNING: Téléversement et import…
+  UPLOAD_MISSING_FILE: Veuillez d’abord choisir un fichier calendrier.
   ENABLED: Plugin activé
   LOCALE: Locale
   LOCALE_HELP: Utilisez auto pour suivre la langue du site Grav, ou choisissez une locale fixe.

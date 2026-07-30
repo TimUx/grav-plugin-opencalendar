@@ -17,7 +17,7 @@ OpenCalendar aggregates events from multiple source types. Each source is define
 | `description` | No | Admin-only notes |
 | `auth` | No | Authentication block |
 
-*Local sources use a path relative to the plugin directory.
+*Local sources use a path relative to allowed base directories (`user/data/opencalendar/` for Admin uploads, or the plugin root for `data/…` files).
 
 ## ICS (iCalendar)
 
@@ -98,25 +98,37 @@ Bearer tokens may also be placed in `auth.password` for Admin forms that only ex
 
 ## Local
 
-For ICS or JSON files under the configured local base path (plugin `data/` / user-data).
+For ICS or JSON files under the allowed local base paths (plugin tree and `user/data/opencalendar/`).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'static-schedule.ics'
+  url: 'data/static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-- Paths are resolved relative to the local base directory and cannot escape it
+- Paths are resolved relative to an allowed base directory and cannot escape those roots
 - `.ics` / `.ical` → ICS parser
 - `.json` → JSON parser
 - Content sniffing is used when the extension is ambiguous
 
-Place files under `user/plugins/opencalendar/data/` (or the configured storage/data directory).
+Place files under `user/plugins/opencalendar/data/` **or** use Admin upload (below).
+
+## Admin upload
+
+In **Plugins → OpenCalendar → Synchronization**, upload an `.ics` / `.ical` or `.json` file.
+
+OpenCalendar will:
+
+1. Store it under `user/data/opencalendar/uploads/`
+2. Register (or update) a `type: local` source whose `url` looks like `uploads/your-file-….ics`
+3. Force-import events into SQLite immediately
+
+Re-uploading with the **same source name** replaces that source’s file path and imports again. The source also appears in the **Sources** tab after the next page reload.
 
 ## Disabled example
 

@@ -11,7 +11,7 @@ Events are refreshed by:
 1. **Grav Scheduler** — recommended for production (see `advanced.scheduler.enabled`)
 2. **Cache clear hook** — optional sync when Grav cache is cleared (`advanced.scheduler.on_cache_clear`)
 3. **Manual CLI command** — for operations and debugging (implementation pending)
-4. **Admin action** — force sync for a single source (implementation pending)
+4. **Admin action** — Synchronization dashboard: sync all / one source, rebuild, clear cache, and upload calendar files
 
 ## Sync intervals
 

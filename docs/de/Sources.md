@@ -17,7 +17,7 @@ OpenCalendar aggregiert Ereignisse aus mehreren Quelltypen. Jede Quelle wird im 
 | `description` | Nein | Nur für Admins sichtbare Notizen |
 | `auth` | Nein | Authentifizierungsblock |
 
-*Lokale Quellen verwenden einen Pfad relativ zum Plugin-Verzeichnis.
+*Lokale Quellen verwenden einen Pfad relativ zu erlaubten Basisverzeichnissen (`user/data/opencalendar/` für Admin-Uploads oder Plugin-Stamm für `data/…`).
 
 ## ICS (iCalendar)
 
@@ -98,25 +98,37 @@ Bearer-Tokens können auch in `auth.password` stehen, wenn Admin-Formulare nur e
 
 ## Local
 
-Für ICS- oder JSON-Dateien unter dem konfigurierten lokalen Basispfad (Plugin-`data/` / User-Data).
+Für ICS- oder JSON-Dateien unter den erlaubten lokalen Basispfaden (Plugin-Baum und `user/data/opencalendar/`).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'static-schedule.ics'
+  url: 'data/static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-- Pfade werden relativ zum lokalen Basisverzeichnis aufgelöst und können dieses nicht verlassen
+- Pfade werden relativ zu einem erlaubten Basisverzeichnis aufgelöst und können diese Roots nicht verlassen
 - `.ics` / `.ical` → ICS-Parser
 - `.json` → JSON-Parser
 - Content Sniffing wird verwendet, wenn die Erweiterung mehrdeutig ist
 
-Dateien unter `user/plugins/opencalendar/data/` ablegen (oder im konfigurierten Storage-/Data-Verzeichnis).
+Dateien unter `user/plugins/opencalendar/data/` ablegen **oder** den Admin-Upload nutzen (unten).
+
+## Admin-Upload
+
+Unter **Plugins → OpenCalendar → Synchronization** eine `.ics`-/`.ical`- oder `.json`-Datei hochladen.
+
+OpenCalendar:
+
+1. speichert sie unter `user/data/opencalendar/uploads/`
+2. registriert (oder aktualisiert) eine Quelle `type: local` mit `url` wie `uploads/ihre-datei-….ics`
+3. importiert die Termine sofort in SQLite
+
+Erneutes Hochladen mit dem **selben Quellnamen** ersetzt den Dateipfad und importiert neu. Die Quelle erscheint nach Neuladen auch im Tab **Sources**.
 
 ## Deaktiviertes Beispiel
 

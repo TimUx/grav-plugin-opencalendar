@@ -110,6 +110,65 @@
       });
   }
 
+  function runUpload(cfg) {
+    var fileInput = document.querySelector('[data-oc-upload-file]');
+    var nameInput = document.querySelector('[data-oc-upload-name]');
+    var submit = document.querySelector('[data-oc-upload-submit]');
+
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      showMessage(cfg.labels.upload_missing_file || cfg.labels.error, 'is-error');
+      return;
+    }
+
+    var formData = new FormData();
+    formData.append('calendar', fileInput.files[0]);
+    if (nameInput && nameInput.value) {
+      formData.append('name', nameInput.value.trim());
+    }
+
+    showMessage(cfg.labels.upload_running || cfg.labels.running, null);
+    if (submit) {
+      submit.disabled = true;
+    }
+
+    var url = cfg.base.replace(/\/$/, '') + '/upload';
+
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+      body: formData
+    })
+      .then(function (response) {
+        return response.json().then(function (body) {
+          return { ok: response.ok, body: body };
+        });
+      })
+      .then(function (result) {
+        if (!result.ok || result.body.ok === false) {
+          showMessage((result.body && result.body.message) || cfg.labels.error, 'is-error');
+          if (result.body && result.body.calendars) {
+            renderTable(cfg, result.body);
+          }
+          return;
+        }
+
+        showMessage(result.body.message || cfg.labels.ok, 'is-ok');
+        renderTable(cfg, result.body);
+        if (fileInput) {
+          fileInput.value = '';
+        }
+      })
+      .catch(function () {
+        showMessage(cfg.labels.error, 'is-error');
+      })
+      .finally(function () {
+        if (submit) {
+          submit.disabled = false;
+        }
+      });
+  }
+
   function boot() {
     var cfg = config();
     if (!cfg || !cfg.base) {
@@ -117,6 +176,13 @@
     }
 
     document.addEventListener('click', function (event) {
+      var uploadButton = event.target.closest('[data-oc-upload-submit]');
+      if (uploadButton && uploadButton.closest('.oc-sync-dashboard')) {
+        event.preventDefault();
+        runUpload(cfg);
+        return;
+      }
+
       var button = event.target.closest('[data-oc-admin-action]');
       if (!button || !button.closest('.oc-sync-dashboard')) {
         return;

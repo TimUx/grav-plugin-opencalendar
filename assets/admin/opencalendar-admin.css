@@ -18,6 +18,44 @@
   margin-bottom: 1rem;
 }
 
+.oc-sync-dashboard__upload {
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.oc-sync-dashboard__upload-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.oc-sync-dashboard__upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.oc-sync-dashboard__upload-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+  flex: 1 1 12rem;
+  font-size: 0.85rem;
+}
+
+.oc-sync-dashboard__upload-label input[type="text"],
+.oc-sync-dashboard__upload-label input[type="file"] {
+  width: 100%;
+}
+
+.oc-sync-dashboard__upload-label--file {
+  flex: 1 1 16rem;
+}
+
 .oc-sync-dashboard__message {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;

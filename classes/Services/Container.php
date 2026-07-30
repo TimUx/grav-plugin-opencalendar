@@ -113,7 +113,9 @@ final class Container
             'timeout' => (int) ($this->config['advanced']['http']['timeout'] ?? 30),
             'verify_ssl' => (bool) ($this->config['advanced']['http']['verify_ssl'] ?? true),
             'max_redirects' => (int) ($this->config['advanced']['http']['max_redirects'] ?? 3),
-            'user_agent' => (string) ($this->config['advanced']['http']['user_agent'] ?? 'OpenCalendar/1.0 Grav Plugin'),
+            'user_agent' => (string) (
+                $this->config['advanced']['http']['user_agent'] ?? 'OpenCalendar/1.0 Grav Plugin'
+            ),
         ];
 
         return SourceFactory::createDefault(
@@ -123,8 +125,42 @@ final class Container
                 ? $this->config['advanced']['import']
                 : [],
             defaultTimezone: (string) ($this->config['timezone'] ?? 'Europe/Berlin'),
-            localBasePath: $this->pluginPath,
+            localBasePath: $this->localSourceBases(),
         );
+    }
+
+    /**
+     * Writable directory for Admin-uploaded calendar files.
+     */
+    public function uploadsDirectory(): string
+    {
+        return rtrim($this->userDataRoot(), '/') . '/opencalendar/uploads';
+    }
+
+    public function calendarUploadService(): CalendarUploadService
+    {
+        return new CalendarUploadService($this->uploadsDirectory());
+    }
+
+    /**
+     * Allowed filesystem roots for type=local sources (uploads + plugin tree).
+     *
+     * @return list<string>
+     */
+    public function localSourceBases(): array
+    {
+        $bases = [
+            rtrim($this->userDataRoot(), '/') . '/opencalendar',
+            rtrim($this->pluginPath, '/'),
+        ];
+
+        return array_values(array_unique(array_filter($bases, static fn (string $b): bool => $b !== '')));
+    }
+
+    private function userDataRoot(): string
+    {
+        return $this->userDataPath
+            ?? (dirname($this->pluginPath, 2) . '/data');
     }
 
     public function syncService(): SyncService
@@ -238,10 +274,8 @@ final class Container
 
         if (str_starts_with($path, 'user-data://')) {
             $relative = ltrim(substr($path, strlen('user-data://')), '/');
-            $base = $this->userDataPath
-                ?? (dirname($this->pluginPath, 2) . '/data');
 
-            return rtrim($base, '/') . '/' . $relative;
+            return rtrim($this->userDataRoot(), '/') . '/' . $relative;
         }
 
         if ($path[0] === '/' || preg_match('#^[A-Za-z]:[/\\\\]#', $path) === 1) {

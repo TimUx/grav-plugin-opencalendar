@@ -11,18 +11,38 @@ use Grav\Plugin\OpenCalendar\Http\HttpClientInterface;
 use Grav\Plugin\OpenCalendar\Models\Event;
 
 /**
- * Local filesystem calendar source for ICS and JSON files under a configured base path.
+ * Local filesystem calendar source for ICS and JSON files under configured base path(s).
  */
 final class LocalSource extends AbstractSource
 {
+    /** @var list<string> */
+    private readonly array $allowedBases;
+
+    /**
+     * @param string|list<string> $basePath Primary base, or list of allowed bases (first used for relative paths)
+     */
     public function __construct(
         HttpClientInterface $http,
-        private readonly string $basePath = '',
+        string|array $basePath = '',
         private readonly ?IcsParser $icsParser = null,
         private readonly ?JsonParser $jsonParser = null,
         array $httpOptions = [],
     ) {
         parent::__construct($http, $httpOptions);
+
+        if (is_array($basePath)) {
+            $bases = [];
+            foreach ($basePath as $base) {
+                $trimmed = rtrim((string) $base, "/\\");
+                if ($trimmed !== '') {
+                    $bases[] = $trimmed;
+                }
+            }
+            $this->allowedBases = array_values(array_unique($bases));
+        } else {
+            $trimmed = rtrim($basePath, "/\\");
+            $this->allowedBases = $trimmed !== '' ? [$trimmed] : [];
+        }
     }
 
     public function getType(): string
@@ -89,49 +109,82 @@ final class LocalSource extends AbstractSource
 
         if ($this->isAbsolutePath($path)) {
             $resolved = realpath($path) ?: $path;
-        } else {
-            $base = rtrim($this->basePath, "/\\");
-            if ($base === '') {
-                throw new \RuntimeException('Local source base path is not configured.');
-            }
-            $candidate = $base . DIRECTORY_SEPARATOR . ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path), "/\\");
-            $realBase = realpath($base) ?: $base;
-            $parent = dirname($candidate);
-            $realParent = realpath($parent);
-            if ($realParent === false) {
-                throw new \RuntimeException('Local calendar path is not accessible: ' . $candidate);
-            }
-            $normalizedBase = rtrim(str_replace('\\', '/', $realBase), '/') . '/';
-            $normalizedParent = rtrim(str_replace('\\', '/', $realParent), '/') . '/';
-            if (!str_starts_with($normalizedParent, $normalizedBase) && rtrim($normalizedParent, '/') !== rtrim($normalizedBase, '/')) {
-                throw new \RuntimeException('Local source path escapes the configured base directory.');
-            }
-            $resolved = $realParent . DIRECTORY_SEPARATOR . basename($candidate);
+            $this->assertWithinBases($resolved);
+
+            return $resolved;
         }
 
-        $this->assertWithinBase($resolved);
+        if ($this->allowedBases === []) {
+            throw new \RuntimeException('Local source base path is not configured.');
+        }
 
-        return $resolved;
+        $relative = ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path), "/\\");
+        $lastError = 'Local calendar file not readable: ' . $path;
+
+        foreach ($this->allowedBases as $base) {
+            try {
+                $candidate = $base . DIRECTORY_SEPARATOR . $relative;
+                $realBase = realpath($base) ?: $base;
+                $parent = dirname($candidate);
+                $realParent = realpath($parent);
+                if ($realParent === false) {
+                    $lastError = 'Local calendar path is not accessible: ' . $candidate;
+                    continue;
+                }
+
+                $normalizedBase = rtrim(str_replace('\\', '/', $realBase), '/') . '/';
+                $normalizedParent = rtrim(str_replace('\\', '/', $realParent), '/') . '/';
+                if (
+                    !str_starts_with($normalizedParent, $normalizedBase)
+                    && rtrim($normalizedParent, '/') !== rtrim($normalizedBase, '/')
+                ) {
+                    $lastError = 'Local source path escapes the configured base directory.';
+                    continue;
+                }
+
+                $resolved = $realParent . DIRECTORY_SEPARATOR . basename($candidate);
+                $this->assertWithinBases($resolved);
+
+                return $resolved;
+            } catch (\Throwable $e) {
+                $lastError = $e->getMessage();
+            }
+        }
+
+        throw new \RuntimeException($lastError);
     }
 
-    private function assertWithinBase(string $resolved): void
+    private function assertWithinBases(string $resolved): void
     {
-        $base = $this->basePath !== '' ? (realpath($this->basePath) ?: $this->basePath) : '';
-        if ($base === '') {
+        if ($this->allowedBases === []) {
             return;
         }
 
-        $normalizedBase = rtrim(str_replace('\\', '/', $base), '/') . '/';
         $normalizedFile = str_replace('\\', '/', $resolved);
-        if (!str_starts_with($normalizedFile, $normalizedBase) && $normalizedFile !== rtrim($normalizedBase, '/')) {
-            throw new \RuntimeException('Local source path escapes the configured base directory.');
+        foreach ($this->allowedBases as $base) {
+            $realBase = realpath($base) ?: $base;
+            $normalizedBase = rtrim(str_replace('\\', '/', $realBase), '/') . '/';
+            if (
+                str_starts_with($normalizedFile, $normalizedBase)
+                || $normalizedFile === rtrim($normalizedBase, '/')
+            ) {
+                return;
+            }
         }
+
+        throw new \RuntimeException('Local source path escapes the configured base directory.');
     }
 
     private function isAbsolutePath(string $path): bool
     {
-        return str_starts_with($path, '/')
-            || (strlen($path) > 2 && ctype_alpha($path[0]) && $path[1] === ':' && ($path[2] === '\\' || $path[2] === '/'));
+        if (str_starts_with($path, '/')) {
+            return true;
+        }
+
+        return strlen($path) > 2
+            && ctype_alpha($path[0])
+            && $path[1] === ':'
+            && ($path[2] === '\\' || $path[2] === '/');
     }
 
     private function detectFormat(string $path, string $payload): string

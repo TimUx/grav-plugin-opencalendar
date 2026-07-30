@@ -11,7 +11,7 @@ Ereignisse werden aktualisiert durch:
 1. **Grav Scheduler** — für Produktion empfohlen (siehe `advanced.scheduler.enabled`)
 2. **Cache-Clear-Hook** — optionaler Sync beim Leeren des Grav-Caches (`advanced.scheduler.on_cache_clear`)
 3. **Manueller CLI-Befehl** — für Betrieb und Debugging (Implementierung ausstehend)
-4. **Admin-Aktion** — erzwungener Sync für eine einzelne Quelle (Implementierung ausstehend)
+4. **Admin-Aktion** — Synchronisierungs-Dashboard: Sync aller/einzelner Quellen, Rebuild, Cache leeren und Kalenderdateien hochladen
 
 ## Sync-Intervalle
 

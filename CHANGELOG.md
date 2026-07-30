@@ -1,3 +1,11 @@
+# v1.2.0
+## 07/30/2026
+
+1. [](#new)
+    * Admin Synchronization tab: upload `.ics` / `.ical` / `.json` calendar files, register as local sources, and import immediately
+2. [](#improved)
+    * Local sources may resolve under `user/data/opencalendar/` (uploads) as well as the plugin directory
+
 # v1.1.1
 ## 07/30/2026
 
