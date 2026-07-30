@@ -161,6 +161,52 @@ final class IntegrationApiTwigTest extends TestCase
         self::assertStringContainsString('oc-list', $processedHidden);
         self::assertStringNotContainsString('data-oc-filters', $processedHidden);
 
+        $capped = $twig->render([
+            'view' => 'list',
+            'limit' => 2,
+            'max_events' => 3,
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('oc-list', $capped);
+        self::assertStringContainsString('"max_events":3', $capped);
+        self::assertStringContainsString('"pagination":true', $capped);
+
+        $noPager = $twig->render([
+            'view' => 'list',
+            'limit' => 2,
+            'max_events' => 5,
+            'no_pagination' => 'true',
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"pagination":false', $noPager);
+        self::assertStringNotContainsString('data-oc-pagination', $noPager);
+
+        $singlePage = $twig->render([
+            'view' => 'list',
+            'limit' => 50,
+            'max_events' => 2,
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"pagination":false', $singlePage);
+        self::assertStringNotContainsString('data-oc-pagination', $singlePage);
+
+        $byWeek = $twig->render([
+            'view' => 'list',
+            'limit' => 50,
+            'group_by' => 'week',
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"group_by":"week"', $byWeek);
+
+        $noGroup = $twig->render([
+            'view' => 'list',
+            'limit' => 50,
+            'group_by' => 'none',
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"group_by":"none"', $noGroup);
+        self::assertStringNotContainsString('oc-list__group', $noGroup);
+
         $query = EventQuery::fromRequest([
             'from' => '2026-07-01',
             'to' => '2026-08-31',

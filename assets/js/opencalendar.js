@@ -330,7 +330,30 @@
       .replace(/'/g, '&#39;');
   }
 
-  function formatListGroup(value, locale, timezone) {
+  function normalizeGroupBy(value) {
+    var key = String(value == null ? 'month' : value).trim().toLowerCase();
+    var aliases = {
+      none: 'none',
+      off: 'none',
+      false: 'none',
+      '0': 'none',
+      day: 'day',
+      days: 'day',
+      week: 'week',
+      weeks: 'week',
+      month: 'month',
+      months: 'month',
+      year: 'year',
+      years: 'year'
+    };
+    return aliases[key] || 'month';
+  }
+
+  function formatListGroup(value, locale, timezone, groupBy) {
+    groupBy = normalizeGroupBy(groupBy);
+    if (groupBy === 'none') {
+      return '';
+    }
     if (!value) {
       return '—';
     }
@@ -339,13 +362,62 @@
       if (Number.isNaN(d.getTime())) {
         return String(value).slice(0, 7);
       }
-      return new Intl.DateTimeFormat(isGermanLocale(locale) ? 'de-DE' : (locale || undefined), {
-        timeZone: resolveTimeZone(timezone),
+      var tz = resolveTimeZone(timezone);
+      var loc = isGermanLocale(locale) ? 'de-DE' : (locale || undefined);
+      if (groupBy === 'day') {
+        return new Intl.DateTimeFormat(loc, {
+          timeZone: tz,
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }).format(d);
+      }
+      if (groupBy === 'week') {
+        var week = isoWeekParts(d, tz);
+        return isGermanLocale(locale)
+          ? ('KW ' + week.week + ' ' + week.year)
+          : ('Week ' + week.week + ', ' + week.year);
+      }
+      if (groupBy === 'year') {
+        return new Intl.DateTimeFormat(loc, { timeZone: tz, year: 'numeric' }).format(d);
+      }
+      return new Intl.DateTimeFormat(loc, {
+        timeZone: tz,
         month: 'long',
         year: 'numeric'
       }).format(d);
     } catch (e) {
       return String(value).slice(0, 7);
+    }
+  }
+
+  function isoWeekParts(date, timezone) {
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(date);
+      var map = {};
+      parts.forEach(function (part) {
+        if (part.type !== 'literal') {
+          map[part.type] = part.value;
+        }
+      });
+      var local = new Date(Date.UTC(
+        Number(map.year),
+        Number(map.month) - 1,
+        Number(map.day)
+      ));
+      var dayNum = local.getUTCDay() || 7;
+      local.setUTCDate(local.getUTCDate() + 4 - dayNum);
+      var yearStart = new Date(Date.UTC(local.getUTCFullYear(), 0, 1));
+      var week = Math.ceil((((local - yearStart) / 86400000) + 1) / 7);
+      return { week: week, year: local.getUTCFullYear() };
+    } catch (e) {
+      return { week: '?', year: '' };
     }
   }
 
@@ -378,21 +450,28 @@
     var all = config.eventsListAll || config.eventsList || [];
     var limit = Number((config.meta && config.meta.limit) || 50);
     var total = Number((config.meta && config.meta.total) || all.length);
-    var pages = Math.max(1, Number((config.meta && config.meta.pages) || Math.ceil(total / limit) || 1));
+    var paginationEnabled = !(config.pagination === false || (config.meta && config.meta.pagination === false));
+    var pages = paginationEnabled
+      ? Math.max(1, Number((config.meta && config.meta.pages) || Math.ceil(total / limit) || 1))
+      : 1;
     page = Math.max(1, Math.min(pages, Number(page) || 1));
     var offset = (page - 1) * limit;
-    config.eventsList = all.slice(offset, offset + limit);
+    config.eventsList = paginationEnabled ? all.slice(offset, offset + limit) : all;
     config.meta = Object.assign({}, config.meta || {}, {
       page: page,
       pages: pages,
       limit: limit,
-      offset: offset,
-      total: total
+      offset: paginationEnabled ? offset : 0,
+      total: total,
+      pagination: paginationEnabled
     });
     return config;
   }
 
   function renderGravPagination(config, root) {
+    if (config.pagination === false || (config.meta && config.meta.pagination === false)) {
+      return '';
+    }
     var labels = i18n(config);
     var meta = config.meta || {};
     var page = Number(meta.page || 1);
@@ -443,15 +522,23 @@
     }
 
     var currentGroup = null;
+    var listOpened = false;
+    var groupBy = normalizeGroupBy((config.list && config.list.group_by) || 'month');
     events.forEach(function (event) {
       var start = event.start || '';
-      var group = formatListGroup(start, locale, timezone);
-      if (group !== currentGroup) {
+      var group = formatListGroup(start, locale, timezone, groupBy);
+      if (groupBy === 'none') {
+        if (!listOpened) {
+          html += '<ul class="oc-list__items">';
+          listOpened = true;
+        }
+      } else if (group !== currentGroup) {
         if (currentGroup !== null) {
           html += '</ul>';
         }
         html += '<h3 class="oc-list__group">' + escapeHtml(group) + '</h3><ul class="oc-list__items">';
         currentGroup = group;
+        listOpened = true;
       }
       var color = escapeHtml(event.color || '#3788d8');
       var title = escapeHtml(event.title || '');
@@ -468,7 +555,7 @@
         + '</span>'
         + '</button></li>';
     });
-    if (currentGroup !== null) {
+    if (listOpened) {
       html += '</ul>';
     }
 
@@ -606,6 +693,37 @@
       initCalendar(root, config);
     }
     initFilters(root, config);
+    initSubscribe(root, config);
+  }
+
+  function initSubscribe(root, config) {
+    var box = root.querySelector('[data-oc-subscribe]');
+    if (!box) {
+      return;
+    }
+    var labels = i18n(config);
+    box.querySelectorAll('[data-oc-copy-url]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var url = button.getAttribute('data-oc-copy-url') || '';
+        if (!url) {
+          return;
+        }
+        var done = function () {
+          var previous = button.textContent;
+          button.textContent = labels.subscribe_copied || 'Copied';
+          window.setTimeout(function () {
+            button.textContent = previous;
+          }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done).catch(function () {
+            window.prompt(labels.subscribe_copy || 'Copy ICS URL', url);
+          });
+        } else {
+          window.prompt(labels.subscribe_copy || 'Copy ICS URL', url);
+        }
+      });
+    });
   }
 
   function boot() {

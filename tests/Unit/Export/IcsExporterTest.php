@@ -48,6 +48,8 @@ final class IcsExporterTest extends TestCase
         self::assertStringContainsString('SUMMARY:Team Meeting', $ics);
         self::assertStringContainsString('LOCATION:Room 1', $ics);
         self::assertStringContainsString('X-WR-CALNAME:Export Test', $ics);
+        self::assertStringContainsString('REFRESH-INTERVAL', $ics);
+        self::assertStringContainsString('X-PUBLISHED-TTL', $ics);
         self::assertStringContainsString('END:VCALENDAR', $ics);
     }
 

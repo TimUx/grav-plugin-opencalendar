@@ -32,15 +32,16 @@ class TwigExtension extends AbstractExtension
             new TwigFunction('opencalendar_calendars', [$this, 'calendars']),
             new TwigFunction('opencalendar_categories', [$this, 'categories']),
             new TwigFunction('opencalendar_export_url', [$this, 'exportUrl']),
+            new TwigFunction('opencalendar_webcal_url', [$this, 'webcalUrl']),
         ];
     }
 
     /**
-     * Public ICS export URL (empty string when export is disabled).
+     * Public ICS export/subscribe URL (empty string when export is disabled).
      *
      * @param array<string, scalar|null> $query
      */
-    public function exportUrl(array $query = []): string
+    public function exportUrl(array $query = [], bool $absolute = true): string
     {
         $export = $this->config['export'] ?? [];
         if (is_array($export) && array_key_exists('enabled', $export) && !$export['enabled']) {
@@ -51,9 +52,8 @@ class TwigExtension extends AbstractExtension
         if (is_array($export) && !empty($export['route'])) {
             $route = (string) $export['route'];
         }
-
-        if ($query === []) {
-            return $route;
+        if (!str_starts_with($route, '/')) {
+            $route = '/' . $route;
         }
 
         $parts = [];
@@ -63,8 +63,84 @@ class TwigExtension extends AbstractExtension
             }
             $parts[] = rawurlencode((string) $key) . '=' . rawurlencode((string) $value);
         }
+        $path = $parts === [] ? $route : $route . '?' . implode('&', $parts);
 
-        return $parts === [] ? $route : $route . '?' . implode('&', $parts);
+        if (!$absolute) {
+            return $path;
+        }
+
+        $base = $this->siteBaseUrl();
+
+        return $base !== '' ? $base . $path : $path;
+    }
+
+    /**
+     * webcal:// URL for one-tap subscribe in iOS/macOS/Outlook (empty when export disabled).
+     *
+     * @param array<string, scalar|null> $query
+     */
+    public function webcalUrl(array $query = []): string
+    {
+        $httpsUrl = $this->exportUrl($query, true);
+        if ($httpsUrl === '') {
+            return '';
+        }
+
+        if (str_starts_with($httpsUrl, 'https://')) {
+            return 'webcal://' . substr($httpsUrl, strlen('https://'));
+        }
+        if (str_starts_with($httpsUrl, 'http://')) {
+            return 'webcal://' . substr($httpsUrl, strlen('http://'));
+        }
+
+        $base = $this->siteBaseUrl();
+        if ($base !== '') {
+            $absolute = $this->exportUrl($query, true);
+
+            return $this->webcalUrlFromHttp($absolute);
+        }
+
+        return 'webcal://' . ltrim($httpsUrl, '/');
+    }
+
+    private function webcalUrlFromHttp(string $url): string
+    {
+        if (str_starts_with($url, 'https://')) {
+            return 'webcal://' . substr($url, 8);
+        }
+        if (str_starts_with($url, 'http://')) {
+            return 'webcal://' . substr($url, 7);
+        }
+
+        return $url;
+    }
+
+    private function siteBaseUrl(): string
+    {
+        try {
+            if (!class_exists(\Grav\Common\Grav::class)) {
+                return '';
+            }
+            $grav = \Grav\Common\Grav::instance();
+            $uri = $grav['uri'] ?? null;
+            if (is_object($uri) && method_exists($uri, 'rootUrl')) {
+                /** @var mixed $root */
+                $root = $uri->rootUrl(true);
+                if (is_string($root) && $root !== '') {
+                    return rtrim($root, '/');
+                }
+            }
+            if (is_object($uri) && method_exists($uri, 'base')) {
+                $base = $uri->base();
+                if (is_string($base) && $base !== '') {
+                    return rtrim($base, '/');
+                }
+            }
+        } catch (\Throwable) {
+            // ignore in unit tests / CLI
+        }
+
+        return '';
     }
 
     /**
@@ -78,7 +154,7 @@ class TwigExtension extends AbstractExtension
             $this->disablePageCache();
         }
 
-        $source = $options['source'] ?? $options['calendar'] ?? null;
+        $source = $options['source'] ?? $options['sources'] ?? $options['calendar'] ?? null;
         $calendarKeys = [];
         if (is_string($source) && $source !== '') {
             $calendarKeys = array_map('trim', explode(',', $source));
@@ -92,6 +168,11 @@ class TwigExtension extends AbstractExtension
         }
 
         $perPage = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
+        $maxEvents = null;
+        if (isset($options['max_events']) && $options['max_events'] !== '' && $options['max_events'] !== null) {
+            $maxEvents = max(1, (int) $options['max_events']);
+        }
+        $noPagination = $this->toBool($options['no_pagination'] ?? false);
         $page = $this->resolvePage($options);
         $futureOnly = $this->toBool($options['future_only'] ?? false);
         if (array_key_exists('show_past', $options)) {
@@ -102,10 +183,7 @@ class TwigExtension extends AbstractExtension
             );
         }
 
-        $categoriesFilter = [];
-        if ($requestFilters['category'] !== '') {
-            $categoriesFilter[] = $requestFilters['category'];
-        }
+        $categoriesFilter = $this->resolveCategoryFilter($options, $requestFilters);
 
         $calendarKeys = array_values(array_filter($calendarKeys, static fn (string $k): bool => $k !== ''));
         $sort = (string) ($options['sort'] ?? $this->config['display']['list']['sort'] ?? 'asc');
@@ -114,10 +192,15 @@ class TwigExtension extends AbstractExtension
 
         // List view: load a full window of events and paginate with Grav's /page:N URLs
         // (client-side slice), so Grav page-cache cannot pin the UI to page 1.
-        $fetchLimit = $view === 'list' ? max($perPage * 50, 500) : $perPage;
-        $fetchOffset = $view === 'list'
-            ? 0
-            : (isset($options['offset']) ? max(0, (int) $options['offset']) : ($page - 1) * $perPage);
+        if ($view === 'list') {
+            $fetchLimit = $maxEvents ?? max($perPage * 50, 500);
+            $fetchOffset = 0;
+        } else {
+            $fetchLimit = $maxEvents ?? $perPage;
+            $fetchOffset = isset($options['offset'])
+                ? max(0, (int) $options['offset'])
+                : ($page - 1) * $perPage;
+        }
 
         $query = new EventQuery(
             from: $from,
@@ -158,12 +241,48 @@ class TwigExtension extends AbstractExtension
             $result->items
         );
 
-        $total = $view === 'list' ? $result->total : $result->total;
-        $pages = $view === 'list' ? max(1, (int) ceil($total / $perPage)) : $result->totalPages();
-        $page = min(max(1, $page), $pages);
-        $pageEvents = $view === 'list'
-            ? array_slice($allListEvents, ($page - 1) * $perPage, $perPage)
-            : $allListEvents;
+        if ($maxEvents !== null) {
+            $allListEvents = array_slice($allListEvents, 0, $maxEvents);
+        }
+
+        if ($noPagination) {
+            // Single page: show up to max_events (preferred) or limit events, never paginate.
+            $displayCap = $maxEvents ?? $perPage;
+            $allListEvents = array_slice($allListEvents, 0, $displayCap);
+            $total = count($allListEvents);
+            $pages = 1;
+            $page = 1;
+            $pageEvents = $allListEvents;
+            $perPageMeta = max(1, $total > 0 ? $total : $perPage);
+        } else {
+            if ($view === 'list') {
+                $total = $maxEvents !== null ? count($allListEvents) : $result->total;
+                $pages = max(1, (int) ceil($total / $perPage));
+                $page = min(max(1, $page), $pages);
+                $pageEvents = array_slice($allListEvents, ($page - 1) * $perPage, $perPage);
+            } else {
+                $total = $maxEvents !== null ? count($allListEvents) : $result->total;
+                $pages = max(1, (int) ceil($total / max(1, $perPage)));
+                $page = min(max(1, $page), $pages);
+                $pageEvents = $allListEvents;
+            }
+            $perPageMeta = $perPage;
+        }
+
+        $paginationEnabled = !$noPagination && $pages > 1;
+
+        $calendarEvents = array_map(function ($e) use ($locale, $timezone): array {
+            $calendarEvent = $e->toCalendarEvent();
+            $calendarEvent['extendedProps'] = array_merge(
+                is_array($calendarEvent['extendedProps'] ?? null) ? $calendarEvent['extendedProps'] : [],
+                $this->displayFields($e->toArray(), $locale, $timezone)
+            );
+
+            return $calendarEvent;
+        }, $result->items);
+        if ($maxEvents !== null) {
+            $calendarEvents = array_slice($calendarEvents, 0, $maxEvents);
+        }
 
         $payload = [
             'instanceId' => $instanceId,
@@ -172,23 +291,18 @@ class TwigExtension extends AbstractExtension
             'locale' => $locale,
             'timezone' => $timezone,
             'i18n' => $i18n,
-            'events' => array_map(function ($e) use ($locale, $timezone): array {
-                $calendarEvent = $e->toCalendarEvent();
-                $calendarEvent['extendedProps'] = array_merge(
-                    is_array($calendarEvent['extendedProps'] ?? null) ? $calendarEvent['extendedProps'] : [],
-                    $this->displayFields($e->toArray(), $locale, $timezone)
-                );
-
-                return $calendarEvent;
-            }, $result->items),
+            'events' => $calendarEvents,
             'eventsList' => $pageEvents,
             'eventsListAll' => $view === 'list' ? $allListEvents : $pageEvents,
+            'pagination' => $paginationEnabled,
             'meta' => [
                 'total' => $total,
-                'limit' => $perPage,
-                'offset' => ($page - 1) * $perPage,
+                'limit' => $perPageMeta,
+                'offset' => ($page - 1) * $perPageMeta,
                 'page' => $page,
                 'pages' => $pages,
+                'max_events' => $maxEvents,
+                'pagination' => $paginationEnabled,
             ],
             'calendars' => array_map(static fn ($c) => [
                 'key' => $c->sourceKey,
@@ -198,7 +312,9 @@ class TwigExtension extends AbstractExtension
             ], $calendars),
             'categories' => $categories,
             'calendar' => $calendarConfig,
-            'list' => $listConfig,
+            'list' => array_merge($listConfig, [
+                'group_by' => $this->resolveGroupBy($options, $listConfig),
+            ]),
             'filters' => $this->resolveFiltersConfig($options),
             'activeFilters' => $requestFilters,
             'search' => $this->resolveSearchConfig($options),
@@ -214,7 +330,12 @@ class TwigExtension extends AbstractExtension
             JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
         );
 
-        $initialView = (string) ($options['view_mode'] ?? $calendarConfig['initial_view'] ?? 'dayGridMonth');
+        $initialView = (string) (
+            $options['calendar_view']
+            ?? $options['view_mode']
+            ?? $calendarConfig['initial_view']
+            ?? 'dayGridMonth'
+        );
         if (in_array($view, ['month', 'week', 'day', 'agenda'], true)) {
             $initialView = match ($view) {
                 'month' => 'dayGridMonth',
@@ -240,6 +361,7 @@ class TwigExtension extends AbstractExtension
                 . htmlspecialchars($initialView, ENT_QUOTES, 'UTF-8')
                 . '" style="height:' . $height . '"></div>'
             : '';
+        $subscribeHtml = $this->renderSubscribeLinks($options, $calendarKeys);
 
         $close = htmlspecialchars($i18n['close'], ENT_QUOTES, 'UTF-8');
         $date = htmlspecialchars($i18n['date'], ENT_QUOTES, 'UTF-8');
@@ -256,6 +378,7 @@ class TwigExtension extends AbstractExtension
     {$calendarHtml}
     {$listHtml}
   </div>
+  {$subscribeHtml}
   <div class="oc-modal" data-oc-modal hidden>
     <div class="oc-modal__backdrop" data-oc-modal-close></div>
     <div class="oc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="{$instanceEsc}-title" tabindex="-1">
@@ -277,6 +400,57 @@ class TwigExtension extends AbstractExtension
   <script type="application/json" id="{$instanceEsc}-cfg">{$json}</script>
 </div>
 HTML;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @param list<string> $calendarKeys
+     */
+    private function renderSubscribeLinks(array $options, array $calendarKeys): string
+    {
+        $export = is_array($this->config['export'] ?? null) ? $this->config['export'] : [];
+        if (array_key_exists('enabled', $export) && !$export['enabled']) {
+            return '';
+        }
+
+        $show = array_key_exists('show_subscribe', $options)
+            ? $this->toBool($options['show_subscribe'])
+            : (bool) ($export['show_subscribe_links'] ?? false);
+        if (!$show) {
+            return '';
+        }
+
+        $query = [];
+        if ($calendarKeys !== []) {
+            $query['source'] = implode(',', $calendarKeys);
+        }
+
+        $httpUrl = $this->exportUrl($query, true);
+        $webcal = $this->webcalUrl($query);
+        if ($httpUrl === '') {
+            return '';
+        }
+
+        $i18n = $this->frontendI18n();
+        $label = htmlspecialchars((string) ($i18n['subscribe'] ?? 'Subscribe'), ENT_QUOTES, 'UTF-8');
+        $copyLabel = htmlspecialchars((string) ($i18n['subscribe_copy'] ?? 'Copy ICS URL'), ENT_QUOTES, 'UTF-8');
+        $help = htmlspecialchars(
+            (string) ($i18n['subscribe_help'] ?? 'Add this calendar on your phone or mail client.'),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+        $httpEsc = htmlspecialchars($httpUrl, ENT_QUOTES, 'UTF-8');
+        $webcalEsc = htmlspecialchars($webcal !== '' ? $webcal : $httpUrl, ENT_QUOTES, 'UTF-8');
+
+        return '<div class="oc-subscribe" data-oc-subscribe>'
+            . '<p class="oc-subscribe__help">' . $help . '</p>'
+            . '<div class="oc-subscribe__actions">'
+            . '<a class="oc-subscribe__link" href="' . $webcalEsc . '">' . $label . '</a>'
+            . '<button type="button" class="oc-subscribe__copy" data-oc-copy-url="' . $httpEsc . '">'
+            . $copyLabel . '</button>'
+            . '</div>'
+            . '<code class="oc-subscribe__url">' . $httpEsc . '</code>'
+            . '</div>';
     }
 
     /**
@@ -392,16 +566,26 @@ HTML;
         $currentGroup = null;
         $locale = (string) ($payload['locale'] ?? 'de');
         $timezone = (string) ($payload['timezone'] ?? 'Europe/Berlin');
+        $groupBy = $this->normalizeGroupBy($payload['list']['group_by'] ?? 'month');
+        $listOpened = false;
+
         foreach ($events as $event) {
             $start = (string) ($event['start'] ?? '');
-            $group = $this->formatListGroup($start, $locale, $timezone);
-            if ($group !== $currentGroup) {
+            $group = $this->formatListGroup($start, $locale, $timezone, $groupBy);
+
+            if ($groupBy === 'none') {
+                if (!$listOpened) {
+                    $html .= '<ul class="oc-list__items">';
+                    $listOpened = true;
+                }
+            } elseif ($group !== $currentGroup) {
                 if ($currentGroup !== null) {
                     $html .= '</ul>';
                 }
                 $html .= '<h3 class="oc-list__group">' . htmlspecialchars($group, ENT_QUOTES, 'UTF-8')
                     . '</h3><ul class="oc-list__items">';
                 $currentGroup = $group;
+                $listOpened = true;
             }
 
             $color = htmlspecialchars((string) ($event['color'] ?? '#3788d8'), ENT_QUOTES, 'UTF-8');
@@ -425,13 +609,14 @@ HTML;
                 . '</button></li>';
         }
 
-        if ($currentGroup !== null) {
+        if ($listOpened) {
             $html .= '</ul>';
         }
 
         $page = (int) ($meta['page'] ?? 1);
         $pages = (int) ($meta['pages'] ?? 1);
-        if ($pages > 1) {
+        $paginationEnabled = (bool) ($payload['pagination'] ?? ($meta['pagination'] ?? true));
+        if ($paginationEnabled && $pages > 1) {
             $html .= $this->renderGravPagination($page, $pages, $i18n);
         }
 
@@ -519,6 +704,10 @@ HTML;
             'week' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_WEEK'),
             'day' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_DAY'),
             'list' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_LIST'),
+            'subscribe' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE'),
+            'subscribe_copy' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY'),
+            'subscribe_help' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP'),
+            'subscribe_copied' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED'),
         ];
     }
 
@@ -555,6 +744,10 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Week',
             'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Day',
             'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'List',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE' => 'Subscribe to calendar',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY' => 'Copy ICS URL',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP' => 'Add this calendar on your phone or mail client — it updates automatically.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED' => 'Copied',
         ];
 
         $de = [
@@ -582,6 +775,10 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Woche',
             'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Tag',
             'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'Liste',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE' => 'Kalender abonnieren',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY' => 'ICS-URL kopieren',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP' => 'Diesen Kalender auf Smartphone oder in der Mail-App hinzufügen — er aktualisiert sich automatisch.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED' => 'Kopiert',
         ];
 
         $value = null;
@@ -645,6 +842,39 @@ HTML;
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @param array{source: string, category: string, q: string} $requestFilters
+     * @return list<string>
+     */
+    private function resolveCategoryFilter(array $options, array $requestFilters): array
+    {
+        $categories = [];
+        if (isset($options['categories']) && $options['categories'] !== '' && $options['categories'] !== null) {
+            if (is_array($options['categories'])) {
+                foreach ($options['categories'] as $category) {
+                    $category = trim((string) $category);
+                    if ($category !== '') {
+                        $categories[] = $category;
+                    }
+                }
+            } else {
+                foreach (explode(',', (string) $options['categories']) as $category) {
+                    $category = trim($category);
+                    if ($category !== '') {
+                        $categories[] = $category;
+                    }
+                }
+            }
+        }
+
+        if ($requestFilters['category'] !== '') {
+            $categories[] = $requestFilters['category'];
+        }
+
+        return array_values(array_unique($categories));
     }
 
     /**
@@ -938,8 +1168,49 @@ HTML;
         }
     }
 
-    private function formatListGroup(string $start, string $locale, string $timezone = 'Europe/Berlin'): string
+    /**
+     * @param array<string, mixed> $options
+     * @param array<string, mixed> $listConfig
+     */
+    private function resolveGroupBy(array $options, array $listConfig): string
     {
+        $value = $options['group_by'] ?? $listConfig['group_by'] ?? 'month';
+
+        return $this->normalizeGroupBy($value);
+    }
+
+    private function normalizeGroupBy(mixed $value): string
+    {
+        $groupBy = strtolower(trim((string) $value));
+        $aliases = [
+            'none' => 'none',
+            'off' => 'none',
+            'false' => 'none',
+            '0' => 'none',
+            'day' => 'day',
+            'days' => 'day',
+            'week' => 'week',
+            'weeks' => 'week',
+            'month' => 'month',
+            'months' => 'month',
+            'year' => 'year',
+            'years' => 'year',
+        ];
+
+        return $aliases[$groupBy] ?? 'month';
+    }
+
+    private function formatListGroup(
+        string $start,
+        string $locale,
+        string $timezone = 'Europe/Berlin',
+        string $groupBy = 'month',
+    ): string {
+        $groupBy = $this->normalizeGroupBy($groupBy);
+        if ($groupBy === 'none') {
+            return '';
+        }
+
         if ($start === '') {
             return '—';
         }
@@ -948,20 +1219,59 @@ HTML;
             $dt = $this->toDisplayDateTime($start, $timezone);
             $isDe = str_starts_with(strtolower($locale), 'de');
 
-            if ($isDe) {
-                static $months = [
-                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
-                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
-                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
-                ];
-
-                return ($months[(int) $dt->format('n')] ?? $dt->format('m')) . ' ' . $dt->format('Y');
-            }
-
-            return $dt->format('F Y');
+            return match ($groupBy) {
+                'day' => $this->formatGroupDay($dt, $isDe),
+                'week' => $this->formatGroupWeek($dt, $isDe),
+                'year' => $dt->format('Y'),
+                default => $this->formatGroupMonth($dt, $isDe),
+            };
         } catch (\Throwable) {
-            return substr($start, 0, 7);
+            return match ($groupBy) {
+                'day' => substr($start, 0, 10),
+                'year' => substr($start, 0, 4),
+                'week' => substr($start, 0, 10),
+                default => substr($start, 0, 7),
+            };
         }
+    }
+
+    private function formatGroupDay(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        if ($isDe) {
+            static $weekdays = [
+                1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag',
+                5 => 'Freitag', 6 => 'Samstag', 7 => 'Sonntag',
+            ];
+
+            return ($weekdays[(int) $dt->format('N')] ?? '') . ', ' . $dt->format('d.m.Y');
+        }
+
+        return $dt->format('l, M j, Y');
+    }
+
+    private function formatGroupWeek(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        $week = $dt->format('W');
+        $year = $dt->format('o');
+
+        return $isDe
+            ? sprintf('KW %s %s', $week, $year)
+            : sprintf('Week %s, %s', $week, $year);
+    }
+
+    private function formatGroupMonth(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        if ($isDe) {
+            static $months = [
+                1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
+            ];
+
+            return ($months[(int) $dt->format('n')] ?? $dt->format('m')) . ' ' . $dt->format('Y');
+        }
+
+        return $dt->format('F Y');
     }
 
     private function toDisplayDateTime(string $start, string $timezone): \DateTimeImmutable

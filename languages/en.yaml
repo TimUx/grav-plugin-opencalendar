@@ -130,6 +130,7 @@ PLUGIN_OPENCALENDAR:
   GROUP_DAY: Day
   GROUP_WEEK: Week
   GROUP_MONTH: Month
+  GROUP_YEAR: Year
   LIST_SORT: Sort order
   SORT_ASC: Ascending (earliest first)
   SORT_DESC: Descending (latest first)
@@ -185,12 +186,21 @@ PLUGIN_OPENCALENDAR:
   WEBHOOK_SECRET_HELP: 'Send as X-OpenCalendar-Token header, Authorization: Bearer, or ?token=.'
   WEBHOOK_ALLOW_SOURCE: Allow source parameter
   WEBHOOK_ALLOW_SOURCE_HELP: 'Accept ?source= or JSON body source to sync a single calendar.'
-  SECTION_EXPORT: ICS export
-  EXPORT_ENABLED: Enable ICS export
-  EXPORT_ENABLED_HELP: 'Publish an aggregated text/calendar feed for subscription in other calendar apps.'
-  EXPORT_ROUTE: Export route
+  SECTION_EXPORT: ICS export / subscription
+  EXPORT_ENABLED: Enable calendar subscription feed
+  EXPORT_ENABLED_HELP: 'Publish a live ICS URL that phones and mail clients can subscribe to and refresh automatically.'
+  EXPORT_ROUTE: Feed URL path
   EXPORT_CALENDAR_NAME: Calendar name
   EXPORT_MAX_EVENTS: Maximum events
+  EXPORT_REFRESH_MINUTES: Suggested refresh (minutes)
+  EXPORT_REFRESH_MINUTES_HELP: 'Written into the ICS feed so clients know how often to re-fetch.'
+  EXPORT_DEFAULT_FROM: Default range start
+  EXPORT_DEFAULT_FROM_HELP: 'Used when no ?from= is given (e.g. -30 days). Empty = no lower bound.'
+  EXPORT_DEFAULT_TO: Default range end
+  EXPORT_DEFAULT_TO_HELP: 'Used when no ?to= is given (e.g. +365 days). Empty = no upper bound.'
+  EXPORT_SHOW_SUBSCRIBE: Show subscribe links in widgets
+  EXPORT_SHOW_SUBSCRIBE_HELP: 'Adds a subscribe bar under widgets (override with shortcode show_subscribe).'
+  EXPORT_CALENDAR_DESCRIPTION: Feed description
   SECTION_ADVANCED: Advanced options
   DEBUG: Debug mode
   LOG_LEVEL: Log level
@@ -244,6 +254,10 @@ PLUGIN_OPENCALENDAR:
   FRONTEND_ATTACHMENT: Attachment
   FRONTEND_DESCRIPTION: Description
   FRONTEND_URL: Website
+  FRONTEND_SUBSCRIBE: Subscribe to calendar
+  FRONTEND_SUBSCRIBE_COPY: Copy ICS URL
+  FRONTEND_SUBSCRIBE_HELP: 'Add this calendar on your phone or mail client — it updates automatically.'
+  FRONTEND_SUBSCRIBE_COPIED: Copied
 
   # Errors
   ERROR_SYNC_FAILED: 'Synchronization failed for source "%s".'

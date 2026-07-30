@@ -80,27 +80,30 @@ Debugging steps:
 
 Some feeds embed HTML in `DESCRIPTION`. By default HTML is preserved. Set `advanced.import.strip_html: true` to store plain text only.
 
-## Exporting ICS
+## Exporting / subscribing (network calendars)
 
-OpenCalendar can publish an aggregated `text/calendar` feed from SQLite:
+OpenCalendar publishes an aggregated `text/calendar` feed from SQLite for **subscription** in phones and mail apps:
 
 ```yaml
 export:
   enabled: true
   route: /opencalendar/calendar.ics
   calendar_name: OpenCalendar
-  max_events: 5000
+  refresh_minutes: 60
+  default_from: '-30 days'
+  default_to: '+365 days'
 ```
-
-Subscribe in other apps with the public URL, or use Twig:
 
 ```twig
-<a href="{{ opencalendar_export_url({ source: 'team' }) }}">Subscribe</a>
+<a href="{{ opencalendar_webcal_url() }}">Subscribe</a>
+<code>{{ opencalendar_export_url({ source: 'team' }) }}</code>
 ```
+
+Full device instructions: [Subscribe.md](Subscribe.md).
 
 When the JSON API is enabled, the same feed is also available at `{api.route}/export.ics`.
 
-Exported fields include UID, SUMMARY, DESCRIPTION, LOCATION, URL, STATUS, CATEGORIES, DTSTART/DTEND (UTC or VALUE=DATE for all-day), and optional X-OPENCALENDAR-SOURCE metadata.
+Exported fields include UID, SUMMARY, DESCRIPTION, LOCATION, URL, STATUS, CATEGORIES, DTSTART/DTEND (UTC or VALUE=DATE for all-day), `REFRESH-INTERVAL`, and optional X-OPENCALENDAR-SOURCE metadata.
 
 ## Related documentation
 

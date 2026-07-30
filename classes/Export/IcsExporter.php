@@ -15,6 +15,8 @@ final class IcsExporter
     public function __construct(
         private readonly string $productId = '-//OpenCalendar//Grav Plugin//EN',
         private readonly string $calendarName = 'OpenCalendar',
+        private readonly int $refreshMinutes = 60,
+        private readonly string $calendarDescription = 'Exported by OpenCalendar',
     ) {
     }
 
@@ -32,7 +34,14 @@ final class IcsExporter
 
         $name = $calendarName ?? $this->calendarName;
         $vcalendar->add('X-WR-CALNAME', $name);
-        $vcalendar->add('X-WR-CALDESC', 'Exported by OpenCalendar');
+        $vcalendar->add('X-WR-CALDESC', $this->calendarDescription);
+
+        $minutes = max(5, $this->refreshMinutes);
+        $duration = 'PT' . $minutes . 'M';
+        // Hint for clients that poll subscribed calendars.
+        $refresh = $vcalendar->add('REFRESH-INTERVAL', $duration);
+        $refresh['VALUE'] = 'DURATION';
+        $vcalendar->add('X-PUBLISHED-TTL', $duration);
 
         $seen = [];
         foreach ($events as $event) {
@@ -62,7 +71,6 @@ final class IcsExporter
 
         if ($event->allDay) {
             $props['DTSTART'] = $event->startAt->format('Ymd');
-            // VALUE=DATE is set via parameters below.
         } else {
             $props['DTSTART'] = $event->startAt->setTimezone(new \DateTimeZone('UTC'));
         }
@@ -116,7 +124,6 @@ final class IcsExporter
                 $vevent->add('RECURRENCE-ID', $event->recurrenceId);
             }
         }
-        // Only emit RRULE for non-expanded master-style rows (no recurrence-id).
         if ($event->rrule !== null && $event->rrule !== '' && ($event->recurrenceId === null || $event->recurrenceId === '')) {
             $vevent->add('RRULE', ltrim($event->rrule, 'RRULE:'));
         }

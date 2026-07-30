@@ -117,6 +117,7 @@ PLUGIN_OPENCALENDAR:
   GROUP_DAY: Day
   GROUP_WEEK: Week
   GROUP_MONTH: Month
+  GROUP_YEAR: Anno
   LIST_SORT: Sort order
   SORT_ASC: Ascending (earliest first)
   SORT_DESC: Descending (latest first)

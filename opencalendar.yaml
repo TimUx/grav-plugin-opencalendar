@@ -131,12 +131,20 @@ webhook:
   secret: ''
   allow_source_param: true
 
-# Public ICS feed of aggregated events
+# Public ICS feed for network calendar subscriptions (phones, Outlook, …)
 export:
   enabled: true
   route: /opencalendar/calendar.ics
   calendar_name: OpenCalendar
+  calendar_description: 'OpenCalendar subscription feed'
   max_events: 5000
+  # Hint for calendar apps how often to re-fetch the feed
+  refresh_minutes: 60
+  # Default event window for the feed (empty = no bound)
+  default_from: '-30 days'
+  default_to: '+365 days'
+  # Show subscribe bar under Twig/shortcode widgets by default
+  show_subscribe_links: false
 
 advanced:
   debug: false
