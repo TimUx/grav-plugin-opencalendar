@@ -34,6 +34,17 @@ Common causes: source disabled, sync error, date filter excluding events, or rec
 
 Yes, using the public ICS address from Google Calendar settings. Private Google calendars require a shareable ICS link or CalDAV with credentials.
 
+## Subscribing on phones
+
+### Can visitors subscribe to OpenCalendar events on their smartphone?
+
+Yes. Enable the ICS subscription feed under **Advanced → ICS export / subscription**. Visitors (or you) add the feed URL as a subscribed/network calendar.
+
+- German step-by-step (iPhone & Android): [Abonnieren.md](Abonnieren.md)
+- English overview: [Subscribe.md](Subscribe.md)
+
+Example URL: `https://your-site.example/opencalendar/calendar.ics`
+
 ## Display
 
 ### Can I use my own theme styles?

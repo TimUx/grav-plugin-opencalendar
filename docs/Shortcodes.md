@@ -126,3 +126,5 @@ Setting `cache: false` (or using list pagination) avoids stale page cache for dy
 - [Twig.md](Twig.md)
 - [Searching.md](Searching.md)
 - [Filtering.md](Filtering.md)
+- [Abonnieren.md](Abonnieren.md) — Smartphone-Kalender abonnieren (DE)
+- [Subscribe.md](Subscribe.md) — network calendar subscription (EN)
