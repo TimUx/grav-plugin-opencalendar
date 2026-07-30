@@ -1,6 +1,6 @@
 # OpenCalendar
 
-> English: [README](README.md)
+> English: [README](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/README.md)
 
 [![CI](https://github.com/TimUx/grav-plugin-opencalendar/actions/workflows/ci.yml/badge.svg)](https://github.com/TimUx/grav-plugin-opencalendar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -35,7 +35,7 @@ OpenCalendar nutzt ein Schichtenmodell: Quell-Adapter holen und parsen Feeds, ei
 Sources (ICS/CalDAV/JSON/Local) → Sync → SQLite → Services → Twig / Shortcodes / API
 ```
 
-Details: [docs/de/Architecture.md](docs/de/Architecture.md)
+Details: [docs/de/Architecture.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Architecture.md)
 
 ## Installation
 
@@ -61,7 +61,7 @@ bin/grav cache
 
 Aktivieren unter **Admin → Plugins → OpenCalendar** oder `enabled: true` in der Config setzen.
 
-Vollständiger Leitfaden: [docs/de/Installation.md](docs/de/Installation.md)
+Vollständiger Leitfaden: [docs/de/Installation.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Installation.md)
 
 ## Aktualisieren
 
@@ -70,7 +70,7 @@ Vollständiger Leitfaden: [docs/de/Installation.md](docs/de/Installation.md)
 3. `composer install` ausführen, wenn sich Abhängigkeiten geändert haben
 4. Cache leeren: `bin/grav cache`
 
-Schema-Migrationen laufen automatisch. Siehe [docs/de/Migration.md](docs/de/Migration.md).
+Schema-Migrationen laufen automatisch. Siehe [docs/de/Migration.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Migration.md).
 
 ## Konfiguration
 
@@ -90,9 +90,9 @@ sources:
 
 Alles konfigurierbar unter **Admin → Plugins → OpenCalendar** mit Tabs für General, Storage, Sources, Display, Search, Filters, Synchronization und Advanced.
 
-Kalenderdatei manuell importieren: **Synchronization → Kalenderdatei hochladen** (`.ics` / `.ical` / `.json`). Leitfaden: [docs/de/Synchronization.md](docs/de/Synchronization.md#kalenderdatei-hochladen).
+Kalenderdatei manuell importieren: **Synchronization → Kalenderdatei hochladen** (`.ics` / `.ical` / `.json`). Leitfaden: [docs/de/Synchronization.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Synchronization.md#kalenderdatei-hochladen).
 
-Vollständige Referenz: [docs/de/Configuration.md](docs/de/Configuration.md)
+Vollständige Referenz: [docs/de/Configuration.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Configuration.md)
 
 ## Ansichten
 
@@ -114,7 +114,7 @@ Standard über `display.default_view` oder pro Seite mit Shortcodes setzen.
 
 Plugin-Partials einbinden oder im Theme überschreiben.
 
-Leitfaden: [docs/de/Twig.md](docs/de/Twig.md)
+Leitfaden: [docs/de/Twig.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Twig.md)
 
 ## Shortcodes
 
@@ -124,7 +124,7 @@ Leitfaden: [docs/de/Twig.md](docs/de/Twig.md)
 [opencalendar-search /]
 ```
 
-Leitfaden: [docs/de/Shortcodes.md](docs/de/Shortcodes.md)
+Leitfaden: [docs/de/Shortcodes.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Shortcodes.md)
 
 ## Suche
 
@@ -138,31 +138,31 @@ search:
   highlight: true
 ```
 
-Leitfaden: [docs/de/Searching.md](docs/de/Searching.md)
+Leitfaden: [docs/de/Searching.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Searching.md)
 
 ## Filter
 
 Filtern nach Quelle, Kategorie und Datumsbereich. URL-Persistenz ermöglicht teilbare gefilterte Ansichten.
 
-Leitfaden: [docs/de/Filtering.md](docs/de/Filtering.md)
+Leitfaden: [docs/de/Filtering.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Filtering.md)
 
 ## Synchronisation
 
 Remote-Feeds synchronisieren nach Zeitplan (Standard: alle 15 Minuten). Pro-Quelle-Refresh-Overrides, Deduplizierung, Wiederholungs-Expansion und Cleanup-Richtlinien halten die Datenbank aktuell ohne unbegrenztes Wachstum. Im Admin-Tab Synchronization sind außerdem Force-Sync, Rebuild und **manueller Kalender-Upload** möglich.
 
-Leitfaden: [docs/de/Synchronization.md](docs/de/Synchronization.md)
+Leitfaden: [docs/de/Synchronization.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Synchronization.md)
 
 ## SQLite
 
 Termine liegen in `data/opencalendar.db` mit WAL-Modus, FTS5-Suche und automatischen Schema-Migrationen.
 
-Leitfaden: [docs/de/SQLite.md](docs/de/SQLite.md)
+Leitfaden: [docs/de/SQLite.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/SQLite.md)
 
 ## Caching
 
 Parse-Cache vermeidet erneutes Lesen unveränderter Feeds; Render-Cache beschleunigt Twig- und API-Antworten. TTL für Traffic und Update-Frequenz anpassen.
 
-Leitfaden: [docs/de/Caching.md](docs/de/Caching.md)
+Leitfaden: [docs/de/Caching.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Caching.md)
 
 ## Performance
 
@@ -179,45 +179,45 @@ Optionale schreibgeschützte JSON-API (standardmäßig deaktiviert):
 GET /opencalendar/api/events?from=2026-07-01&to=2026-07-31
 ```
 
-Leitfaden: [docs/de/API.md](docs/de/API.md)
+Leitfaden: [docs/de/API.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/API.md)
 
 ## Fehlerbehebung
 
 Häufige Probleme: Sync-Fehler, leere Kalender, Berechtigungsfehler, Scheduler läuft nicht.
 
-Leitfaden: [docs/de/Troubleshooting.md](docs/de/Troubleshooting.md)
+Leitfaden: [docs/de/Troubleshooting.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Troubleshooting.md)
 
 ## FAQ
 
 Kurzantworten zu Quellen, Google Calendar, SQLite, Lizenzierung und mehr.
 
-Leitfaden: [docs/de/FAQ.md](docs/de/FAQ.md)
+Leitfaden: [docs/de/FAQ.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/FAQ.md)
 
 ## Dokumentation
 
-Vollständiger Index (DE + EN): [docs/README.md](docs/README.md)
+Vollständiger Index (DE + EN): [docs/README.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/README.md)
 
 | Dokument | Thema |
 |----------|-------|
-| [Installation](docs/de/Installation.md) | Einrichtung und Voraussetzungen |
-| [Configuration](docs/de/Configuration.md) | Alle Konfigurationsoptionen |
-| [Architecture](docs/de/Architecture.md) | Code-Struktur |
-| [Sources](docs/de/Sources.md) | ICS, CalDAV, JSON, lokal, Admin-Upload |
-| [ICS](docs/de/ICS.md) | iCalendar-Details |
-| [Synchronization](docs/de/Synchronization.md) | Sync, Cleanup, Admin-Upload |
-| [SQLite](docs/de/SQLite.md) | Datenbankspeicher |
-| [Twig](docs/de/Twig.md) | Template-Integration |
-| [Shortcodes](docs/de/Shortcodes.md) | Seiten-Shortcodes |
-| [Subscribe](docs/de/Subscribe.md) | Netzwerk-/Abonnement-Kalender |
-| [Searching](docs/de/Searching.md) | Volltextsuche |
-| [Filtering](docs/de/Filtering.md) | Terminfilter |
-| [Caching](docs/de/Caching.md) | Cache-Schichten |
-| [API](docs/de/API.md) | REST-Endpunkte |
-| [Development](docs/de/Development.md) | Leitfaden für Mitwirkende |
-| [Migration](docs/de/Migration.md) | Upgrades |
-| [Troubleshooting](docs/de/Troubleshooting.md) | Problemlösung |
-| [FAQ](docs/de/FAQ.md) | Häufige Fragen |
-| [Publishing / GPM](docs/de/Publishing-GPM.md) | Offizielle Grav-Repository-Aufnahme |
+| [Installation](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Installation.md) | Einrichtung und Voraussetzungen |
+| [Configuration](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Configuration.md) | Alle Konfigurationsoptionen |
+| [Architecture](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Architecture.md) | Code-Struktur |
+| [Sources](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Sources.md) | ICS, CalDAV, JSON, lokal, Admin-Upload |
+| [ICS](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/ICS.md) | iCalendar-Details |
+| [Synchronization](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Synchronization.md) | Sync, Cleanup, Admin-Upload |
+| [SQLite](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/SQLite.md) | Datenbankspeicher |
+| [Twig](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Twig.md) | Template-Integration |
+| [Shortcodes](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Shortcodes.md) | Seiten-Shortcodes |
+| [Subscribe](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Subscribe.md) | Netzwerk-/Abonnement-Kalender |
+| [Searching](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Searching.md) | Volltextsuche |
+| [Filtering](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Filtering.md) | Terminfilter |
+| [Caching](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Caching.md) | Cache-Schichten |
+| [API](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/API.md) | REST-Endpunkte |
+| [Development](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Development.md) | Leitfaden für Mitwirkende |
+| [Migration](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Migration.md) | Upgrades |
+| [Troubleshooting](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Troubleshooting.md) | Problemlösung |
+| [FAQ](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/FAQ.md) | Häufige Fragen |
+| [Publishing / GPM](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Publishing-GPM.md) | Offizielle Grav-Repository-Aufnahme |
 
 ## Roadmap
 
@@ -233,7 +233,7 @@ Fortschritt auf [GitHub Issues](https://github.com/TimUx/grav-plugin-opencalenda
 
 ## Mitwirken
 
-Beiträge sind willkommen! Lesen Sie [CONTRIBUTING.de.md](CONTRIBUTING.de.md), führen Sie `composer check` aus und reichen Sie einen Pull Request ein.
+Beiträge sind willkommen! Lesen Sie [CONTRIBUTING.de.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/CONTRIBUTING.de.md), führen Sie `composer check` aus und reichen Sie einen Pull Request ein.
 
 ## Lizenz
 

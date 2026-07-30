@@ -49,6 +49,26 @@
         "sort-packages": true,
         "allow-plugins": {}
     },
+    "archive": {
+        "exclude": [
+            "/.github",
+            "/docs",
+            "/tests",
+            "/.editorconfig",
+            "/.gitattributes",
+            "/.gitignore",
+            "/phpunit.xml",
+            "/phpstan.neon",
+            "/phpcs.xml",
+            "/CONTRIBUTING.md",
+            "/CONTRIBUTING.de.md",
+            "/CODE_OF_CONDUCT.md",
+            "/CODE_OF_CONDUCT.de.md",
+            "/SECURITY.md",
+            "/SECURITY.de.md",
+            "/README.de.md"
+        ]
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }

@@ -48,6 +48,22 @@ gh issue create -R getgrav/grav \
   --body-file docs/de/gpm-submission-issue.md
 ```
 
+## Inhalt des Distributionspakets
+
+Release-ZIPs für GPM / GitHub-„Source code“-Downloads werden über [`.gitattributes`](../../.gitattributes) (`export-ignore`) gefiltert. Composer-Dist-Archive nutzen die passende `archive.exclude`-Liste in `composer.json`.
+
+**Enthalten (Laufzeit + Grav-Anforderungen):** Plugin-PHP/YAML, `classes/`, `languages/`, `templates/`, `assets/`, `admin/`, `blueprints*`, `composer.json` / `composer.lock`, `CHANGELOG.md`, `LICENSE`, `README.md`.
+
+**Ausgeschlossen (nur Repo / GitHub):** `docs/`, `tests/`, `.github/`, Contributing/Security/Code-of-Conduct, `README.de.md`, PHPUnit/PHPStan/PHPCS-Konfiguration, Editor-Metadaten.
+
+Ein `git clone` liefert weiterhin den vollen Entwicklungsbaum. Für Produktion GPM oder das Release-ZIP verwenden.
+
+Lokal prüfen:
+
+```bash
+git archive --format=tar --worktree-attributes HEAD | tar -t | grep -E '^(docs|tests|\.github)/' || echo 'Dev-Pfade ausgeschlossen'
+```
+
 ## Nach der Aufnahme
 
 - `version` in `blueprints.yaml` erhöhen und für jedes Release einen CHANGELOG-Abschnitt hinzufügen
