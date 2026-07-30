@@ -392,7 +392,11 @@ class OpenCalendarPlugin extends Plugin
         }
 
         $controller = new ExportController($this->container(), $this->exportConfig());
-        $response = $controller->handle($query);
+        $ifNoneMatch = $_SERVER['HTTP_IF_NONE_MATCH'] ?? null;
+        $response = $controller->handle(
+            $query,
+            is_string($ifNoneMatch) ? $ifNoneMatch : null,
+        );
 
         http_response_code($response['status']);
         foreach ($response['headers'] as $name => $value) {

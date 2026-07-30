@@ -186,12 +186,21 @@ PLUGIN_OPENCALENDAR:
   WEBHOOK_SECRET_HELP: 'Als Header X-OpenCalendar-Token, Authorization: Bearer oder ?token= senden.'
   WEBHOOK_ALLOW_SOURCE: Quellparameter erlauben
   WEBHOOK_ALLOW_SOURCE_HELP: 'Akzeptiert ?source= oder JSON-Body source für den Sync einer einzelnen Quelle.'
-  SECTION_EXPORT: ICS-Export
-  EXPORT_ENABLED: ICS-Export aktivieren
-  EXPORT_ENABLED_HELP: 'Aggregierten text/calendar-Feed für Abonnements in anderen Kalender-Apps bereitstellen.'
-  EXPORT_ROUTE: Export-Route
+  SECTION_EXPORT: ICS-Export / Abonnement
+  EXPORT_ENABLED: Kalender-Abonnement-Feed aktivieren
+  EXPORT_ENABLED_HELP: 'Veröffentlicht eine ICS-URL, die Smartphones und Mail-Programme abonnieren und automatisch aktualisieren können.'
+  EXPORT_ROUTE: Feed-Pfad
   EXPORT_CALENDAR_NAME: Kalendername
   EXPORT_MAX_EVENTS: Maximale Termine
+  EXPORT_REFRESH_MINUTES: Empfohlenes Refresh-Intervall (Minuten)
+  EXPORT_REFRESH_MINUTES_HELP: 'Wird in den ICS-Feed geschrieben, damit Clients wissen, wie oft sie neu laden sollen.'
+  EXPORT_DEFAULT_FROM: Standard-Zeitraum von
+  EXPORT_DEFAULT_FROM_HELP: 'Wenn kein ?from= gesetzt ist (z. B. -30 days). Leer = keine Untergrenze.'
+  EXPORT_DEFAULT_TO: Standard-Zeitraum bis
+  EXPORT_DEFAULT_TO_HELP: 'Wenn kein ?to= gesetzt ist (z. B. +365 days). Leer = keine Obergrenze.'
+  EXPORT_SHOW_SUBSCRIBE: Abonnieren-Links in Widgets anzeigen
+  EXPORT_SHOW_SUBSCRIBE_HELP: 'Zeigt unter Kalender/Listen einen Abonnieren-Bereich (per Shortcode show_subscribe überschreibbar).'
+  EXPORT_CALENDAR_DESCRIPTION: Feed-Beschreibung
   SECTION_ADVANCED: Erweiterte Optionen
   DEBUG: Debug-Modus
   LOG_LEVEL: Log-Level
@@ -245,6 +254,10 @@ PLUGIN_OPENCALENDAR:
   FRONTEND_ATTACHMENT: Anhang
   FRONTEND_DESCRIPTION: Beschreibung
   FRONTEND_URL: Link
+  FRONTEND_SUBSCRIBE: Kalender abonnieren
+  FRONTEND_SUBSCRIBE_COPY: ICS-URL kopieren
+  FRONTEND_SUBSCRIBE_HELP: 'Diesen Kalender auf Smartphone oder in der Mail-App hinzufügen — er aktualisiert sich automatisch.'
+  FRONTEND_SUBSCRIBE_COPIED: Kopiert
 
   # Fehler
   ERROR_SYNC_FAILED: 'Synchronisation für Quelle „%s“ fehlgeschlagen.'

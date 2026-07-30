@@ -66,9 +66,11 @@ final class ApiController
                     'enabled' => true,
                     'calendar_name' => 'OpenCalendar',
                     'max_events' => 5000,
+                    'refresh_minutes' => 60,
                 ]);
+                $ifNoneMatch = $_SERVER['HTTP_IF_NONE_MATCH'] ?? null;
 
-                return $exporter->handle($query);
+                return $exporter->handle($query, is_string($ifNoneMatch) ? $ifNoneMatch : null);
             }
 
             if ($path === '/events' || $path === '/') {

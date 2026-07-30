@@ -32,15 +32,16 @@ class TwigExtension extends AbstractExtension
             new TwigFunction('opencalendar_calendars', [$this, 'calendars']),
             new TwigFunction('opencalendar_categories', [$this, 'categories']),
             new TwigFunction('opencalendar_export_url', [$this, 'exportUrl']),
+            new TwigFunction('opencalendar_webcal_url', [$this, 'webcalUrl']),
         ];
     }
 
     /**
-     * Public ICS export URL (empty string when export is disabled).
+     * Public ICS export/subscribe URL (empty string when export is disabled).
      *
      * @param array<string, scalar|null> $query
      */
-    public function exportUrl(array $query = []): string
+    public function exportUrl(array $query = [], bool $absolute = true): string
     {
         $export = $this->config['export'] ?? [];
         if (is_array($export) && array_key_exists('enabled', $export) && !$export['enabled']) {
@@ -51,9 +52,8 @@ class TwigExtension extends AbstractExtension
         if (is_array($export) && !empty($export['route'])) {
             $route = (string) $export['route'];
         }
-
-        if ($query === []) {
-            return $route;
+        if (!str_starts_with($route, '/')) {
+            $route = '/' . $route;
         }
 
         $parts = [];
@@ -63,8 +63,84 @@ class TwigExtension extends AbstractExtension
             }
             $parts[] = rawurlencode((string) $key) . '=' . rawurlencode((string) $value);
         }
+        $path = $parts === [] ? $route : $route . '?' . implode('&', $parts);
 
-        return $parts === [] ? $route : $route . '?' . implode('&', $parts);
+        if (!$absolute) {
+            return $path;
+        }
+
+        $base = $this->siteBaseUrl();
+
+        return $base !== '' ? $base . $path : $path;
+    }
+
+    /**
+     * webcal:// URL for one-tap subscribe in iOS/macOS/Outlook (empty when export disabled).
+     *
+     * @param array<string, scalar|null> $query
+     */
+    public function webcalUrl(array $query = []): string
+    {
+        $httpsUrl = $this->exportUrl($query, true);
+        if ($httpsUrl === '') {
+            return '';
+        }
+
+        if (str_starts_with($httpsUrl, 'https://')) {
+            return 'webcal://' . substr($httpsUrl, strlen('https://'));
+        }
+        if (str_starts_with($httpsUrl, 'http://')) {
+            return 'webcal://' . substr($httpsUrl, strlen('http://'));
+        }
+
+        $base = $this->siteBaseUrl();
+        if ($base !== '') {
+            $absolute = $this->exportUrl($query, true);
+
+            return $this->webcalUrlFromHttp($absolute);
+        }
+
+        return 'webcal://' . ltrim($httpsUrl, '/');
+    }
+
+    private function webcalUrlFromHttp(string $url): string
+    {
+        if (str_starts_with($url, 'https://')) {
+            return 'webcal://' . substr($url, 8);
+        }
+        if (str_starts_with($url, 'http://')) {
+            return 'webcal://' . substr($url, 7);
+        }
+
+        return $url;
+    }
+
+    private function siteBaseUrl(): string
+    {
+        try {
+            if (!class_exists(\Grav\Common\Grav::class)) {
+                return '';
+            }
+            $grav = \Grav\Common\Grav::instance();
+            $uri = $grav['uri'] ?? null;
+            if (is_object($uri) && method_exists($uri, 'rootUrl')) {
+                /** @var mixed $root */
+                $root = $uri->rootUrl(true);
+                if (is_string($root) && $root !== '') {
+                    return rtrim($root, '/');
+                }
+            }
+            if (is_object($uri) && method_exists($uri, 'base')) {
+                $base = $uri->base();
+                if (is_string($base) && $base !== '') {
+                    return rtrim($base, '/');
+                }
+            }
+        } catch (\Throwable) {
+            // ignore in unit tests / CLI
+        }
+
+        return '';
     }
 
     /**
@@ -285,6 +361,7 @@ class TwigExtension extends AbstractExtension
                 . htmlspecialchars($initialView, ENT_QUOTES, 'UTF-8')
                 . '" style="height:' . $height . '"></div>'
             : '';
+        $subscribeHtml = $this->renderSubscribeLinks($options, $calendarKeys);
 
         $close = htmlspecialchars($i18n['close'], ENT_QUOTES, 'UTF-8');
         $date = htmlspecialchars($i18n['date'], ENT_QUOTES, 'UTF-8');
@@ -301,6 +378,7 @@ class TwigExtension extends AbstractExtension
     {$calendarHtml}
     {$listHtml}
   </div>
+  {$subscribeHtml}
   <div class="oc-modal" data-oc-modal hidden>
     <div class="oc-modal__backdrop" data-oc-modal-close></div>
     <div class="oc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="{$instanceEsc}-title" tabindex="-1">
@@ -322,6 +400,57 @@ class TwigExtension extends AbstractExtension
   <script type="application/json" id="{$instanceEsc}-cfg">{$json}</script>
 </div>
 HTML;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @param list<string> $calendarKeys
+     */
+    private function renderSubscribeLinks(array $options, array $calendarKeys): string
+    {
+        $export = is_array($this->config['export'] ?? null) ? $this->config['export'] : [];
+        if (array_key_exists('enabled', $export) && !$export['enabled']) {
+            return '';
+        }
+
+        $show = array_key_exists('show_subscribe', $options)
+            ? $this->toBool($options['show_subscribe'])
+            : (bool) ($export['show_subscribe_links'] ?? false);
+        if (!$show) {
+            return '';
+        }
+
+        $query = [];
+        if ($calendarKeys !== []) {
+            $query['source'] = implode(',', $calendarKeys);
+        }
+
+        $httpUrl = $this->exportUrl($query, true);
+        $webcal = $this->webcalUrl($query);
+        if ($httpUrl === '') {
+            return '';
+        }
+
+        $i18n = $this->frontendI18n();
+        $label = htmlspecialchars((string) ($i18n['subscribe'] ?? 'Subscribe'), ENT_QUOTES, 'UTF-8');
+        $copyLabel = htmlspecialchars((string) ($i18n['subscribe_copy'] ?? 'Copy ICS URL'), ENT_QUOTES, 'UTF-8');
+        $help = htmlspecialchars(
+            (string) ($i18n['subscribe_help'] ?? 'Add this calendar on your phone or mail client.'),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+        $httpEsc = htmlspecialchars($httpUrl, ENT_QUOTES, 'UTF-8');
+        $webcalEsc = htmlspecialchars($webcal !== '' ? $webcal : $httpUrl, ENT_QUOTES, 'UTF-8');
+
+        return '<div class="oc-subscribe" data-oc-subscribe>'
+            . '<p class="oc-subscribe__help">' . $help . '</p>'
+            . '<div class="oc-subscribe__actions">'
+            . '<a class="oc-subscribe__link" href="' . $webcalEsc . '">' . $label . '</a>'
+            . '<button type="button" class="oc-subscribe__copy" data-oc-copy-url="' . $httpEsc . '">'
+            . $copyLabel . '</button>'
+            . '</div>'
+            . '<code class="oc-subscribe__url">' . $httpEsc . '</code>'
+            . '</div>';
     }
 
     /**
@@ -575,6 +704,10 @@ HTML;
             'week' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_WEEK'),
             'day' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_DAY'),
             'list' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_LIST'),
+            'subscribe' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE'),
+            'subscribe_copy' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY'),
+            'subscribe_help' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP'),
+            'subscribe_copied' => $this->t('PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED'),
         ];
     }
 
@@ -611,6 +744,10 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Week',
             'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Day',
             'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'List',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE' => 'Subscribe to calendar',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY' => 'Copy ICS URL',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP' => 'Add this calendar on your phone or mail client — it updates automatically.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED' => 'Copied',
         ];
 
         $de = [
@@ -638,6 +775,10 @@ HTML;
             'PLUGIN_OPENCALENDAR.FRONTEND_WEEK' => 'Woche',
             'PLUGIN_OPENCALENDAR.FRONTEND_DAY' => 'Tag',
             'PLUGIN_OPENCALENDAR.FRONTEND_LIST' => 'Liste',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE' => 'Kalender abonnieren',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPY' => 'ICS-URL kopieren',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_HELP' => 'Diesen Kalender auf Smartphone oder in der Mail-App hinzufügen — er aktualisiert sich automatisch.',
+            'PLUGIN_OPENCALENDAR.FRONTEND_SUBSCRIBE_COPIED' => 'Kopiert',
         ];
 
         $value = null;

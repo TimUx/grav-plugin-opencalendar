@@ -713,6 +713,50 @@ form:
                 type: number
                 min: 1
 
+            export.refresh_minutes:
+              type: number
+              label: PLUGIN_OPENCALENDAR.EXPORT_REFRESH_MINUTES
+              help: PLUGIN_OPENCALENDAR.EXPORT_REFRESH_MINUTES_HELP
+              default: 60
+              validate:
+                type: number
+                min: 5
+
+            export.default_from:
+              type: text
+              label: PLUGIN_OPENCALENDAR.EXPORT_DEFAULT_FROM
+              help: PLUGIN_OPENCALENDAR.EXPORT_DEFAULT_FROM_HELP
+              default: '-30 days'
+              validate:
+                type: text
+
+            export.default_to:
+              type: text
+              label: PLUGIN_OPENCALENDAR.EXPORT_DEFAULT_TO
+              help: PLUGIN_OPENCALENDAR.EXPORT_DEFAULT_TO_HELP
+              default: '+365 days'
+              validate:
+                type: text
+
+            export.calendar_description:
+              type: text
+              label: PLUGIN_OPENCALENDAR.EXPORT_CALENDAR_DESCRIPTION
+              default: 'OpenCalendar subscription feed'
+              validate:
+                type: text
+
+            export.show_subscribe_links:
+              type: toggle
+              label: PLUGIN_OPENCALENDAR.EXPORT_SHOW_SUBSCRIBE
+              help: PLUGIN_OPENCALENDAR.EXPORT_SHOW_SUBSCRIBE_HELP
+              highlight: 1
+              default: 0
+              options:
+                1: PLUGIN_ADMIN.YES
+                0: PLUGIN_ADMIN.NO
+              validate:
+                type: bool
+
             advanced_section:
               type: section
               title: PLUGIN_OPENCALENDAR.SECTION_ADVANCED

@@ -201,6 +201,7 @@ Guide: [docs/FAQ.md](docs/FAQ.md)
 | [SQLite](docs/SQLite.md) | Database storage |
 | [Twig](docs/Twig.md) | Template integration |
 | [Shortcodes](docs/Shortcodes.md) | Page shortcodes |
+| [Subscribe](docs/Subscribe.md) | Network calendar / phone subscription |
 | [Searching](docs/Searching.md) | Full-text search |
 | [Filtering](docs/Filtering.md) | Event filters |
 | [Caching](docs/Caching.md) | Cache layers |

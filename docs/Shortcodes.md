@@ -39,6 +39,7 @@ All attributes below are optional. Defaults come from plugin config (`opencalend
 | `locale` | `locale` | Locale for date formatting (`auto` follows Grav language). |
 | `height` | `auto` | Calendar height (CSS value, e.g. `600` or `auto`). |
 | `offset` | `0` | Skip N events (mainly for non-list / API-style queries). |
+| `show_subscribe` | `export.show_subscribe_links` | `true`/`false` — show “subscribe to calendar” links (`webcal` + copy ICS URL). |
 
 ### Pagination rules (list view)
 

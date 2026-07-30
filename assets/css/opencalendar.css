@@ -314,6 +314,51 @@
   color: var(--oc-accent);
 }
 
+.oc-subscribe {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--oc-border, #ddd);
+  font-size: 0.92rem;
+}
+
+.oc-subscribe__help {
+  margin: 0 0 0.5rem;
+  color: var(--oc-muted, #666);
+}
+
+.oc-subscribe__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.oc-subscribe__link,
+.oc-subscribe__copy {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--oc-border, #ccc);
+  background: var(--oc-surface, #f7f7f7);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.oc-subscribe__link:hover,
+.oc-subscribe__copy:hover {
+  border-color: var(--oc-accent, #3788d8);
+}
+
+.oc-subscribe__url {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  color: var(--oc-muted, #666);
+}
+
 @media (max-width: 640px) {
   .oc-filters {
     flex-direction: column;

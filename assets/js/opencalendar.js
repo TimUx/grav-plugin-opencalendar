@@ -693,6 +693,37 @@
       initCalendar(root, config);
     }
     initFilters(root, config);
+    initSubscribe(root, config);
+  }
+
+  function initSubscribe(root, config) {
+    var box = root.querySelector('[data-oc-subscribe]');
+    if (!box) {
+      return;
+    }
+    var labels = i18n(config);
+    box.querySelectorAll('[data-oc-copy-url]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var url = button.getAttribute('data-oc-copy-url') || '';
+        if (!url) {
+          return;
+        }
+        var done = function () {
+          var previous = button.textContent;
+          button.textContent = labels.subscribe_copied || 'Copied';
+          window.setTimeout(function () {
+            button.textContent = previous;
+          }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done).catch(function () {
+            window.prompt(labels.subscribe_copy || 'Copy ICS URL', url);
+          });
+        } else {
+          window.prompt(labels.subscribe_copy || 'Copy ICS URL', url);
+        }
+      });
+    });
   }
 
   function boot() {

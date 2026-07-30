@@ -4,10 +4,12 @@
 1. [](#new)
     * Shortcode/Twig options `max_events` and `no_pagination` for list caps and pager control
     * Shortcode/Twig option `group_by` (`none`, `day`, `week`, `month`, `year`) for list headings
+    * Network calendar subscription feed (`webcal://`, refresh hints, ETag, subscribe UI)
 2. [](#improved)
     * Documented every usable `[opencalendar]` parameter (including `show_past`)
     * Accepted `sources` / `calendar_view` aliases and shortcode `categories`
     * Admin list grouping includes `year`
+    * ICS export tuned for phone/mail auto-refresh (`REFRESH-INTERVAL`, default date window)
 
 # v1.1.0
 ## 07/29/2026
