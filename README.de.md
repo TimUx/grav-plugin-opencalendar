@@ -52,14 +52,15 @@ bin/gpm install opencalendar
 
 ### Manuell
 
+Release-ZIP von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) laden (gefiltertes Installationspaket — ohne Docs/Tests/CI), nach `user/plugins/opencalendar` entpacken, dann:
+
 ```bash
-git clone https://github.com/TimUx/grav-plugin-opencalendar.git user/plugins/opencalendar
 cd user/plugins/opencalendar
 composer install --no-dev --optimize-autoloader
 bin/grav cache
 ```
 
-Aktivieren unter **Admin → Plugins → OpenCalendar** oder `enabled: true` in der Config setzen.
+Aktivieren unter **Admin → Plugins → OpenCalendar** oder `enabled: true` in der Config setzen. Git-Clone nur für die Entwicklung.
 
 Vollständiger Leitfaden: [docs/de/Installation.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Installation.md)
 
