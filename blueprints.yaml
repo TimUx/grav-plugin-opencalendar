@@ -359,6 +359,7 @@ form:
                 day: PLUGIN_OPENCALENDAR.GROUP_DAY
                 week: PLUGIN_OPENCALENDAR.GROUP_WEEK
                 month: PLUGIN_OPENCALENDAR.GROUP_MONTH
+                year: PLUGIN_OPENCALENDAR.GROUP_YEAR
 
             display.list.sort:
               type: select

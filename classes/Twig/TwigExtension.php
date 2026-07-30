@@ -236,7 +236,9 @@ class TwigExtension extends AbstractExtension
             ], $calendars),
             'categories' => $categories,
             'calendar' => $calendarConfig,
-            'list' => $listConfig,
+            'list' => array_merge($listConfig, [
+                'group_by' => $this->resolveGroupBy($options, $listConfig),
+            ]),
             'filters' => $this->resolveFiltersConfig($options),
             'activeFilters' => $requestFilters,
             'search' => $this->resolveSearchConfig($options),
@@ -435,16 +437,26 @@ HTML;
         $currentGroup = null;
         $locale = (string) ($payload['locale'] ?? 'de');
         $timezone = (string) ($payload['timezone'] ?? 'Europe/Berlin');
+        $groupBy = $this->normalizeGroupBy($payload['list']['group_by'] ?? 'month');
+        $listOpened = false;
+
         foreach ($events as $event) {
             $start = (string) ($event['start'] ?? '');
-            $group = $this->formatListGroup($start, $locale, $timezone);
-            if ($group !== $currentGroup) {
+            $group = $this->formatListGroup($start, $locale, $timezone, $groupBy);
+
+            if ($groupBy === 'none') {
+                if (!$listOpened) {
+                    $html .= '<ul class="oc-list__items">';
+                    $listOpened = true;
+                }
+            } elseif ($group !== $currentGroup) {
                 if ($currentGroup !== null) {
                     $html .= '</ul>';
                 }
                 $html .= '<h3 class="oc-list__group">' . htmlspecialchars($group, ENT_QUOTES, 'UTF-8')
                     . '</h3><ul class="oc-list__items">';
                 $currentGroup = $group;
+                $listOpened = true;
             }
 
             $color = htmlspecialchars((string) ($event['color'] ?? '#3788d8'), ENT_QUOTES, 'UTF-8');
@@ -468,7 +480,7 @@ HTML;
                 . '</button></li>';
         }
 
-        if ($currentGroup !== null) {
+        if ($listOpened) {
             $html .= '</ul>';
         }
 
@@ -1015,8 +1027,49 @@ HTML;
         }
     }
 
-    private function formatListGroup(string $start, string $locale, string $timezone = 'Europe/Berlin'): string
+    /**
+     * @param array<string, mixed> $options
+     * @param array<string, mixed> $listConfig
+     */
+    private function resolveGroupBy(array $options, array $listConfig): string
     {
+        $value = $options['group_by'] ?? $listConfig['group_by'] ?? 'month';
+
+        return $this->normalizeGroupBy($value);
+    }
+
+    private function normalizeGroupBy(mixed $value): string
+    {
+        $groupBy = strtolower(trim((string) $value));
+        $aliases = [
+            'none' => 'none',
+            'off' => 'none',
+            'false' => 'none',
+            '0' => 'none',
+            'day' => 'day',
+            'days' => 'day',
+            'week' => 'week',
+            'weeks' => 'week',
+            'month' => 'month',
+            'months' => 'month',
+            'year' => 'year',
+            'years' => 'year',
+        ];
+
+        return $aliases[$groupBy] ?? 'month';
+    }
+
+    private function formatListGroup(
+        string $start,
+        string $locale,
+        string $timezone = 'Europe/Berlin',
+        string $groupBy = 'month',
+    ): string {
+        $groupBy = $this->normalizeGroupBy($groupBy);
+        if ($groupBy === 'none') {
+            return '';
+        }
+
         if ($start === '') {
             return '—';
         }
@@ -1025,20 +1078,59 @@ HTML;
             $dt = $this->toDisplayDateTime($start, $timezone);
             $isDe = str_starts_with(strtolower($locale), 'de');
 
-            if ($isDe) {
-                static $months = [
-                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
-                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
-                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
-                ];
-
-                return ($months[(int) $dt->format('n')] ?? $dt->format('m')) . ' ' . $dt->format('Y');
-            }
-
-            return $dt->format('F Y');
+            return match ($groupBy) {
+                'day' => $this->formatGroupDay($dt, $isDe),
+                'week' => $this->formatGroupWeek($dt, $isDe),
+                'year' => $dt->format('Y'),
+                default => $this->formatGroupMonth($dt, $isDe),
+            };
         } catch (\Throwable) {
-            return substr($start, 0, 7);
+            return match ($groupBy) {
+                'day' => substr($start, 0, 10),
+                'year' => substr($start, 0, 4),
+                'week' => substr($start, 0, 10),
+                default => substr($start, 0, 7),
+            };
         }
+    }
+
+    private function formatGroupDay(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        if ($isDe) {
+            static $weekdays = [
+                1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag',
+                5 => 'Freitag', 6 => 'Samstag', 7 => 'Sonntag',
+            ];
+
+            return ($weekdays[(int) $dt->format('N')] ?? '') . ', ' . $dt->format('d.m.Y');
+        }
+
+        return $dt->format('l, M j, Y');
+    }
+
+    private function formatGroupWeek(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        $week = $dt->format('W');
+        $year = $dt->format('o');
+
+        return $isDe
+            ? sprintf('KW %s %s', $week, $year)
+            : sprintf('Week %s, %s', $week, $year);
+    }
+
+    private function formatGroupMonth(\DateTimeImmutable $dt, bool $isDe): string
+    {
+        if ($isDe) {
+            static $months = [
+                1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
+            ];
+
+            return ($months[(int) $dt->format('n')] ?? $dt->format('m')) . ' ' . $dt->format('Y');
+        }
+
+        return $dt->format('F Y');
     }
 
     private function toDisplayDateTime(string $start, string $timezone): \DateTimeImmutable

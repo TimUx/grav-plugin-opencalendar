@@ -130,6 +130,7 @@ PLUGIN_OPENCALENDAR:
   GROUP_DAY: Tag
   GROUP_WEEK: Woche
   GROUP_MONTH: Monat
+  GROUP_YEAR: Jahr
   LIST_SORT: Sortierreihenfolge
   SORT_ASC: Aufsteigend (früheste zuerst)
   SORT_DESC: Absteigend (späteste zuerst)

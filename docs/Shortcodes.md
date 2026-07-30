@@ -32,6 +32,7 @@ All attributes below are optional. Defaults come from plugin config (`opencalend
 | `show_past` | `display.list.show_past` | `true`/`false` — include events that already ended. Alias: `include_expired`. |
 | `future_only` | `false` | `true` — only events starting in the future. |
 | `sort` | `display.list.sort` | `asc` or `desc` by start time. |
+| `group_by` | `display.list.group_by` | List grouping: `none`, `day`, `week`, `month`, or `year`. |
 | `show_filters` | `filters.enabled` | `true`/`false` — show source/category/date filter UI. |
 | `show_search` | `search.enabled` | `true`/`false` — show search box. |
 | `theme` | `theme` | `auto`, `light`, or `dark`. |
@@ -61,10 +62,16 @@ Upcoming events (10 per page, past hidden):
 [opencalendar view="list" limit="10" from="now" to="+30 days" show_past="false" /]
 ```
 
-At most 5 events, no pager:
+At most 5 events, no pager, no grouping:
 
 ```
-[opencalendar view="list" max_events="5" no_pagination="true" show_past="false" /]
+[opencalendar view="list" max_events="5" no_pagination="true" group_by="none" show_past="false" /]
+```
+
+Grouped by week:
+
+```
+[opencalendar view="list" limit="20" group_by="week" from="now" show_past="false" /]
 ```
 
 Up to 25 events, 10 per page (pagination shown):

@@ -49,6 +49,7 @@ Returns a collection of event DTOs for the given query options.
 | `show_past` | bool | Include ended events (`include_expired` alias) |
 | `future_only` | bool | Only future starts |
 | `sort` | `asc`\|`desc` | Sort by start time |
+| `group_by` | string | List grouping: `none`, `day`, `week`, `month`, `year` |
 | `show_filters` | bool | Toggle filter UI |
 | `show_search` | bool | Toggle search box |
 | `theme` | string | `auto` / `light` / `dark` |

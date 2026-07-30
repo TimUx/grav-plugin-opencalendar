@@ -117,6 +117,7 @@ PLUGIN_OPENCALENDAR:
   GROUP_DAY: Jour
   GROUP_WEEK: Semaine
   GROUP_MONTH: Mois
+  GROUP_YEAR: Année
   LIST_SORT: Ordre de tri
   SORT_ASC: Croissant (plus anciens d’abord)
   SORT_DESC: Décroissant (plus récents d’abord)

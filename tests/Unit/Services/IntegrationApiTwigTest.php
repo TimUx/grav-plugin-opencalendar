@@ -190,6 +190,23 @@ final class IntegrationApiTwigTest extends TestCase
         self::assertStringContainsString('"pagination":false', $singlePage);
         self::assertStringNotContainsString('data-oc-pagination', $singlePage);
 
+        $byWeek = $twig->render([
+            'view' => 'list',
+            'limit' => 50,
+            'group_by' => 'week',
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"group_by":"week"', $byWeek);
+
+        $noGroup = $twig->render([
+            'view' => 'list',
+            'limit' => 50,
+            'group_by' => 'none',
+            'show_past' => true,
+        ]);
+        self::assertStringContainsString('"group_by":"none"', $noGroup);
+        self::assertStringNotContainsString('oc-list__group', $noGroup);
+
         $query = EventQuery::fromRequest([
             'from' => '2026-07-01',
             'to' => '2026-08-31',
