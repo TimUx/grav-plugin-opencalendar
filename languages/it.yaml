@@ -30,6 +30,14 @@ PLUGIN_OPENCALENDAR:
   SYNC_COL_UPDATED: Aggiornati
   SYNC_COL_DELETED: Eliminati
   SYNC_COL_ERROR: Errore
+  UPLOAD_TITLE: Carica file calendario
+  UPLOAD_HELP: Carica un calendario .ics / .ical o .json. Viene salvato in user/data/opencalendar/uploads, registrato come fonte locale e importato subito.
+  UPLOAD_NAME: Nome della fonte
+  UPLOAD_NAME_PLACEHOLDER: es. Calendario club
+  UPLOAD_FILE: File calendario
+  UPLOAD_SUBMIT: Carica e importa
+  UPLOAD_RUNNING: Caricamento e importazione…
+  UPLOAD_MISSING_FILE: Seleziona prima un file calendario.
   ENABLED: Plugin abilitato
   LOCALE: Lingua/locale
   LOCALE_HELP: Use auto to follow the Grav site language, or pick a fixed locale for date formatting.

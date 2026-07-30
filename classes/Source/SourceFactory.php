@@ -60,13 +60,14 @@ final class SourceFactory
     /**
      * @param array<string, mixed> $httpOptions
      * @param array<string, mixed> $importOptions
+     * @param string|list<string> $localBasePath
      */
     public static function createDefault(
         HttpClientInterface $http,
         array $httpOptions = [],
         array $importOptions = [],
         string $defaultTimezone = 'UTC',
-        string $localBasePath = '',
+        string|array $localBasePath = '',
     ): self {
         $parser = new IcsParser(
             defaultTimezone: $defaultTimezone,

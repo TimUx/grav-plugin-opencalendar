@@ -60,6 +60,20 @@ sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
 
 If corrupt, rename DB file and re-sync. See [SQLite.md](SQLite.md).
 
+## Admin upload fails
+
+**Symptoms:** Upload form shows an error; no new source appears.
+
+**Checks:**
+
+1. File must be `.ics`, `.ical`, or `.json` and at most 10 MiB
+2. ICS content must include `BEGIN:VCALENDAR`; JSON must parse as valid JSON
+3. `user/data/opencalendar/uploads/` and `user/config/plugins/` must be writable by the web server
+4. PHP `upload_max_filesize` / `post_max_size` must allow the file size
+5. After a successful upload, reload the plugin page to see the source under **Sources**
+
+See [Synchronization.md](Synchronization.md#upload-calendar-file).
+
 ## Scheduler not running
 
 **Symptoms:** Events never update automatically.

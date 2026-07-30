@@ -30,6 +30,14 @@ PLUGIN_OPENCALENDAR:
   SYNC_COL_UPDATED: Bijgewerkt
   SYNC_COL_DELETED: Verwijderd
   SYNC_COL_ERROR: Fout
+  UPLOAD_TITLE: Agendabestand uploaden
+  UPLOAD_HELP: Upload een .ics-/.ical- of .json-agenda. Opgeslagen onder user/data/opencalendar/uploads, geregistreerd als lokale bron en direct geïmporteerd.
+  UPLOAD_NAME: Bronnaam
+  UPLOAD_NAME_PLACEHOLDER: bijv. Clubagenda
+  UPLOAD_FILE: Agendabestand
+  UPLOAD_SUBMIT: Uploaden en importeren
+  UPLOAD_RUNNING: Bezig met uploaden en importeren…
+  UPLOAD_MISSING_FILE: Kies eerst een agendabestand.
   ENABLED: Plugin ingeschakeld
   LOCALE: Locale
   LOCALE_HELP: Use auto to follow the Grav site language, or pick a fixed locale for date formatting.

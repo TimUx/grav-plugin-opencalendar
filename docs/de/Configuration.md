@@ -57,7 +57,7 @@ Jeder Quelleneintrag unterstützt:
 | `name` | Anzeigename in Admin und Frontend-Badges |
 | `enabled` | Sync überspringen, wenn `false` |
 | `type` | `ics`, `caldav`, `json` oder `local` |
-| `url` | Remote-URL oder lokaler relativer Pfad |
+| `url` | Remote-URL, Plugin-relativer Pfad (z. B. `data/file.ics`) oder `uploads/…` für Admin-Uploads |
 | `refresh` | `inherit` oder Minuten/`daily`-Überschreibung |
 | `color` | Hex-Farbe für die Kalenderdarstellung |
 | `description` | Optionale Admin-Notiz |
@@ -78,6 +78,8 @@ sources:
 ```
 
 Details nach Quellentyp siehe [Sources.md](Sources.md).
+
+Im Admin können unter Synchronization auch ICS-/JSON-Dateien **hochgeladen** werden; dabei entstehen Quellen `type: local` mit `url: uploads/…`. Siehe [Synchronization.md](Synchronization.md#kalenderdatei-hochladen).
 
 ## Darstellung
 

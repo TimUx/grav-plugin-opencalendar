@@ -81,9 +81,11 @@ chmod 775 user/plugins/opencalendar/data
 ## Verify installation
 
 1. Open **Admin → Plugins** — OpenCalendar should appear as enabled.
-2. Add at least one calendar source under the **Sources** tab.
-3. Trigger a manual sync (CLI or scheduler) once implementation is available.
+2. Add at least one calendar source under the **Sources** tab, **or** upload an `.ics` / `.json` file under **Synchronization → Upload calendar file**.
+3. On the **Synchronization** tab, click **Synchronize now** (or rely on the upload import) and confirm events appear in the status table.
 4. Add a calendar page using Twig or shortcodes (see [Twig.md](Twig.md) and [Shortcodes.md](Shortcodes.md)).
+
+Ensure `user/data/opencalendar/` is writable if you use Admin uploads or the default SQLite path.
 
 ## Upgrading
 
@@ -93,6 +95,6 @@ See the main [README](../../README.md#updating) and [Migration.md](Migration.md)
 
 1. Disable the plugin in Admin.
 2. Remove `user/plugins/opencalendar`.
-3. Optionally delete `user/config/plugins/opencalendar.yaml` and the SQLite database.
+3. Optionally delete `user/config/plugins/opencalendar.yaml`, the SQLite database, and `user/data/opencalendar/uploads/`.
 
 Cached events in Grav's general cache are cleared when the plugin is disabled.

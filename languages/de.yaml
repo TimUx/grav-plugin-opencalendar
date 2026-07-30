@@ -35,6 +35,14 @@ PLUGIN_OPENCALENDAR:
   SYNC_COL_UPDATED: Aktualisiert
   SYNC_COL_DELETED: Gelöscht
   SYNC_COL_ERROR: Fehler
+  UPLOAD_TITLE: Kalenderdatei hochladen
+  UPLOAD_HELP: 'Laden Sie eine .ics-/.ical- oder .json-Kalenderdatei hoch. Sie wird unter user/data/opencalendar/uploads gespeichert, als lokale Quelle registriert und sofort importiert. Erneutes Hochladen mit demselben Quellnamen ersetzt die Datei und importiert neu.'
+  UPLOAD_NAME: Quellenname
+  UPLOAD_NAME_PLACEHOLDER: z. B. Vereinskalender
+  UPLOAD_FILE: Kalenderdatei
+  UPLOAD_SUBMIT: Hochladen und importieren
+  UPLOAD_RUNNING: Wird hochgeladen und importiert…
+  UPLOAD_MISSING_FILE: Bitte zuerst eine Kalenderdatei auswählen.
 
   # Allgemein
   ENABLED: Plugin aktiviert
@@ -87,13 +95,13 @@ PLUGIN_OPENCALENDAR:
   SOURCE_NAME: Name
   SOURCE_ENABLED: Aktiviert
   SOURCE_TYPE: Typ
-  SOURCE_TYPE_HELP: 'ICS für öffentliche Feeds, CalDAV für authentifizierte Server, JSON für eigene APIs, local für Dateien im Plugin-Datenordner.'
+  SOURCE_TYPE_HELP: 'ICS für öffentliche Feeds, CalDAV für authentifizierte Server, JSON für eigene APIs, local für Dateien unter dem Plugin oder im Admin-Upload-Ordner.'
   SOURCE_TYPE_ICS: ICS (iCalendar)
   SOURCE_TYPE_CALDAV: CalDAV
   SOURCE_TYPE_JSON: JSON-API
   SOURCE_TYPE_LOCAL: Lokale Datei
   SOURCE_URL: URL oder Pfad
-  SOURCE_URL_HELP: 'Remote-URL für ICS/CalDAV/JSON oder relativer Pfad unter dem Plugin für lokale Quellen.'
+  SOURCE_URL_HELP: 'Remote-URL für ICS/CalDAV/JSON, relativer Pfad unter dem Plugin (z. B. data/file.ics) oder uploads/… für Admin-Uploads.'
   SOURCE_REFRESH: Aktualisierungsintervall
   SOURCE_REFRESH_HELP: 'Globales Sync-Intervall für diese Quelle überschreiben oder Standard übernehmen.'
   REFRESH_INHERIT: Globales Intervall übernehmen

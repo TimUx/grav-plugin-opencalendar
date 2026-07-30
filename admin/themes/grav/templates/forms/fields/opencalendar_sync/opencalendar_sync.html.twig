@@ -29,6 +29,24 @@
       </button>
     </div>
 
+    <div class="oc-sync-dashboard__upload" data-oc-upload-panel>
+      <h3 class="oc-sync-dashboard__upload-title">{{ 'PLUGIN_OPENCALENDAR.UPLOAD_TITLE'|t }}</h3>
+      <p class="oc-sync-dashboard__help">{{ 'PLUGIN_OPENCALENDAR.UPLOAD_HELP'|t }}</p>
+      <div class="oc-sync-dashboard__upload-row">
+        <label class="oc-sync-dashboard__upload-label">
+          <span>{{ 'PLUGIN_OPENCALENDAR.UPLOAD_NAME'|t }}</span>
+          <input type="text" name="oc_upload_name" data-oc-upload-name placeholder="{{ 'PLUGIN_OPENCALENDAR.UPLOAD_NAME_PLACEHOLDER'|t }}" />
+        </label>
+        <label class="oc-sync-dashboard__upload-label oc-sync-dashboard__upload-label--file">
+          <span>{{ 'PLUGIN_OPENCALENDAR.UPLOAD_FILE'|t }}</span>
+          <input type="file" name="oc_upload_file" data-oc-upload-file accept=".ics,.ical,.json,text/calendar,application/json" />
+        </label>
+        <button type="button" class="button" data-oc-upload-submit>
+          {{ 'PLUGIN_OPENCALENDAR.UPLOAD_SUBMIT'|t }}
+        </button>
+      </div>
+    </div>
+
     <div class="oc-sync-dashboard__message" data-oc-admin-message hidden></div>
 
     <div class="oc-sync-dashboard__table-wrap">
@@ -92,6 +110,8 @@
     error: 'PLUGIN_OPENCALENDAR.SYNC_ACTION_ERROR'|t,
     running: 'PLUGIN_OPENCALENDAR.SYNC_ACTION_RUNNING'|t,
     no_calendars: 'PLUGIN_OPENCALENDAR.SYNC_NO_CALENDARS'|t,
+    upload_running: 'PLUGIN_OPENCALENDAR.UPLOAD_RUNNING'|t,
+    upload_missing_file: 'PLUGIN_OPENCALENDAR.UPLOAD_MISSING_FILE'|t,
     columns: {
       source: 'PLUGIN_OPENCALENDAR.SYNC_COL_SOURCE'|t,
       status: 'PLUGIN_OPENCALENDAR.SYNC_COL_STATUS'|t,

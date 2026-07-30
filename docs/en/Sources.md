@@ -17,7 +17,7 @@ OpenCalendar aggregates events from multiple source types. Each source is define
 | `description` | No | Admin-only notes |
 | `auth` | No | Authentication block |
 
-*Local sources use a path relative to the plugin directory.
+*Local sources use a path relative to allowed base directories (`user/data/opencalendar/` for Admin uploads, or the plugin root for `data/…` files).
 
 ## ICS (iCalendar)
 
@@ -98,25 +98,58 @@ Bearer tokens may also be placed in `auth.password` for Admin forms that only ex
 
 ## Local
 
-For ICS or JSON files under the configured local base path (plugin `data/` / user-data).
+For ICS or JSON files under the allowed local base paths (plugin tree and `user/data/opencalendar/`).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'static-schedule.ics'
+  url: 'data/static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-- Paths are resolved relative to the local base directory and cannot escape it
+- Paths are resolved relative to an allowed base directory and cannot escape those roots
 - `.ics` / `.ical` → ICS parser
 - `.json` → JSON parser
 - Content sniffing is used when the extension is ambiguous
 
-Place files under `user/plugins/opencalendar/data/` (or the configured storage/data directory).
+Place files under `user/plugins/opencalendar/data/` **or** use Admin upload (below).
+
+## Admin upload
+
+In **Admin → Plugins → OpenCalendar → Synchronization**, use **Upload calendar file**.
+
+| Detail | Value |
+|--------|--------|
+| Formats | `.ics`, `.ical`, `.json` |
+| Max size | 10 MiB |
+| Storage | `user/data/opencalendar/uploads/` (survives plugin updates) |
+| Config | Adds/updates a `type: local` source in `user/config/plugins/opencalendar.yaml` |
+| Import | Immediate forced sync into SQLite |
+
+Example source row after upload:
+
+```yaml
+- name: Club calendar
+  enabled: true
+  type: local
+  url: 'uploads/club-calendar-20260730T210000Z-a1b2c3.ics'
+  refresh: inherit
+  description: 'Uploaded via Admin (club-calendar.ics)'
+  auth:
+    type: none
+```
+
+Notes:
+
+- ICS files must contain `BEGIN:VCALENDAR`; JSON must be valid event JSON (see [JSON](#json) above).
+- Re-upload with the **same source name** to replace the file and re-import.
+- Different names create additional local sources.
+- Uploaded files are not deleted automatically when you remove a source from the Sources tab — delete unused files under `uploads/` if needed.
+- Full dashboard steps: [Synchronization.md](Synchronization.md#upload-calendar-file).
 
 ## Disabled example
 

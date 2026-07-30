@@ -81,9 +81,11 @@ chmod 775 user/plugins/opencalendar/data
 ## Installation prüfen
 
 1. **Admin → Plugins** öffnen — OpenCalendar sollte als aktiviert erscheinen.
-2. Mindestens eine Kalenderquelle unter dem Tab **Sources** hinzufügen.
-3. Einmal manuell synchronisieren (CLI oder Scheduler), sobald die Implementierung verfügbar ist.
+2. Mindestens eine Kalenderquelle unter dem Tab **Sources** hinzufügen **oder** unter **Synchronization → Kalenderdatei hochladen** eine `.ics`-/`.json`-Datei importieren.
+3. Im Tab **Synchronization** auf **Jetzt synchronisieren** klicken (oder den Upload-Import nutzen) und prüfen, dass Termine in der Status-Tabelle erscheinen.
 4. Eine Kalenderseite mit Twig oder Shortcodes anlegen (siehe [Twig.md](Twig.md) und [Shortcodes.md](Shortcodes.md)).
+
+`user/data/opencalendar/` muss beschreibbar sein, wenn Sie Admin-Uploads oder den Standard-SQLite-Pfad nutzen.
 
 ## Aktualisierung
 
@@ -93,6 +95,6 @@ Siehe die [README](../../README.md#updating) und [Migration.md](Migration.md) be
 
 1. Plugin im Admin deaktivieren.
 2. `user/plugins/opencalendar` entfernen.
-3. Optional `user/config/plugins/opencalendar.yaml` und die SQLite-Datenbank löschen.
+3. Optional `user/config/plugins/opencalendar.yaml`, die SQLite-Datenbank und `user/data/opencalendar/uploads/` löschen.
 
 Zwischengespeicherte Termine im allgemeinen Grav-Cache werden beim Deaktivieren des Plugins geleert.

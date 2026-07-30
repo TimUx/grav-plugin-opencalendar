@@ -6,14 +6,18 @@ namespace Grav\Plugin\OpenCalendar\Controllers;
 
 use Grav\Plugin\OpenCalendar\Enum\SyncStatus;
 use Grav\Plugin\OpenCalendar\Services\Container;
+use Grav\Plugin\OpenCalendar\Services\PluginSourcesWriter;
 
 /**
- * Admin dashboard actions: sync now, rebuild database, clear cache.
+ * Admin dashboard actions: sync now, rebuild database, clear cache, upload calendar.
  */
 final class AdminController
 {
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container,
+        private readonly ?string $pluginConfigPath = null,
+        private readonly ?\Closure $refreshContainer = null,
+    ) {
     }
 
     /**
@@ -112,6 +116,87 @@ final class AdminController
             ]);
         } catch (\Throwable $e) {
             return ['ok' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Store an uploaded ICS/JSON calendar, register it as a local source, and import.
+     *
+     * @param array<string, mixed> $file $_FILES['calendar'] style entry
+     * @return array<string, mixed>
+     */
+    public function uploadCalendar(array $file, string $sourceName = ''): array
+    {
+        if ($this->pluginConfigPath === null || $this->pluginConfigPath === '') {
+            return array_merge($this->status(false), [
+                'ok' => false,
+                'message' => 'Plugin config path is not available; cannot register uploaded source.',
+            ]);
+        }
+
+        try {
+            $upload = $this->container->calendarUploadService();
+            $stored = $upload->storeUploadedFile($file);
+
+            $name = trim($sourceName);
+            if ($name === '') {
+                $name = pathinfo($stored['original_name'], PATHINFO_FILENAME) ?: 'Uploaded calendar';
+            }
+
+            $row = $upload->buildSourceRow(
+                $name,
+                $stored['relative_url'],
+                'Uploaded via Admin (' . $stored['original_name'] . ')'
+            );
+
+            $writer = new PluginSourcesWriter($this->pluginConfigPath);
+            $upsert = $writer->upsertByName($row);
+
+            if ($this->refreshContainer instanceof \Closure) {
+                $refreshed = ($this->refreshContainer)();
+                if ($refreshed instanceof Container) {
+                    $this->container = $refreshed;
+                }
+            }
+
+            $result = $this->container->calendarService()->synchronizeOne(
+                $this->container->sourceConfigs(),
+                $upsert['key']
+            );
+
+            if ($result === null) {
+                // Fallback: sync all after config reload race.
+                $results = $this->container->calendarService()->synchronize(
+                    $this->container->sourceConfigs(),
+                    true
+                );
+                $message = ($upsert['created'] ? 'Source created and imported. ' : 'Source updated and imported. ')
+                    . $this->summarizeResults($results);
+
+                return array_merge($this->status(false), [
+                    'ok' => true,
+                    'message' => $message,
+                    'source_key' => $upsert['key'],
+                    'file' => $stored['relative_url'],
+                    'results' => array_map(static fn ($r) => $r->toArray(), $results),
+                ]);
+            }
+
+            $message = ($upsert['created'] ? 'Source created and imported. ' : 'Source updated and imported. ')
+                . $this->summarizeResults([$result]);
+
+            return array_merge($this->status(false), [
+                'ok' => $result->status !== SyncStatus::Error,
+                'message' => $message,
+                'source_key' => $upsert['key'],
+                'file' => $stored['relative_url'],
+                'results' => [$result->toArray()],
+            ]);
+        } catch (\Throwable $e) {
+            return array_merge($this->status(false), [
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

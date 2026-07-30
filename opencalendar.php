@@ -193,7 +193,7 @@ class OpenCalendarPlugin extends Plugin
         $assets->addJs($base . '/assets/admin/opencalendar-admin.js', ['group' => 'bottom']);
 
         try {
-            $status = (new AdminController($this->container()))->status();
+            $status = $this->adminController()->status();
             $this->grav['twig']->twig_vars['opencalendar_status'] = $status;
         } catch (\Throwable $e) {
             $this->grav['twig']->twig_vars['opencalendar_status'] = [
@@ -461,12 +461,13 @@ class OpenCalendarPlugin extends Plugin
             return;
         }
 
-        $admin = new AdminController($this->container(true));
+        $admin = $this->adminController(true);
         $result = match ($action) {
             'sync' => $admin->syncNow(isset($_GET['source']) ? (string) $_GET['source'] : null),
             'rebuild' => $admin->rebuildDatabase(),
             'clear-cache' => $admin->clearCache(),
             'status' => $admin->status(),
+            'upload' => $this->handleAdminUpload($admin),
             default => null,
         };
 
@@ -477,6 +478,105 @@ class OpenCalendarPlugin extends Plugin
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function handleAdminUpload(AdminController $admin): array
+    {
+        $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        if ($method !== 'POST') {
+            return [
+                'ok' => false,
+                'message' => 'Calendar upload requires POST multipart/form-data.',
+            ];
+        }
+
+        $file = $_FILES['calendar'] ?? null;
+        if (!is_array($file)) {
+            return [
+                'ok' => false,
+                'message' => 'No calendar file was selected.',
+            ];
+        }
+
+        $name = isset($_POST['name']) ? trim((string) $_POST['name']) : '';
+
+        return $admin->uploadCalendar($file, $name);
+    }
+
+    private function adminController(bool $fresh = false): AdminController
+    {
+        return new AdminController(
+            $this->container($fresh),
+            $this->resolvePluginConfigPath(),
+            function (): Container {
+                $this->reloadPluginConfigIntoGrav();
+                $this->container = null;
+
+                return $this->container(true);
+            },
+        );
+    }
+
+    private function resolvePluginConfigPath(): string
+    {
+        try {
+            $locator = $this->grav['locator'] ?? null;
+            if (is_object($locator) && method_exists($locator, 'findResource')) {
+                $existing = $locator->findResource('config://plugins/opencalendar.yaml', true);
+                if (is_string($existing) && $existing !== '') {
+                    return $existing;
+                }
+
+                $dir = $locator->findResource('config://plugins', true, true);
+                if (is_string($dir) && $dir !== '') {
+                    return rtrim($dir, '/') . '/opencalendar.yaml';
+                }
+            }
+        } catch (\Throwable) {
+            // fall through
+        }
+
+        return dirname(__DIR__, 2) . '/config/plugins/opencalendar.yaml';
+    }
+
+    private function reloadPluginConfigIntoGrav(): void
+    {
+        $path = $this->resolvePluginConfigPath();
+        if (!is_file($path)) {
+            return;
+        }
+
+        try {
+            $raw = file_get_contents($path);
+            if ($raw === false || trim($raw) === '') {
+                return;
+            }
+
+            $parsed = null;
+            if (class_exists(\Grav\Common\Yaml::class)) {
+                $parsed = \Grav\Common\Yaml::parse($raw);
+            } elseif (function_exists('yaml_parse')) {
+                $parsed = yaml_parse($raw);
+            }
+
+            if (!is_array($parsed)) {
+                return;
+            }
+
+            $current = ConfigNormalizer::toArray($this->config->get('plugins.opencalendar', []));
+            $merged = array_replace_recursive($current, $parsed);
+            // Sources list must be replaced, not recursively merged by index.
+            if (isset($parsed['sources'])) {
+                $merged['sources'] = $parsed['sources'];
+            }
+
+            $this->config->set('plugins.opencalendar', $merged);
+        } catch (\Throwable $e) {
+            $this->grav['log']->warning('OpenCalendar failed to reload plugin config: ' . $e->getMessage());
+        }
     }
 
     public function onSchedulerInitialized(Event $event): void

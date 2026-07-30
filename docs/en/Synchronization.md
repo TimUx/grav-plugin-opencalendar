@@ -11,7 +11,38 @@ Events are refreshed by:
 1. **Grav Scheduler** — recommended for production (see `advanced.scheduler.enabled`)
 2. **Cache clear hook** — optional sync when Grav cache is cleared (`advanced.scheduler.on_cache_clear`)
 3. **Manual CLI command** — for operations and debugging (implementation pending)
-4. **Admin action** — force sync for a single source (implementation pending)
+4. **Admin action** — Synchronization dashboard: sync all / one source, rebuild, clear cache, and upload calendar files
+5. **Webhook** — optional push-triggered forced sync (`webhook.enabled`)
+
+## Admin dashboard
+
+Open **Admin → Plugins → OpenCalendar → Synchronization**.
+
+| Action | Effect |
+|--------|--------|
+| Synchronize now | Force-sync all enabled sources |
+| Sync (per row) | Force-sync one source |
+| Rebuild database | Full rebuild from configured sources |
+| Clear cache | Drop OpenCalendar caches |
+| Refresh status | Reload calendar status table |
+
+### Upload calendar file
+
+Use **Upload calendar file** on the same tab to import a file without configuring a remote URL first.
+
+1. Optionally enter a **Source name** (defaults to the file name).
+2. Choose an `.ics`, `.ical`, or `.json` file (max. 10 MiB).
+3. Click **Upload and import**.
+
+OpenCalendar then:
+
+1. Stores the file under `user/data/opencalendar/uploads/`
+2. Writes/updates a `type: local` entry in `user/config/plugins/opencalendar.yaml` with `url: uploads/…`
+3. Force-imports events into SQLite and refreshes the status table
+
+Re-uploading with the **same source name** updates that source (new file path + re-import) instead of creating a duplicate. After a page reload the source also appears under the **Sources** tab.
+
+See [Sources.md](Sources.md#admin-upload) for path rules and local-source details.
 
 ## Sync intervals
 

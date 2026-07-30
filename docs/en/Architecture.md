@@ -100,6 +100,7 @@ Runtime behavior is driven by `opencalendar.yaml` with no hard-coded feed URLs. 
 | `onCacheClear` | Optional sync when Grav cache is cleared |
 | `onAdminDashboard` | Home dashboard sync-status widget |
 | `onAdminTwigTemplatePaths` | Admin templates (sync field, dashboard) |
+| `onAdminPagesInitialized` | Admin JSON actions (`sync`, `rebuild`, `clear-cache`, `status`, `upload`) |
 
 ## Dependencies
 
