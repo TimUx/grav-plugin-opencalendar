@@ -1,5 +1,7 @@
 # REST API
 
+> Deutsch: [REST-API](../de/API.md)
+
 OpenCalendar can expose read-only JSON endpoints for headless integrations, mobile apps, or AJAX clients.
 
 ## Enabling

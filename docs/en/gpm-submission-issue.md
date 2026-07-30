@@ -1,3 +1,7 @@
+# GPM submission issue body
+
+> Deutsch: [GPM-Einreichung](../de/gpm-submission-issue.md)
+
 ## Plugin Submission
 
 **Repository:** https://github.com/TimUx/grav-plugin-opencalendar

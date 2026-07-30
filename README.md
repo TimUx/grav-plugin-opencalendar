@@ -1,5 +1,7 @@
 # OpenCalendar
 
+> Deutsch: [README.de.md](README.de.md)
+
 [![CI](https://github.com/TimUx/grav-plugin-opencalendar/actions/workflows/ci.yml/badge.svg)](https://github.com/TimUx/grav-plugin-opencalendar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -32,7 +34,7 @@ OpenCalendar uses a layered design: source adapters fetch and parse feeds, a syn
 Sources (ICS/CalDAV/JSON/Local) → Sync → SQLite → Services → Twig / Shortcodes / API
 ```
 
-See [docs/Architecture.md](docs/Architecture.md) for details.
+See [docs/en/Architecture.md](docs/en/Architecture.md) for details.
 
 ## Installation
 
@@ -58,7 +60,7 @@ bin/grav cache
 
 Enable in **Admin → Plugins → OpenCalendar** or set `enabled: true` in config.
 
-Full guide: [docs/Installation.md](docs/Installation.md)
+Full guide: [docs/en/Installation.md](docs/en/Installation.md)
 
 ## Updating
 
@@ -67,7 +69,7 @@ Full guide: [docs/Installation.md](docs/Installation.md)
 3. Run `composer install` if dependencies changed
 4. Clear cache: `bin/grav cache`
 
-Schema migrations apply automatically. See [docs/Migration.md](docs/Migration.md).
+Schema migrations apply automatically. See [docs/en/Migration.md](docs/en/Migration.md).
 
 ## Configuration
 
@@ -87,7 +89,7 @@ sources:
 
 Configure everything from **Admin → Plugins → OpenCalendar** with tabs for General, Storage, Sources, Display, Search, Filters, and Advanced settings.
 
-Full reference: [docs/Configuration.md](docs/Configuration.md)
+Full reference: [docs/en/Configuration.md](docs/en/Configuration.md)
 
 ## Views
 
@@ -109,7 +111,7 @@ Set default via `display.default_view` or per-page with shortcodes.
 
 Include plugin partials or override in your theme.
 
-Guide: [docs/Twig.md](docs/Twig.md)
+Guide: [docs/en/Twig.md](docs/en/Twig.md)
 
 ## Shortcodes
 
@@ -119,7 +121,7 @@ Guide: [docs/Twig.md](docs/Twig.md)
 [opencalendar-search /]
 ```
 
-Guide: [docs/Shortcodes.md](docs/Shortcodes.md)
+Guide: [docs/en/Shortcodes.md](docs/en/Shortcodes.md)
 
 ## Searching
 
@@ -133,31 +135,31 @@ search:
   highlight: true
 ```
 
-Guide: [docs/Searching.md](docs/Searching.md)
+Guide: [docs/en/Searching.md](docs/en/Searching.md)
 
 ## Filtering
 
 Filter by source, category, and date range. URL persistence enables shareable filtered views.
 
-Guide: [docs/Filtering.md](docs/Filtering.md)
+Guide: [docs/en/Filtering.md](docs/en/Filtering.md)
 
 ## Synchronization
 
 Remote feeds sync on a schedule (default: every 15 minutes). Per-source refresh overrides, deduplication, recurring expansion, and cleanup policies keep the database accurate without unbounded growth.
 
-Guide: [docs/Synchronization.md](docs/Synchronization.md)
+Guide: [docs/en/Synchronization.md](docs/en/Synchronization.md)
 
 ## SQLite
 
 Events persist in `data/opencalendar.db` with WAL mode, FTS5 search, and automatic schema migrations.
 
-Guide: [docs/SQLite.md](docs/SQLite.md)
+Guide: [docs/en/SQLite.md](docs/en/SQLite.md)
 
 ## Caching
 
 Parse cache avoids re-reading unchanged feeds; render cache speeds up Twig and API responses. Tune TTL for your traffic and update frequency.
 
-Guide: [docs/Caching.md](docs/Caching.md)
+Guide: [docs/en/Caching.md](docs/en/Caching.md)
 
 ## Performance
 
@@ -174,44 +176,46 @@ Optional read-only JSON API (disabled by default):
 GET /opencalendar/api/events?from=2026-07-01&to=2026-07-31
 ```
 
-Guide: [docs/API.md](docs/API.md)
+Guide: [docs/en/API.md](docs/en/API.md)
 
 ## Troubleshooting
 
 Common issues: sync failures, empty calendars, permission errors, scheduler not running.
 
-Guide: [docs/Troubleshooting.md](docs/Troubleshooting.md)
+Guide: [docs/en/Troubleshooting.md](docs/en/Troubleshooting.md)
 
 ## FAQ
 
 Quick answers on sources, Google Calendar, SQLite, licensing, and more.
 
-Guide: [docs/FAQ.md](docs/FAQ.md)
+Guide: [docs/en/FAQ.md](docs/en/FAQ.md)
 
 ## Documentation
 
+Full index (EN + DE): [docs/README.md](docs/README.md)
+
 | Document | Topic |
 |----------|-------|
-| [Installation](docs/Installation.md) | Setup and requirements |
-| [Configuration](docs/Configuration.md) | All config options |
-| [Architecture](docs/Architecture.md) | Code structure |
-| [Sources](docs/Sources.md) | ICS, CalDAV, JSON, local |
-| [ICS](docs/ICS.md) | iCalendar specifics |
-| [Synchronization](docs/Synchronization.md) | Sync and cleanup |
-| [SQLite](docs/SQLite.md) | Database storage |
-| [Twig](docs/Twig.md) | Template integration |
-| [Shortcodes](docs/Shortcodes.md) | Page shortcodes |
-| [Subscribe](docs/Subscribe.md) | Network calendar / phone subscription (EN) |
-| [Abonnieren](docs/Abonnieren.md) | Smartphone-Kalender abonnieren (DE) |
-| [Searching](docs/Searching.md) | Full-text search |
-| [Filtering](docs/Filtering.md) | Event filters |
-| [Caching](docs/Caching.md) | Cache layers |
-| [API](docs/API.md) | REST endpoints |
-| [Development](docs/Development.md) | Contributor guide |
-| [Migration](docs/Migration.md) | Upgrades |
-| [Troubleshooting](docs/Troubleshooting.md) | Problem solving |
-| [FAQ](docs/FAQ.md) | Common questions |
-| [Publishing / GPM](docs/Publishing-GPM.md) | Official Grav repository listing |
+| [Installation](docs/en/Installation.md) | Setup and requirements |
+| [Configuration](docs/en/Configuration.md) | All config options |
+| [Architecture](docs/en/Architecture.md) | Code structure |
+| [Sources](docs/en/Sources.md) | ICS, CalDAV, JSON, local |
+| [ICS](docs/en/ICS.md) | iCalendar specifics |
+| [Synchronization](docs/en/Synchronization.md) | Sync and cleanup |
+| [SQLite](docs/en/SQLite.md) | Database storage |
+| [Twig](docs/en/Twig.md) | Template integration |
+| [Shortcodes](docs/en/Shortcodes.md) | Page shortcodes |
+| [Subscribe](docs/en/Subscribe.md) / [Abonnieren](docs/de/Subscribe.md) | Network calendar / phone subscription |
+| [Documentation index](docs/README.md) | English & German docs overview |
+| [Searching](docs/en/Searching.md) | Full-text search |
+| [Filtering](docs/en/Filtering.md) | Event filters |
+| [Caching](docs/en/Caching.md) | Cache layers |
+| [API](docs/en/API.md) | REST endpoints |
+| [Development](docs/en/Development.md) | Contributor guide |
+| [Migration](docs/en/Migration.md) | Upgrades |
+| [Troubleshooting](docs/en/Troubleshooting.md) | Problem solving |
+| [FAQ](docs/en/FAQ.md) | Common questions |
+| [Publishing / GPM](docs/en/Publishing-GPM.md) | Official Grav repository listing |
 
 ## Roadmap
 
@@ -227,7 +231,7 @@ Track progress on [GitHub Issues](https://github.com/TimUx/grav-plugin-opencalen
 
 ## Contributing
 
-Contributions welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md), follow `composer check`, and submit a pull request.
+Contributions welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) ([DE](CONTRIBUTING.de.md)), follow `composer check`, and submit a pull request.
 
 ## License
 

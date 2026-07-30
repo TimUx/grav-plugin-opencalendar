@@ -1,8 +1,9 @@
 # Calendar subscription (network calendars)
 
+> Deutsch: [Kalender auf dem Smartphone abonnieren](../de/Subscribe.md)
+
 OpenCalendar publishes a live **ICS feed** of events imported into SQLite. Phones, tablets, and mail/calendar apps can **subscribe** to that URL and refresh automatically — the same mechanism as Google Calendar / Outlook “Add calendar from URL”.
 
-> Deutsche Anleitung (Smartphone Schritt für Schritt): [Abonnieren.md](Abonnieren.md)
 
 ## Enable the feed
 
@@ -96,7 +97,7 @@ No push to Apple/Google is required — subscription calendars are pull-based.
 
 ## Related
 
-- [Abonnieren.md](Abonnieren.md) — German smartphone guide
+- [Kalender abonnieren (DE)](../de/Subscribe.md) — German smartphone guide
 - [ICS.md](ICS.md) — import + export details
 - [Synchronization.md](Synchronization.md) — how sources stay fresh
 - [Shortcodes.md](Shortcodes.md) — `show_subscribe`

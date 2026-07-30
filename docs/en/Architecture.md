@@ -1,5 +1,7 @@
 # Architecture
 
+> Deutsch: [Architektur](../de/Architecture.md)
+
 OpenCalendar follows a layered architecture designed for Grav CMS integration, testability, and incremental source-type support.
 
 ## High-level overview

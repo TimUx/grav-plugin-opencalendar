@@ -11,7 +11,7 @@ keywords: calendar, ics, caldav, events, schedule, opencalendar, json, webhook, 
 homepage: https://github.com/TimUx/grav-plugin-opencalendar
 demo: https://www.feuerwehr-willingshausen.de/de/termine
 bugs: https://github.com/TimUx/grav-plugin-opencalendar/issues
-docs: https://github.com/TimUx/grav-plugin-opencalendar/tree/main/docs
+docs: https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/README.md
 license: MIT
 
 dependencies:

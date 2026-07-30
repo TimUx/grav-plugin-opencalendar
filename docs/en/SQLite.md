@@ -1,5 +1,7 @@
 # SQLite Storage
 
+> Deutsch: [SQLite-Speicher](../de/SQLite.md)
+
 OpenCalendar persists normalized events in SQLite for fast queries, search, and resilience when remote feeds are unavailable.
 
 ## Database location

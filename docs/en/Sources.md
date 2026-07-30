@@ -1,5 +1,7 @@
 # Calendar Sources
 
+> Deutsch: [Kalenderquellen](../de/Sources.md)
+
 OpenCalendar aggregates events from multiple source types. Each source is defined in the `sources` array in configuration.
 
 ## Common fields

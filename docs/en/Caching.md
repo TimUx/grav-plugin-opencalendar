@@ -1,5 +1,7 @@
 # Caching
 
+> Deutsch: [Caching](../de/Caching.md)
+
 OpenCalendar uses multiple cache layers to keep calendar pages fast without hammering remote feeds.
 
 ## Cache layers

@@ -1,5 +1,7 @@
 # Publishing to the Grav Plugin Repository (GPM)
 
+> Deutsch: [Veröffentlichung im Grav Plugin Repository (GPM)](../de/Publishing-GPM.md)
+
 This document tracks what is required to list OpenCalendar in the official Grav Package Manager.
 
 ## Official requirements
@@ -43,7 +45,7 @@ gh release create v1.0.1 --title "v1.0.1" --notes-file CHANGELOG.md
 # 2) Ask Grav to list the plugin
 gh issue create -R getgrav/grav \
   --title "[add-resource] New Plugin: OpenCalendar" \
-  --body-file docs/gpm-submission-issue.md
+  --body-file docs/en/gpm-submission-issue.md
 ```
 
 ## After listing

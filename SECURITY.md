@@ -1,5 +1,7 @@
 # Security Policy
 
+> Deutsch: [SECURITY.de.md](SECURITY.de.md)
+
 ## Supported Versions
 
 | Version | Supported |
@@ -43,7 +45,7 @@ Out of scope:
 ## Safe Configuration
 
 - Store CalDAV credentials in environment-specific config overrides, not in version control.
-- Restrict API access when exposing OpenCalendar on public sites (see [docs/API.md](docs/API.md)).
+- Restrict API access when exposing OpenCalendar on public sites (see [docs/en/API.md](docs/en/API.md)).
 - Use HTTPS for remote ICS and CalDAV endpoints.
 - Keep PHP and Grav updated.
 

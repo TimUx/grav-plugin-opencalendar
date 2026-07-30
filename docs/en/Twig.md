@@ -1,5 +1,7 @@
 # Twig Integration
 
+> Deutsch: [Twig-Integration](../de/Twig.md)
+
 OpenCalendar exposes Twig functions and filters for rendering events in theme templates.
 
 ## Enabling in templates
@@ -151,5 +153,5 @@ bin/grav cache
 ## Related documentation
 
 - [Shortcodes.md](Shortcodes.md)
-- [Views](../README.md#views)
+- [Views](../../README.md#views)
 - [Caching.md](Caching.md)

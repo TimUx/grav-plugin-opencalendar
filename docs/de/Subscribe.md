@@ -1,8 +1,8 @@
 # Kalender auf dem Smartphone abonnieren
 
-OpenCalendar stellt die importierten Termine als **Live-ICS-Feed** bereit. Smartphones und Tablets können diese Adresse als **Netzwerk-/Abonnement-Kalender** einbinden. Die Apps laden den Kalender regelmäßig neu — ohne manuelles erneutes Importieren.
+> English: [Calendar subscription](../en/Subscribe.md)
 
-> Englische Fassung: [Subscribe.md](Subscribe.md)
+OpenCalendar stellt die importierten Termine als **Live-ICS-Feed** bereit. Smartphones und Tablets können diese Adresse als **Netzwerk-/Abonnement-Kalender** einbinden. Die Apps laden den Kalender regelmäßig neu — ohne manuelles erneutes Importieren.
 
 ## 1. Feed-Adresse ermitteln
 
@@ -127,7 +127,7 @@ Es ist **kein** Push an Apple/Google nötig — Abonnement-Kalender arbeiten per
 
 ## Verwandte Dokumentation
 
-- [Subscribe.md](Subscribe.md) — English guide & Twig helpers
+- [Subscribe.md](Subscribe.md) — Englische Anleitung & Twig-Helfer
 - [ICS.md](ICS.md) — Import und Export technisch
 - [Synchronization.md](Synchronization.md) — Sync & Scheduler
 - [Shortcodes.md](Shortcodes.md) — `show_subscribe`
