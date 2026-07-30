@@ -48,6 +48,22 @@ gh issue create -R getgrav/grav \
   --body-file docs/en/gpm-submission-issue.md
 ```
 
+## Distribution package contents
+
+Release ZIPs used by GPM / GitHub “Source code” downloads are filtered by [`.gitattributes`](../../.gitattributes) (`export-ignore`). Composer dist archives use the matching `archive.exclude` list in `composer.json`.
+
+**Included (runtime + Grav requirements):** plugin PHP/YAML, `classes/`, `languages/`, `templates/`, `assets/`, `admin/`, `blueprints*`, `composer.json` / `composer.lock`, `CHANGELOG.md`, `LICENSE`, `README.md`.
+
+**Excluded (repo / GitHub only):** `docs/`, `tests/`, `.github/`, contributing/security/code-of-conduct files, `README.de.md`, PHPUnit/PHPStan/PHPCS configs, editor metadata.
+
+Cloning the repository still returns the full tree for development. Prefer GPM or the release ZIP for production installs.
+
+Verify locally:
+
+```bash
+git archive --format=tar --worktree-attributes HEAD | tar -t | grep -E '^(docs|tests|\.github)/' || echo 'dev paths excluded'
+```
+
 ## After listing
 
 - Bump `version` in `blueprints.yaml` and add a CHANGELOG section for every release

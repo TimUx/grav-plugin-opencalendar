@@ -30,16 +30,14 @@ Oder über das Admin-Panel: **Plugins → Hinzufügen** und nach OpenCalendar su
 
 ## Manuelle Installation
 
-1. Repository herunterladen oder klonen:
+Bevorzugt das **Release-ZIP** von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) (dasselbe gefilterte Paket wie GPM). Es enthält nur Laufzeitdateien — nicht `docs/`, `tests/`, CI-Konfiguration oder GitHub-Community-Dateien. Die vollständige Dokumentation bleibt auf GitHub.
+
+1. Aktuelles Release-Archiv herunterladen (oder GPM / `bin/gpm direct-install` nutzen).
+
+2. Nach `opencalendar` in den Grav-Plugins-Ordner entpacken:
 
    ```bash
-   git clone https://github.com/TimUx/grav-plugin-opencalendar.git
-   ```
-
-2. In den Grav-Plugins-Ordner kopieren oder verlinken:
-
-   ```bash
-   cp -R grav-plugin-opencalendar /path/to/grav/user/plugins/opencalendar
+   unzip opencalendar-*.zip -d /path/to/grav/user/plugins/opencalendar
    ```
 
 3. PHP-Abhängigkeiten installieren:
@@ -49,7 +47,14 @@ Oder über das Admin-Panel: **Plugins → Hinzufügen** und nach OpenCalendar su
    composer install --no-dev --optimize-autoloader
    ```
 
-   Für die Entwicklung `--no-dev` weglassen, um PHPUnit, PHPStan und PHPCS einzuschließen.
+### Entwicklungs-Checkout
+
+Repository nur zum Mitwirken klonen. Dieser Checkout enthält Docs, Tests und Tooling:
+
+```bash
+git clone https://github.com/TimUx/grav-plugin-opencalendar.git
+composer install   # inkl. require-dev
+```
 
 4. Grav-Cache leeren:
 

@@ -1,3 +1,10 @@
+# v1.2.1
+## 07/30/2026
+
+1. [](#improved)
+    * Release / GPM packages exclude docs, tests, CI, and GitHub community files via `.gitattributes` `export-ignore` (and Composer `archive.exclude`)
+    * README documentation links point to GitHub so installed packages do not need the `docs/` tree
+
 # v1.2.0
 ## 07/30/2026
 
