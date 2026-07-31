@@ -1,3 +1,13 @@
+# v1.3.0
+## 07/31/2026
+
+1. [](#new)
+    * Grav 2.0 compatibility: Admin Next sync field (`admin-next/fields/opencalendar_sync.js`), API routes under `/api/v1/opencalendar/*`, dashboard notifications
+    * Twig content sandbox allow-list for OpenCalendar functions (`onBuildTwigSandboxPolicy`)
+2. [](#improved)
+    * Event subscriptions no longer gated on `isAdmin()` at boot (required for Admin Next / API)
+    * Declared `compatibility.grav: ['1.7', '2.0']` — same plugin works on Grav 1.7 classic admin and Grav 2.0
+
 # v1.2.1
 ## 07/30/2026
 

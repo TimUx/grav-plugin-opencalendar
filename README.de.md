@@ -17,6 +17,7 @@ Entwickelt für PHP 8.2+ mit strikter Typisierung, PHPStan Level 8 und PSR-12-Co
 
 - **Mehrere Quelltypen** — ICS/iCalendar, CalDAV, JSON-APIs, lokale Dateien
 - **Admin-Datei-Upload** — `.ics` / `.json` im Synchronisierungs-Dashboard nach SQLite importieren
+- **Grav 1.7 & 2.0** — Classic Admin und Admin Next (`compatibility: ['1.7', '2.0']`)
 - **SQLite-Speicher** — schnelle Abfragen, FTS-Suche, keine externe Datenbank nötig
 - **Hintergrund-Sync** — konfigurierbare Intervalle mit Grav-Scheduler-Integration
 - **Zwei Ansichten** — interaktiver Kalender (Monat/Woche/Tag) und gruppierte Listen

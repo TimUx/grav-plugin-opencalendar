@@ -97,5 +97,23 @@ Deprecation warnings appear in logs one minor release before removal when possib
 ## Related documentation
 
 - [Installation.md](Installation.md)
+## Grav CMS 1.7 → 2.0
+
+OpenCalendar **1.3.0+** supports both Grav majors in one package (`compatibility.grav: ['1.7', '2.0']`). You do **not** need a separate `opencalendar2` plugin.
+
+| Area | Grav 1.7 | Grav 2.0 |
+|------|----------|----------|
+| Config blueprints | Classic Admin | Admin Next (same YAML) |
+| Sync dashboard field | Twig `opencalendar_sync` | Web component `admin-next/fields/opencalendar_sync.js` |
+| Sync / upload actions | `/admin/plugins/opencalendar/*` | `/api/v1/opencalendar/*` (Grav API plugin) |
+| Dashboard | Classic widget | Admin Next notifications |
+| Frontend Twig / shortcodes | Unchanged | Sandbox allow-list via `onBuildTwigSandboxPolicy` |
+
+When migrating a site with the official Migrate to Grav 2.0 wizard, OpenCalendar is treated as 2.0-compatible once you install/update to 1.3.0+. Config and SQLite data under `user/data/opencalendar/` copy across like other plugin data.
+
+Requirements on Grav 2.0: PHP 8.3+ (platform minimum), Grav API plugin enabled (ships with 2.0).
+
+## Related documentation
+
 - [SQLite.md](SQLite.md)
 - [CHANGELOG.md](../../CHANGELOG.md)

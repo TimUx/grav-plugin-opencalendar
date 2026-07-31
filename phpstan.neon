@@ -4,8 +4,11 @@ parameters:
         - classes
     scanFiles:
         - tests/stubs/grav.php
+        - tests/stubs/grav-api.php
     excludePaths:
         - tests/*
+        # Requires grav-plugin-api + PSR-7 at runtime (Grav 2.0 only).
+        - classes/Controllers/GravApiAdminController.php
     ignoreErrors:
         -
             message: '#Cannot access offset .* on object#'
