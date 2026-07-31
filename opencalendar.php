@@ -10,6 +10,7 @@ use Grav\Plugin\OpenCalendar\Api\RateLimiter;
 use Grav\Plugin\OpenCalendar\Controllers\AdminController;
 use Grav\Plugin\OpenCalendar\Controllers\ApiController;
 use Grav\Plugin\OpenCalendar\Controllers\ExportController;
+use Grav\Plugin\OpenCalendar\Controllers\GravApiAdminController;
 use Grav\Plugin\OpenCalendar\Controllers\ShortcodeProcessor;
 use Grav\Plugin\OpenCalendar\Controllers\WebhookController;
 use Grav\Plugin\OpenCalendar\Events\GravEventDispatcher;
@@ -39,6 +40,10 @@ class OpenCalendarPlugin extends Plugin
                 ['autoload', 100000],
                 ['onPluginsInitialized', 0],
             ],
+            // Grav 2.0 Admin Next / API plugin (no-op when API plugin is absent on 1.7)
+            'onApiRegisterRoutes' => ['onApiRegisterRoutes', 0],
+            'onApiDashboardNotifications' => ['onApiDashboardNotifications', 0],
+            'onBuildTwigSandboxPolicy' => ['onBuildTwigSandboxPolicy', 0],
         ];
     }
 
@@ -69,7 +74,8 @@ class OpenCalendarPlugin extends Plugin
 
             if ($this->isAdmin() && isset($this->grav['messages'])) {
                 $this->grav['messages']->add(
-                    'OpenCalendar is not ready: run <code>composer install --no-dev</code> in <code>user/plugins/opencalendar</code>.',
+                    'OpenCalendar is not ready: run <code>composer install --no-dev</code>'
+                    . ' in <code>user/plugins/opencalendar</code>.',
                     'error'
                 );
             }
@@ -77,26 +83,19 @@ class OpenCalendarPlugin extends Plugin
             return;
         }
 
-        if ($this->isAdmin()) {
-            $this->enable([
-                'onTwigSiteVariables' => ['onAdminTwigSiteVariables', 0],
-                'onAdminTwigTemplatePaths' => ['onAdminTwigTemplatePaths', 0],
-                'onAdminMenu' => ['onAdminMenu', 0],
-                'onAdminDashboard' => ['onAdminDashboard', 0],
-                'onPagesInitialized' => ['onAdminPagesInitialized', 0],
-                'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
-            ]);
-
-            return;
-        }
-
+        // Subscribe unconditionally. Grav 2 Admin Next establishes isAdmin() only
+        // after onPluginsInitialized, so gating enable() on isAdmin() here breaks API.
+        // Classic-admin-only handlers no-op when their events never fire on 2.0.
         $this->enable([
             'onTwigExtensions' => ['onTwigExtensions', 0],
             'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
-            'onTwigSiteVariables' => ['onTwigSiteVariables', 0],
+            'onTwigSiteVariables' => ['onTwigSiteVariablesDispatch', 0],
             'onPageContentProcessed' => ['onPageContentProcessed', 0],
             'onPagesInitialized' => ['onPagesInitialized', 0],
             'onSchedulerInitialized' => ['onSchedulerInitialized', 0],
+            'onAdminTwigTemplatePaths' => ['onAdminTwigTemplatePaths', 0],
+            'onAdminMenu' => ['onAdminMenu', 0],
+            'onAdminDashboard' => ['onAdminDashboard', 0],
         ]);
 
         if ($this->pluginConfig('advanced.scheduler.on_cache_clear', true)) {
@@ -110,6 +109,130 @@ class OpenCalendarPlugin extends Plugin
         } catch (\Throwable $e) {
             $this->grav['log']->warning('OpenCalendar boot failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Dispatch Twig site variables for classic admin vs frontend.
+     */
+    public function onTwigSiteVariablesDispatch(): void
+    {
+        if ($this->isAdmin()) {
+            $this->onAdminTwigSiteVariables();
+
+            return;
+        }
+
+        $this->onTwigSiteVariables();
+    }
+
+    /**
+     * Grav 2.0: register Admin Next API routes (requires grav-plugin-api).
+     */
+    public function onApiRegisterRoutes(Event $event): void
+    {
+        if (!class_exists(\Grav\Plugin\Api\Controllers\AbstractApiController::class)) {
+            return;
+        }
+
+        $routes = $event['routes'] ?? null;
+        if (!is_object($routes)) {
+            return;
+        }
+
+        $controller = GravApiAdminController::class;
+        if (method_exists($routes, 'group')) {
+            $routes->group('/opencalendar', static function ($group) use ($controller): void {
+                $group->get('/status', [$controller, 'status']);
+                $group->post('/sync', [$controller, 'sync']);
+                $group->post('/rebuild', [$controller, 'rebuild']);
+                $group->post('/clear-cache', [$controller, 'clearCache']);
+                $group->post('/upload', [$controller, 'upload']);
+            });
+
+            return;
+        }
+
+        if (method_exists($routes, 'get') && method_exists($routes, 'post')) {
+            $routes->get('/opencalendar/status', [$controller, 'status']);
+            $routes->post('/opencalendar/sync', [$controller, 'sync']);
+            $routes->post('/opencalendar/rebuild', [$controller, 'rebuild']);
+            $routes->post('/opencalendar/clear-cache', [$controller, 'clearCache']);
+            $routes->post('/opencalendar/upload', [$controller, 'upload']);
+        }
+    }
+
+    /**
+     * Grav 2.0: dashboard notification with sync summary.
+     */
+    public function onApiDashboardNotifications(Event $event): void
+    {
+        try {
+            $status = $this->createAdminController()->status(false);
+            $errors = (int) ($status['error_count'] ?? 0);
+            $events = (int) ($status['event_count'] ?? 0);
+            $sources = (int) ($status['source_count'] ?? 0);
+
+            $notifications = $event['notifications'] ?? [];
+            if (!is_array($notifications)) {
+                $notifications = [];
+            }
+            if (!isset($notifications['dashboard']) || !is_array($notifications['dashboard'])) {
+                $notifications['dashboard'] = [];
+            }
+
+            $notifications['dashboard'][] = [
+                'id' => 'opencalendar-sync-status',
+                'title' => 'OpenCalendar',
+                'message' => sprintf(
+                    '%d events · %d sources%s',
+                    $events,
+                    $sources,
+                    $errors > 0 ? sprintf(' · %d sync error(s)', $errors) : ''
+                ),
+                'date' => date('c'),
+                'type' => $errors > 0 ? 'warning' : 'info',
+                'link' => (string) ($this->grav['uri']->rootUrl(true) ?? '') . '/admin/plugins/opencalendar',
+            ];
+
+            $event['notifications'] = $notifications;
+        } catch (\Throwable) {
+            // Dashboard notifications are optional.
+        }
+    }
+
+    /**
+     * Grav 2.0 Twig content sandbox: allow OpenCalendar Twig functions in pages.
+     */
+    public function onBuildTwigSandboxPolicy(Event $event): void
+    {
+        $functions = $event['functions'] ?? [];
+        if (!is_array($functions)) {
+            $functions = [];
+        }
+
+        $allowed = [
+            'opencalendar',
+            'opencalendar_events',
+            'opencalendar_calendars',
+            'opencalendar_categories',
+            'opencalendar_export_url',
+            'opencalendar_webcal_url',
+        ];
+        foreach ($allowed as $name) {
+            if (!in_array($name, $functions, true)) {
+                $functions[] = $name;
+            }
+        }
+
+        $event['functions'] = $functions;
+    }
+
+    /**
+     * Factory used by classic admin actions and Grav 2 API controller.
+     */
+    public function createAdminController(bool $fresh = false): AdminController
+    {
+        return $this->adminController($fresh);
     }
 
     private function dependenciesInstalled(): bool
@@ -166,8 +289,13 @@ class OpenCalendarPlugin extends Plugin
             'pipeline' => false,
             'loading' => null,
         ]);
-        $assets->addCss('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.css');
-        $assets->addJs('https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.js', ['group' => 'bottom']);
+        $assets->addCss(
+            'https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.css'
+        );
+        $assets->addJs(
+            'https://cdn.jsdelivr.net/npm/@event-calendar/build@5.10.1/dist/event-calendar.min.js',
+            ['group' => 'bottom']
+        );
         $assets->addJs($base . '/assets/js/opencalendar.js', [
             'group' => 'bottom',
             'priority' => 80,
@@ -279,6 +407,9 @@ class OpenCalendarPlugin extends Plugin
 
     public function onPagesInitialized(): void
     {
+        // Classic Grav 1.7 Admin JSON actions (path-based). Safe no-op elsewhere.
+        $this->onAdminPagesInitialized();
+
         $this->disableCacheForOpenCalendarPages();
 
         $path = $this->grav['uri']->path();

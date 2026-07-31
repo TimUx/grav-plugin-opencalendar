@@ -98,9 +98,12 @@ Runtime behavior is driven by `opencalendar.yaml` with no hard-coded feed URLs. 
 | `onPagesInitialized` | API, webhook, ICS export routes |
 | `onSchedulerInitialized` | Register sync/cleanup jobs |
 | `onCacheClear` | Optional sync when Grav cache is cleared |
-| `onAdminDashboard` | Home dashboard sync-status widget |
-| `onAdminTwigTemplatePaths` | Admin templates (sync field, dashboard) |
-| `onAdminPagesInitialized` | Admin JSON actions (`sync`, `rebuild`, `clear-cache`, `status`, `upload`) |
+| `onAdminDashboard` | Classic Admin (1.7) home dashboard widget |
+| `onAdminTwigTemplatePaths` | Classic Admin templates (sync field, dashboard) |
+| `onPagesInitialized` | Public API/webhook/export + classic Admin JSON actions |
+| `onApiRegisterRoutes` | Grav 2.0 Admin Next API (`/api/v1/opencalendar/*`) |
+| `onApiDashboardNotifications` | Grav 2.0 dashboard sync summary |
+| `onBuildTwigSandboxPolicy` | Allow OpenCalendar Twig functions in sandboxed page content |
 
 ## Dependencies
 

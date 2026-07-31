@@ -68,4 +68,4 @@ git archive --format=tar --worktree-attributes HEAD | tar -t | grep -E '^(docs|t
 
 - `version` in `blueprints.yaml` erhöhen und für jedes Release einen CHANGELOG-Abschnitt hinzufügen
 - Tags konsistent setzen (`v1.0.2`, `v1.1.0`, …) — GPM vergleicht Tags
-- Für Grav 2.0 später: unter PHP 8.3 + Grav 2.0 testen, dann `'2.0'` unter `compatibility.grav` ergänzen
+- Grav 2.0: OpenCalendar deklariert `compatibility.grav: ['1.7', '2.0']`. Admin Next nutzt `admin-next/fields/opencalendar_sync.js` und `/api/v1/opencalendar/*` (Grav-API-Plugin aus 2.0 erforderlich).

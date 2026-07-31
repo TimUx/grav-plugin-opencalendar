@@ -98,9 +98,12 @@ Das Laufzeitverhalten wird über `opencalendar.yaml` gesteuert, ohne hart codier
 | `onPagesInitialized` | API-, Webhook- und ICS-Export-Routen |
 | `onSchedulerInitialized` | Sync-/Cleanup-Jobs registrieren |
 | `onCacheClear` | Optionaler Sync beim Leeren des Grav-Caches |
-| `onAdminDashboard` | Sync-Status-Widget auf dem Admin-Dashboard |
-| `onAdminTwigTemplatePaths` | Admin-Vorlagen (Sync-Feld, Dashboard) |
-| `onAdminPagesInitialized` | Admin-JSON-Aktionen (`sync`, `rebuild`, `clear-cache`, `status`, `upload`) |
+| `onAdminDashboard` | Classic-Admin-(1.7)-Dashboard-Widget |
+| `onAdminTwigTemplatePaths` | Classic-Admin-Vorlagen (Sync-Feld, Dashboard) |
+| `onPagesInitialized` | Öffentliche API/Webhook/Export + Classic-Admin-JSON-Aktionen |
+| `onApiRegisterRoutes` | Grav-2.0-Admin-Next-API (`/api/v1/opencalendar/*`) |
+| `onApiDashboardNotifications` | Grav-2.0-Dashboard-Sync-Zusammenfassung |
+| `onBuildTwigSandboxPolicy` | OpenCalendar-Twig-Funktionen in sandboxed Seiteninhalt erlauben |
 
 ## Abhängigkeiten
 

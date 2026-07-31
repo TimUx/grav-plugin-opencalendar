@@ -34,9 +34,10 @@ final class CalendarUploadService
      *   error?: int,
      *   size?: int
      * } $file $_FILES entry
+     * @param bool $allowLocalTemp Allow readable temp files (CLI tests / Grav API PSR-7 moveTo)
      * @return array{path: string, relative_url: string, original_name: string, format: string}
      */
-    public function storeUploadedFile(array $file): array
+    public function storeUploadedFile(array $file, bool $allowLocalTemp = false): array
     {
         $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($error !== UPLOAD_ERR_OK) {
@@ -48,9 +49,9 @@ final class CalendarUploadService
             throw new \RuntimeException('Uploaded file is missing or not readable.');
         }
 
-        // is_uploaded_file() is false for CLI unit fixtures; enforce it for real HTTP uploads.
+        // is_uploaded_file() is false for CLI fixtures and PSR-7 moveTo() temps used by Admin Next.
         $fromHttp = !in_array(PHP_SAPI, ['cli', 'phpdbg'], true);
-        if ($fromHttp && !is_uploaded_file($tmp)) {
+        if ($fromHttp && !is_uploaded_file($tmp) && !$allowLocalTemp) {
             throw new \RuntimeException('Uploaded file is missing or not readable.');
         }
 

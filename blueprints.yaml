@@ -1,7 +1,7 @@
 name: OpenCalendar
 slug: opencalendar
 type: plugin
-version: 1.2.1
+version: 1.3.0
 description: "Aggregate calendars from ICS, CalDAV, JSON, and local sources with SQLite storage, search, filtering, and flexible Twig display."
 icon: calendar
 author:
@@ -20,6 +20,7 @@ dependencies:
 compatibility:
   grav:
     - '1.7'
+    - '2.0'
 
 form:
   validation: loose

@@ -123,9 +123,10 @@ final class AdminController
      * Store an uploaded ICS/JSON calendar, register it as a local source, and import.
      *
      * @param array<string, mixed> $file $_FILES['calendar'] style entry
+     * @param bool $allowLocalTemp Allow PSR-7 / CLI temp files (Admin Next API uploads)
      * @return array<string, mixed>
      */
-    public function uploadCalendar(array $file, string $sourceName = ''): array
+    public function uploadCalendar(array $file, string $sourceName = '', bool $allowLocalTemp = false): array
     {
         if ($this->pluginConfigPath === null || $this->pluginConfigPath === '') {
             return array_merge($this->status(false), [
@@ -136,7 +137,7 @@ final class AdminController
 
         try {
             $upload = $this->container->calendarUploadService();
-            $stored = $upload->storeUploadedFile($file);
+            $stored = $upload->storeUploadedFile($file, $allowLocalTemp);
 
             $name = trim($sourceName);
             if ($name === '') {
