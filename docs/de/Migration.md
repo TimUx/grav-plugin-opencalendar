@@ -28,21 +28,15 @@ Vor jedem Upgrade [CHANGELOG.md](../../CHANGELOG.md) lesen.
    cp user/config/plugins/opencalendar.yaml ~/backup/
    ```
 
-3. Plugin-Dateien über GPM oder git pull aktualisieren.
+3. Plugin-Dateien über GPM oder git pull aktualisieren. Release-Pakete enthalten Produktions-`vendor/`; Composer ist nur für Entwicklungs-Checkouts nötig bzw. wenn `vendor/` fehlt.
 
-4. Composer bei Bedarf ausführen:
-
-   ```bash
-   cd user/plugins/opencalendar && composer install --no-dev
-   ```
-
-5. Grav-Cache leeren:
+4. Grav-Cache leeren:
 
    ```bash
    bin/grav cache
    ```
 
-6. Admin → Plugins öffnen und Version prüfen.
+5. Admin → Plugins öffnen und Version prüfen.
 
 Schema-Migrationen laufen automatisch beim nächsten Request oder Sync.
 
@@ -66,7 +60,7 @@ Schlägt eine Migration fehl:
 
 1. `user/config/plugins/opencalendar.yaml` kopieren
 2. `user/plugins/opencalendar/data/opencalendar.db` kopieren (oder aus Quellen neu synchronisieren)
-3. PHP-Erweiterungen und Composer-vendor-Ordner auf dem Zielsystem installieren
+3. PHP-Erweiterungen sicherstellen; Release-Pakete enthalten bereits `vendor/`
 4. Dateiberechtigungen für `data/` anpassen
 
 Alternativ die Datenbank weglassen und vollständig neu synchronisieren — geeignet, wenn die Quellen maßgeblich sind.

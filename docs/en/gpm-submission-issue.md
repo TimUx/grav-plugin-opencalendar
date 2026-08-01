@@ -30,6 +30,6 @@ https://www.feuerwehr-willingshausen.de/de/termine
 ## Notes for reviewers
 
 * Install path: `user/plugins/opencalendar`
-* Requires Composer dependencies in the plugin folder (`composer install --no-dev`) — primarily `sabre/vobject`
+* Ships production Composer `vendor/` (primarily `sabre/vobject`); no server-side `composer install` for GPM installs
 * SQLite + PDO SQLite extension required
 * Docs: https://github.com/TimUx/grav-plugin-opencalendar/tree/main/docs

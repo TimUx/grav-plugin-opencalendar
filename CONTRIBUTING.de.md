@@ -25,7 +25,7 @@ Dieses Projekt folgt dem [Contributor Covenant](CODE_OF_CONDUCT.de.md) ([EN](COD
    cd grav-plugin-opencalendar
    ```
 
-2. Abhängigkeiten installieren:
+2. Entwicklungs-Abhängigkeiten installieren (Produktions-`vendor/` ist für GPM bereits committed; das ergänzt PHPUnit/PHPStan usw. — den erweiterten Baum nicht committen):
 
    ```bash
    composer install

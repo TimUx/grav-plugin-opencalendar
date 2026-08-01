@@ -1,4 +1,6 @@
-/vendor/
+# Production vendor/ (sabre/* + Composer autoload) is committed so GPM/release
+# installs work without running Composer. Use `composer install` locally to
+# pull in require-dev tools; do not commit that expanded tree.
 /node_modules/
 /.idea/
 /.vscode/

@@ -28,9 +28,15 @@ bin/gpm direct-install -y TimUx/grav-plugin-opencalendar
 
 Or from the Admin panel: **Plugins → Add** and search for OpenCalendar.
 
+GPM packages include the production Composer `vendor/` folder (`sabre/vobject` and class autoload). No `composer install` is required on the server. Clear Grav cache after install if the Admin UI or shortcodes do not appear yet:
+
+```bash
+bin/grav cache
+```
+
 ## Manual installation
 
-Prefer the **release ZIP** from [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) (same filtered package GPM uses). It contains only runtime plugin files — not `docs/`, `tests/`, CI configs, or GitHub community files. Full documentation stays on GitHub.
+Prefer the **release ZIP** from [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) (same filtered package GPM uses). It contains runtime plugin files plus production `vendor/` — not `docs/`, `tests/`, CI configs, or GitHub community files. Full documentation stays on GitHub.
 
 1. Download the latest release source archive (or use GPM / `bin/gpm direct-install`).
 
@@ -40,34 +46,33 @@ Prefer the **release ZIP** from [GitHub Releases](https://github.com/TimUx/grav-
    unzip opencalendar-*.zip -d /path/to/grav/user/plugins/opencalendar
    ```
 
-3. Install PHP dependencies:
-
-   ```bash
-   cd /path/to/grav/user/plugins/opencalendar
-   composer install --no-dev --optimize-autoloader
-   ```
-
-### Development checkout
-
-Clone the repository only when contributing. That checkout includes docs, tests, and tooling:
-
-```bash
-git clone https://github.com/TimUx/grav-plugin-opencalendar.git
-composer install   # includes require-dev
-```
-
-4. Clear Grav cache:
+3. Clear Grav cache:
 
    ```bash
    cd /path/to/grav
    bin/grav cache
    ```
 
-5. Enable the plugin in **Admin → Plugins → OpenCalendar**, or add to `user/config/plugins/opencalendar.yaml`:
+4. Enable the plugin in **Admin → Plugins → OpenCalendar**, or add to `user/config/plugins/opencalendar.yaml`:
 
    ```yaml
    enabled: true
    ```
+
+### Development checkout
+
+Clone the repository only when contributing. That checkout includes docs, tests, and tooling. Production `vendor/` is already present; run Composer to add PHPUnit/PHPStan and friends:
+
+```bash
+git clone https://github.com/TimUx/grav-plugin-opencalendar.git
+composer install   # adds require-dev (do not commit the expanded vendor tree)
+```
+
+If `vendor/autoload.php` is missing (incomplete copy), restore dependencies with:
+
+```bash
+composer install --no-dev --optimize-autoloader
+```
 
 ## File permissions
 

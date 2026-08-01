@@ -1,3 +1,11 @@
+# v1.3.1
+## 08/01/2026
+
+1. [](#bugfix)
+    * Ship production Composer `vendor/` (sabre/vobject + autoload) in the repository so GPM and release ZIP installs work without running `composer install`
+2. [](#improved)
+    * Installation docs: GPM/release packages are ready to use; Composer is only required for development checkouts
+
 # v1.3.0
 ## 07/31/2026
 

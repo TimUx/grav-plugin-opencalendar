@@ -28,9 +28,15 @@ bin/gpm direct-install -y TimUx/grav-plugin-opencalendar
 
 Oder über das Admin-Panel: **Plugins → Hinzufügen** und nach OpenCalendar suchen.
 
+GPM-Pakete enthalten den Produktions-Composer-Ordner `vendor/` (`sabre/vobject` und Klassen-Autoload). Auf dem Server ist kein `composer install` nötig. Nach der Installation ggf. den Grav-Cache leeren, falls Admin-UI oder Shortcodes noch fehlen:
+
+```bash
+bin/grav cache
+```
+
 ## Manuelle Installation
 
-Bevorzugt das **Release-ZIP** von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) (dasselbe gefilterte Paket wie GPM). Es enthält nur Laufzeitdateien — nicht `docs/`, `tests/`, CI-Konfiguration oder GitHub-Community-Dateien. Die vollständige Dokumentation bleibt auf GitHub.
+Bevorzugt das **Release-ZIP** von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) (dasselbe gefilterte Paket wie GPM). Es enthält Laufzeitdateien plus Produktions-`vendor/` — nicht `docs/`, `tests/`, CI-Konfiguration oder GitHub-Community-Dateien. Die vollständige Dokumentation bleibt auf GitHub.
 
 1. Aktuelles Release-Archiv herunterladen (oder GPM / `bin/gpm direct-install` nutzen).
 
@@ -40,34 +46,33 @@ Bevorzugt das **Release-ZIP** von [GitHub Releases](https://github.com/TimUx/gra
    unzip opencalendar-*.zip -d /path/to/grav/user/plugins/opencalendar
    ```
 
-3. PHP-Abhängigkeiten installieren:
-
-   ```bash
-   cd /path/to/grav/user/plugins/opencalendar
-   composer install --no-dev --optimize-autoloader
-   ```
-
-### Entwicklungs-Checkout
-
-Repository nur zum Mitwirken klonen. Dieser Checkout enthält Docs, Tests und Tooling:
-
-```bash
-git clone https://github.com/TimUx/grav-plugin-opencalendar.git
-composer install   # inkl. require-dev
-```
-
-4. Grav-Cache leeren:
+3. Grav-Cache leeren:
 
    ```bash
    cd /path/to/grav
    bin/grav cache
    ```
 
-5. Plugin aktivieren unter **Admin → Plugins → OpenCalendar** oder in `user/config/plugins/opencalendar.yaml` eintragen:
+4. Plugin aktivieren unter **Admin → Plugins → OpenCalendar** oder in `user/config/plugins/opencalendar.yaml` eintragen:
 
    ```yaml
    enabled: true
    ```
+
+### Entwicklungs-Checkout
+
+Repository nur zum Mitwirken klonen. Dieser Checkout enthält Docs, Tests und Tooling. Der Produktions-`vendor/` liegt bereits bei; Composer ergänzt PHPUnit/PHPStan u. a.:
+
+```bash
+git clone https://github.com/TimUx/grav-plugin-opencalendar.git
+composer install   # ergänzt require-dev (erweiterten vendor-Baum nicht committen)
+```
+
+Wenn `vendor/autoload.php` fehlt (unvollständige Kopie), Abhängigkeiten so wiederherstellen:
+
+```bash
+composer install --no-dev --optimize-autoloader
+```
 
 ## Dateiberechtigungen
 
