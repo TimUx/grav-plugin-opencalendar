@@ -77,8 +77,28 @@ final class IcsParserTest extends TestCase
 
     public function testExpandsRruleAndHonoursExdate(): void
     {
-        $ics = file_get_contents(dirname(__DIR__, 2) . '/Fixtures/sample.ics');
-        self::assertIsString($ics);
+        // Keep instances inside IcsParser's expand window (now-30d … +horizon).
+        $start = new \DateTimeImmutable('tomorrow', new \DateTimeZone('UTC'));
+        $start = $start->setTime(9, 0);
+        $exdate = $start->modify('+2 days');
+        $fmt = static fn (\DateTimeImmutable $dt): string => $dt->format('Ymd\THis\Z');
+
+        $ics = <<<ICS
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenCalendar//TEST//EN
+BEGIN:VEVENT
+UID:recurring-standup@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:{$fmt($start)}
+DTEND:{$fmt($start->modify('+15 minutes'))}
+SUMMARY:Daily Standup
+RRULE:FREQ=DAILY;COUNT=5
+EXDATE:{$fmt($exdate)}
+CATEGORIES:Work
+END:VEVENT
+END:VCALENDAR
+ICS;
 
         $events = $this->parser->parse($ics, $this->config, 1);
         $standup = array_values(array_filter(
@@ -89,8 +109,9 @@ final class IcsParserTest extends TestCase
         // COUNT=5 with one EXDATE => 4 instances when expanded
         self::assertCount(4, $standup);
 
+        $excluded = $exdate->format('Y-m-d');
         foreach ($standup as $event) {
-            self::assertNotSame('2026-07-03', $event->startAt->format('Y-m-d'));
+            self::assertNotSame($excluded, $event->startAt->format('Y-m-d'));
         }
     }
 

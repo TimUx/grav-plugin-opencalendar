@@ -53,15 +53,15 @@ bin/gpm install opencalendar
 
 ### Manuell
 
-Release-ZIP von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) laden (gefiltertes Installationspaket — ohne Docs/Tests/CI), nach `user/plugins/opencalendar` entpacken, dann:
+Release-ZIP von [GitHub Releases](https://github.com/TimUx/grav-plugin-opencalendar/releases) laden (gefiltertes Installationspaket — ohne Docs/Tests/CI), nach `user/plugins/opencalendar` entpacken, dann Cache leeren:
 
 ```bash
-cd user/plugins/opencalendar
-composer install --no-dev --optimize-autoloader
 bin/grav cache
 ```
 
-Aktivieren unter **Admin → Plugins → OpenCalendar** oder `enabled: true` in der Config setzen. Git-Clone nur für die Entwicklung.
+Release- und GPM-Pakete enthalten bereits den Produktions-`vendor/`-Baum — kein Composer-Schritt auf dem Server. Git-Clone nur für die Entwicklung (`composer install` ergänzt Test-/Tooling-Deps).
+
+Aktivieren unter **Admin → Plugins → OpenCalendar** oder `enabled: true` in der Config setzen.
 
 Vollständiger Leitfaden: [docs/de/Installation.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Installation.md)
 
@@ -69,8 +69,7 @@ Vollständiger Leitfaden: [docs/de/Installation.md](https://github.com/TimUx/gra
 
 1. `user/config/plugins/opencalendar.yaml` und `data/opencalendar.db` sichern
 2. Plugin-Dateien aktualisieren (GPM oder git pull)
-3. `composer install` ausführen, wenn sich Abhängigkeiten geändert haben
-4. Cache leeren: `bin/grav cache`
+3. Cache leeren: `bin/grav cache`
 
 Schema-Migrationen laufen automatisch. Siehe [docs/de/Migration.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/Migration.md).
 

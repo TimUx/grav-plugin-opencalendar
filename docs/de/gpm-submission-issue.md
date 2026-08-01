@@ -32,6 +32,6 @@ https://www.feuerwehr-willingshausen.de/de/termine
 ## Hinweise für Reviewer
 
 * Installationspfad: `user/plugins/opencalendar`
-* Composer-Abhängigkeiten im Plugin-Ordner erforderlich (`composer install --no-dev`) — primär `sabre/vobject`
+* Enthält Produktions-Composer-`vendor/` (primär `sabre/vobject`); bei GPM-Installationen kein `composer install` auf dem Server nötig
 * SQLite + PDO-SQLite-Erweiterung erforderlich
 * Docs: https://github.com/TimUx/grav-plugin-opencalendar/tree/main/docs
