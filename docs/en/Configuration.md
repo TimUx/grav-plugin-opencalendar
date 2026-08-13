@@ -41,12 +41,12 @@ Disable caching during development to see changes immediately. In production, ke
 
 ```yaml
 storage:
-  path: data/opencalendar.db
+  path: user-data://opencalendar/opencalendar.db
   wal_mode: true
   vacuum_on_cleanup: false
 ```
 
-Use an absolute path if the database should live outside the plugin directory (e.g. on a persistent volume).
+Always keep the database under Grav `user/data/` (or another absolute path **outside** the plugin tree). Paths inside `user/plugins/opencalendar/` break GPM uninstall/reinstall and are auto-migrated away on boot.
 
 ## Sources
 
@@ -57,7 +57,7 @@ Each source entry supports:
 | `name` | Display name in Admin and frontend badges |
 | `enabled` | Skip sync when `false` |
 | `type` | `ics`, `caldav`, `json`, or `local` |
-| `url` | Remote URL, plugin-relative path (e.g. `data/file.ics`), or `uploads/…` for Admin-uploaded files |
+| `url` | Remote URL, or path under `user/data/opencalendar/` (e.g. `uploads/…` for Admin-uploaded files) |
 | `refresh` | `inherit` or minutes/`daily` override |
 | `color` | Hex color for calendar rendering |
 | `description` | Optional admin note |

@@ -73,7 +73,7 @@ PLUGIN_OPENCALENDAR:
   PARSE_CACHE_TTL: TTL du cache d’analyse (secondes)
   PARSE_CACHE_TTL_HELP: Réutiliser ICS/JSON analysés entre les syncs pour réduire le CPU.
   STORAGE_PATH: Chemin de la base
-  STORAGE_PATH_HELP: 'Préférez user-data://opencalendar/opencalendar.db (données Grav accessibles en écriture).'
+  STORAGE_PATH_HELP: 'Préférez user-data://opencalendar/opencalendar.db (données Grav). N’utilisez pas de chemins dans le dossier du plugin.'
   WAL_MODE: Mode WAL SQLite
   WAL_MODE_HELP: WAL améliore la concurrence en lecture. Recommandé en production.
   VACUUM_ON_CLEANUP: VACUUM au nettoyage
@@ -90,7 +90,7 @@ PLUGIN_OPENCALENDAR:
   SOURCE_TYPE_JSON: API JSON
   SOURCE_TYPE_LOCAL: Fichier local
   SOURCE_URL: URL ou chemin
-  SOURCE_URL_HELP: URL distante pour ICS/CalDAV/JSON, ou chemin relatif pour les sources locales.
+  SOURCE_URL_HELP: 'URL distante pour ICS/CalDAV/JSON, ou chemin sous user/data/opencalendar/ (ex. uploads/fichier.ics).'
   SOURCE_REFRESH: Intervalle de rafraîchissement
   SOURCE_REFRESH_HELP: Remplace l’intervalle global pour cette source, ou hérite de la valeur par défaut.
   REFRESH_INHERIT: Hériter de l’intervalle global

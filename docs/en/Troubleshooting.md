@@ -50,15 +50,33 @@ Solutions for common OpenCalendar problems.
 **Symptoms:** `ERROR_STORAGE` in logs.
 
 ```bash
-# Fix permissions
-chown -R www-data:www-data user/plugins/opencalendar/data
-chmod 775 user/plugins/opencalendar/data
+# Fix permissions (data lives under user/data, not the plugin folder)
+chown -R www-data:www-data user/data/opencalendar
+chmod 775 user/data/opencalendar
 
 # Integrity check
-sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
+sqlite3 user/data/opencalendar/opencalendar.db "PRAGMA integrity_check;"
 ```
 
 If corrupt, rename DB file and re-sync. See [SQLite.md](SQLite.md).
+
+## GPM: `rmdir … Directory not empty`
+
+**Symptoms:** After upgrade/uninstall, reinstall fails with `rmdir(.../user/plugins/opencalendar): Directory not empty`.
+
+**Cause:** Older installs kept SQLite or calendar files under `user/plugins/opencalendar/data/`. GPM only removes packaged files; leftovers block `rmdir()`.
+
+**Since 1.3.2:** OpenCalendar auto-migrates those files to `user/data/opencalendar/` and keeps the plugin tree software-only.
+
+**Immediate fix on older versions:**
+
+```bash
+# optional backup
+cp -a user/plugins/opencalendar/data /tmp/opencalendar-data-backup 2>/dev/null
+rm -rf user/plugins/opencalendar
+bin/gpm install opencalendar
+bin/grav cache
+```
 
 ## Admin upload fails
 

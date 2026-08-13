@@ -24,10 +24,10 @@ cleanup: 30
 sync_interval: 15
 
 storage:
-  # Prefer Grav user data (writable). Legacy plugin-relative paths still work.
-  # Examples:
-  #   user-data://opencalendar/opencalendar.db
-  #   data/opencalendar.db   (relative to plugin directory)
+  # Always under Grav user/data — never under user/plugins/opencalendar.
+  # Runtime files in the plugin tree break GPM uninstall/reinstall (rmdir not empty).
+  # Legacy plugin-relative paths are auto-migrated to user-data on boot.
+  # Example: user-data://opencalendar/opencalendar.db
   path: user-data://opencalendar/opencalendar.db
   # WAL mode improves concurrent read performance
   wal_mode: true

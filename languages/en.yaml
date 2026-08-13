@@ -82,7 +82,7 @@ PLUGIN_OPENCALENDAR:
 
   # Storage
   STORAGE_PATH: Database path
-  STORAGE_PATH_HELP: 'Preferred: user-data://opencalendar/opencalendar.db (writable Grav user data). Plugin-relative paths like data/opencalendar.db still work but need write permissions for the web server.'
+  STORAGE_PATH_HELP: 'Must stay under Grav user data, e.g. user-data://opencalendar/opencalendar.db. Plugin-directory paths are auto-migrated and no longer used (they break GPM uninstall/reinstall).'
   WAL_MODE: SQLite WAL mode
   WAL_MODE_HELP: 'Write-Ahead Logging improves read concurrency. Recommended for production.'
   VACUUM_ON_CLEANUP: VACUUM on cleanup
@@ -95,13 +95,13 @@ PLUGIN_OPENCALENDAR:
   SOURCE_NAME: Name
   SOURCE_ENABLED: Enabled
   SOURCE_TYPE: Type
-  SOURCE_TYPE_HELP: 'ICS for public feeds, CalDAV for authenticated servers, JSON for custom APIs, local for files under the plugin or Admin uploads folder.'
+  SOURCE_TYPE_HELP: 'ICS for public feeds, CalDAV for authenticated servers, JSON for custom APIs, local for files under user/data/opencalendar/ (Admin uploads).'
   SOURCE_TYPE_ICS: ICS (iCalendar)
   SOURCE_TYPE_CALDAV: CalDAV
   SOURCE_TYPE_JSON: JSON API
   SOURCE_TYPE_LOCAL: Local file
   SOURCE_URL: URL or path
-  SOURCE_URL_HELP: 'Remote URL for ICS/CalDAV/JSON, relative path under the plugin (e.g. data/file.ics), or uploads/… for Admin-uploaded files.'
+  SOURCE_URL_HELP: 'Remote URL for ICS/CalDAV/JSON, or a path under user/data/opencalendar/ (e.g. uploads/file.ics). Do not store files inside user/plugins/opencalendar/.'
   SOURCE_REFRESH: Refresh interval
   SOURCE_REFRESH_HELP: 'Override global sync interval for this source, or inherit the default.'
   REFRESH_INHERIT: Inherit global interval

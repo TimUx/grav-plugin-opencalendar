@@ -40,7 +40,7 @@ OpenCalendar follows a layered architecture designed for Grav CMS integration, t
 | `classes/Api/` | JSON API serializers and route definitions |
 | `templates/` | Twig templates and partials |
 | `assets/` | CSS, JS, vendored frontend libraries |
-| `data/` | Default SQLite location (gitignored at runtime) |
+| *(runtime)* | SQLite + uploads live under `user/data/opencalendar/` — never in the plugin tree |
 
 ## Namespace
 

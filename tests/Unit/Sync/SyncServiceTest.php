@@ -32,9 +32,24 @@ final class SyncServiceTest extends TestCase
     {
         $this->dbPath = sys_get_temp_dir() . '/opencalendar-sync-' . uniqid('', true) . '.db';
         $this->icsPath = sys_get_temp_dir() . '/opencalendar-' . uniqid('', true) . '.ics';
-        $fixture = dirname(__DIR__, 2) . '/Fixtures/sample.ics';
-        self::assertFileExists($fixture);
-        copy($fixture, $this->icsPath);
+
+        $tz = new \DateTimeZone('UTC');
+        $start = (new \DateTimeImmutable('tomorrow', $tz))->setTime(10, 0);
+        $fmt = static fn (\DateTimeImmutable $dt): string => $dt->format('Ymd\THis\Z');
+        $ics = <<<ICS
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenCalendar//TEST//EN
+BEGIN:VEVENT
+UID:sync-meeting@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:{$fmt($start)}
+DTEND:{$fmt($start->modify('+1 hour'))}
+SUMMARY:Sync Fixture Meeting
+END:VEVENT
+END:VCALENDAR
+ICS;
+        file_put_contents($this->icsPath, $ics);
     }
 
     protected function tearDown(): void

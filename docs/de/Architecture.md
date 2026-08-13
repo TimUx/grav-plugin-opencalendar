@@ -40,7 +40,7 @@ OpenCalendar folgt einer geschichteten Architektur, die für die Integration in 
 | `classes/Api/` | JSON-API-Serialisierer und Routendefinitionen |
 | `templates/` | Twig-Vorlagen und Partials |
 | `assets/` | CSS, JS, eingebundene Frontend-Bibliotheken |
-| `data/` | Standard-Speicherort für SQLite (zur Laufzeit gitignored) |
+| *(Laufzeit)* | SQLite + Uploads unter `user/data/opencalendar/` — nie im Plugin-Baum |
 
 ## Namespace
 

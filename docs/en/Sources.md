@@ -17,7 +17,7 @@ OpenCalendar aggregates events from multiple source types. Each source is define
 | `description` | No | Admin-only notes |
 | `auth` | No | Authentication block |
 
-*Local sources use a path relative to allowed base directories (`user/data/opencalendar/` for Admin uploads, or the plugin root for `data/…` files).
+*Local sources use a path relative to `user/data/opencalendar/` (Admin uploads and manually placed files).
 
 ## ICS (iCalendar)
 
@@ -98,25 +98,25 @@ Bearer tokens may also be placed in `auth.password` for Admin forms that only ex
 
 ## Local
 
-For ICS or JSON files under the allowed local base paths (plugin tree and `user/data/opencalendar/`).
+For ICS or JSON files under `user/data/opencalendar/` (e.g. Admin uploads).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'data/static-schedule.ics'
+  url: 'uploads/static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-- Paths are resolved relative to an allowed base directory and cannot escape those roots
+- Paths are resolved relative to `user/data/opencalendar/` and cannot escape that root
 - `.ics` / `.ical` → ICS parser
 - `.json` → JSON parser
 - Content sniffing is used when the extension is ambiguous
 
-Place files under `user/plugins/opencalendar/data/` **or** use Admin upload (below).
+Do **not** place files under `user/plugins/opencalendar/` — that blocks GPM updates. Use Admin upload or put files under `user/data/opencalendar/`.
 
 ## Admin upload
 

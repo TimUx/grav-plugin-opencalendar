@@ -863,6 +863,7 @@ class OpenCalendarPlugin extends Plugin
             logger: $logger,
             userDataPath: $userDataPath,
             dispatcher: new GravEventDispatcher($this->grav),
+            configFilePath: $this->resolvePluginConfigPath(),
         );
 
         return $this->container;
