@@ -317,7 +317,8 @@ final class Container
                     $fileConfig['storage']['path'] = self::CANONICAL_STORAGE;
                 }
 
-                if ($result['sources_rewritten'] > 0 && isset($this->config['sources']) && is_array($this->config['sources'])) {
+                $hasSources = isset($this->config['sources']) && is_array($this->config['sources']);
+                if ($result['sources_rewritten'] > 0 && $hasSources) {
                     // Prefer rewritten source URLs from the migrated in-memory config when keys match.
                     $rewrittenByKey = [];
                     foreach ($this->config['sources'] as $row) {

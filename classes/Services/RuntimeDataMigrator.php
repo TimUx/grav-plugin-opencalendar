@@ -190,9 +190,9 @@ final class RuntimeDataMigrator
 
         // Common historical default.
         $fallback = $this->pluginDataRoot() . '/opencalendar.db';
-        if (($configured === 'data/opencalendar.db' || str_ends_with($configured, 'opencalendar.db'))
-            && is_file($fallback)
-        ) {
+        $looksLikeLegacyDb = $configured === 'data/opencalendar.db'
+            || str_ends_with($configured, 'opencalendar.db');
+        if ($looksLikeLegacyDb && is_file($fallback)) {
             return $fallback;
         }
 
@@ -339,7 +339,10 @@ final class RuntimeDataMigrator
 
             if ($this->isAbsolutePath($path) && $this->isPathInsidePlugin($path)) {
                 $relative = $this->relativeFrom($pluginData, $path);
-                if ($relative !== basename($path) || str_starts_with(str_replace('\\', '/', $path), str_replace('\\', '/', $pluginData))) {
+                $pathNorm = str_replace('\\', '/', $path);
+                $dataNorm = str_replace('\\', '/', $pluginData);
+                $underData = str_starts_with($pathNorm, $dataNorm);
+                if ($relative !== basename($path) || $underData) {
                     $sources[$index]['url'] = str_replace('\\', '/', $relative);
                 } else {
                     $sources[$index]['url'] = basename($path);
