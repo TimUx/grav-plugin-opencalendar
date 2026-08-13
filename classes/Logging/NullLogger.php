@@ -6,6 +6,10 @@ namespace Grav\Plugin\OpenCalendar\Logging;
 
 final class NullLogger implements LoggerInterface
 {
+    public function info(string $message, array $context = []): void
+    {
+    }
+
     public function warning(string $message, array $context = []): void
     {
     }

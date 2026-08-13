@@ -78,15 +78,17 @@ composer install --no-dev --optimize-autoloader
 
 Der Webserver muss Schreibrechte haben für:
 
-- `user/plugins/opencalendar/data/` (SQLite-Datenbank)
+- `user/data/opencalendar/` (SQLite-Datenbank und Uploads)
 - `logs/` (Plugin-Logdatei, wenn konfiguriert)
 
 Beispiel:
 
 ```bash
-chown -R www-data:www-data user/plugins/opencalendar/data
-chmod 775 user/plugins/opencalendar/data
+chown -R www-data:www-data user/data/opencalendar
+chmod 775 user/data/opencalendar
 ```
+
+Keine Laufzeitdateien unter `user/plugins/opencalendar/` ablegen — das verhindert saubere GPM-Deinstallation/Updates.
 
 ## Installation prüfen
 

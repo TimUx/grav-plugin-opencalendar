@@ -15,16 +15,11 @@ storage:
   path: user-data://opencalendar/opencalendar.db
 ```
 
-`user-data://` resolves to Grav’s writable `user/data/` directory (recommended).
+`user-data://` resolves to Grav’s writable `user/data/` directory.
 
-Legacy plugin-relative paths still work:
+Do **not** store the database under `user/plugins/opencalendar/`. Runtime files there break GPM uninstall/reinstall (`rmdir … Directory not empty`). Legacy plugin-relative paths (e.g. `data/opencalendar.db`) are auto-migrated to `user-data://opencalendar/opencalendar.db` on boot.
 
-```yaml
-storage:
-  path: data/opencalendar.db
-```
-
-Those require the web server user (e.g. `www-data`) to own `user/plugins/opencalendar/data/`. Absolute paths are also supported for custom volumes.
+Absolute paths outside the plugin tree remain supported for custom volumes.
 
 ## Schema overview
 
@@ -62,7 +57,7 @@ Never edit the database manually in production unless following a documented rec
 Include the database in your site backup strategy:
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db ".backup backup/opencalendar-$(date +%F).db"
+sqlite3 user/data/opencalendar/opencalendar.db ".backup backup/opencalendar-$(date +%F).db"
 ```
 
 Or copy the file while Grav is idle / plugin disabled.
@@ -80,13 +75,13 @@ When `storage.vacuum_on_cleanup` is enabled, SQLite reclaims free pages after cl
 Manual vacuum:
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db "VACUUM;"
+sqlite3 user/data/opencalendar/opencalendar.db "VACUUM;"
 ```
 
 ### Integrity check
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
+sqlite3 user/data/opencalendar/opencalendar.db "PRAGMA integrity_check;"
 ```
 
 ## Permissions
@@ -94,8 +89,8 @@ sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
 The web server user needs read/write on the database file and directory:
 
 ```bash
-chmod 775 user/plugins/opencalendar/data
-chown www-data:www-data user/plugins/opencalendar/data/opencalendar.db
+chmod 775 user/data/opencalendar
+chown www-data:www-data user/data/opencalendar/opencalendar.db
 ```
 
 ## Size expectations

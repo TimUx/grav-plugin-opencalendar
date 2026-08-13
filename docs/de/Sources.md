@@ -17,7 +17,7 @@ OpenCalendar aggregiert Ereignisse aus mehreren Quelltypen. Jede Quelle wird im 
 | `description` | Nein | Nur für Admins sichtbare Notizen |
 | `auth` | Nein | Authentifizierungsblock |
 
-*Lokale Quellen verwenden einen Pfad relativ zu erlaubten Basisverzeichnissen (`user/data/opencalendar/` für Admin-Uploads oder Plugin-Stamm für `data/…`).
+*Lokale Quellen verwenden einen Pfad relativ zu `user/data/opencalendar/` (Admin-Uploads und manuell abgelegte Dateien).
 
 ## ICS (iCalendar)
 
@@ -98,25 +98,25 @@ Bearer-Tokens können auch in `auth.password` stehen, wenn Admin-Formulare nur e
 
 ## Local
 
-Für ICS- oder JSON-Dateien unter den erlaubten lokalen Basispfaden (Plugin-Baum und `user/data/opencalendar/`).
+Für ICS- oder JSON-Dateien unter `user/data/opencalendar/` (z. B. Admin-Uploads).
 
 ```yaml
 - name: Static Schedule
   enabled: true
   type: local
-  url: 'data/static-schedule.ics'
+  url: 'uploads/static-schedule.ics'
   refresh: daily
   color: '#FF9800'
   auth:
     type: none
 ```
 
-- Pfade werden relativ zu einem erlaubten Basisverzeichnis aufgelöst und können diese Roots nicht verlassen
+- Pfade werden relativ zu `user/data/opencalendar/` aufgelöst und können dieses Root nicht verlassen
 - `.ics` / `.ical` → ICS-Parser
 - `.json` → JSON-Parser
 - Content Sniffing wird verwendet, wenn die Erweiterung mehrdeutig ist
 
-Dateien unter `user/plugins/opencalendar/data/` ablegen **oder** den Admin-Upload nutzen (unten).
+Dateien **nicht** unter `user/plugins/opencalendar/` ablegen — das blockiert GPM-Updates. Stattdessen Admin-Upload nutzen oder Dateien nach `user/data/opencalendar/` legen.
 
 ## Admin-Upload
 

@@ -15,16 +15,11 @@ storage:
   path: user-data://opencalendar/opencalendar.db
 ```
 
-`user-data://` wird auf Gravs beschreibbares `user/data/`-Verzeichnis aufgelöst (empfohlen).
+`user-data://` wird auf Gravs beschreibbares `user/data/`-Verzeichnis aufgelöst.
 
-Legacy plugin-relative Pfade funktionieren weiterhin:
+Die Datenbank **nicht** unter `user/plugins/opencalendar/` ablegen. Laufzeitdateien dort brechen GPM-Deinstallation/Neuinstallation (`rmdir … Directory not empty`). Legacy plugin-relative Pfade (z. B. `data/opencalendar.db`) werden beim Boot automatisch nach `user-data://opencalendar/opencalendar.db` migriert.
 
-```yaml
-storage:
-  path: data/opencalendar.db
-```
-
-Dafür muss der Webserver-Benutzer (z. B. `www-data`) `user/plugins/opencalendar/data/` besitzen. Absolute Pfade werden für eigene Volumes ebenfalls unterstützt.
+Absolute Pfade außerhalb des Plugin-Baums bleiben für eigene Volumes unterstützt.
 
 ## Schema-Überblick
 
@@ -62,7 +57,7 @@ Die Datenbank in Produktion niemals manuell bearbeiten, außer gemäß dokumenti
 Die Datenbank in Ihre Site-Backup-Strategie einbeziehen:
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db ".backup backup/opencalendar-$(date +%F).db"
+sqlite3 user/data/opencalendar/opencalendar.db ".backup backup/opencalendar-$(date +%F).db"
 ```
 
 Oder die Datei kopieren, während Grav im Leerlauf ist / das Plugin deaktiviert ist.
@@ -80,13 +75,13 @@ Wenn `storage.vacuum_on_cleanup` aktiviert ist, gibt SQLite nach der Bereinigung
 Manuelles Vacuum:
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db "VACUUM;"
+sqlite3 user/data/opencalendar/opencalendar.db "VACUUM;"
 ```
 
 ### Integritätsprüfung
 
 ```bash
-sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
+sqlite3 user/data/opencalendar/opencalendar.db "PRAGMA integrity_check;"
 ```
 
 ## Berechtigungen
@@ -94,8 +89,8 @@ sqlite3 user/plugins/opencalendar/data/opencalendar.db "PRAGMA integrity_check;"
 Der Webserver-Benutzer benötigt Lese-/Schreibzugriff auf Datei und Verzeichnis der Datenbank:
 
 ```bash
-chmod 775 user/plugins/opencalendar/data
-chown www-data:www-data user/plugins/opencalendar/data/opencalendar.db
+chmod 775 user/data/opencalendar
+chown www-data:www-data user/data/opencalendar/opencalendar.db
 ```
 
 ## Größenerwartungen

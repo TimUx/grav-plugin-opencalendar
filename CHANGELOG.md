@@ -1,3 +1,11 @@
+# v1.3.2
+## 08/13/2026
+
+1. [](#improved)
+    * Keep the plugin directory software-only: runtime SQLite and local calendar files live under `user/data/opencalendar/`
+    * Auto-migrate legacy `user/plugins/opencalendar/data/` files and rewrite `storage.path` / local source URLs on boot
+    * Local sources may only resolve under `user/data/opencalendar/` (Admin uploads), never under the plugin tree — prevents GPM `rmdir … Directory not empty` on uninstall/reinstall
+
 # v1.3.1
 ## 08/01/2026
 

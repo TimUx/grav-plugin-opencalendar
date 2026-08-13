@@ -41,12 +41,12 @@ Cache während der Entwicklung deaktivieren, um Änderungen sofort zu sehen. In 
 
 ```yaml
 storage:
-  path: data/opencalendar.db
+  path: user-data://opencalendar/opencalendar.db
   wal_mode: true
   vacuum_on_cleanup: false
 ```
 
-Einen absoluten Pfad verwenden, wenn die Datenbank außerhalb des Plugin-Verzeichnisses liegen soll (z. B. auf einem persistenten Volume).
+Die Datenbank immer unter Grav `user/data/` halten (oder einen absoluten Pfad **außerhalb** des Plugin-Baums). Pfade in `user/plugins/opencalendar/` brechen GPM-Deinstallation/Neuinstallation und werden beim Boot automatisch migriert.
 
 ## Quellen
 
@@ -57,7 +57,7 @@ Jeder Quelleneintrag unterstützt:
 | `name` | Anzeigename in Admin und Frontend-Badges |
 | `enabled` | Sync überspringen, wenn `false` |
 | `type` | `ics`, `caldav`, `json` oder `local` |
-| `url` | Remote-URL, Plugin-relativer Pfad (z. B. `data/file.ics`) oder `uploads/…` für Admin-Uploads |
+| `url` | Remote-URL oder Pfad unter `user/data/opencalendar/` (z. B. `uploads/…` für Admin-Uploads) |
 | `refresh` | `inherit` oder Minuten/`daily`-Überschreibung |
 | `color` | Hex-Farbe für die Kalenderdarstellung |
 | `description` | Optionale Admin-Notiz |

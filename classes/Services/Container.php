@@ -26,28 +26,37 @@ use Grav\Plugin\OpenCalendar\Sync\SyncService;
  */
 final class Container
 {
+    private const CANONICAL_STORAGE = 'user-data://opencalendar/opencalendar.db';
+
     private ?Database $database = null;
     private ?CalendarService $calendarService = null;
     private ?CacheService $cacheService = null;
     private ?SyncService $syncService = null;
-    private bool $migrated = false;
+    private bool $schemaMigrated = false;
+    private bool $runtimeMigrated = false;
+
+    /** @var array<string, mixed> */
+    private array $config;
 
     /**
      * @param array<string, mixed> $config
      */
     public function __construct(
-        private readonly array $config,
+        array $config,
         private readonly string $pluginPath,
         private readonly mixed $gravCache = null,
         private readonly LoggerInterface $logger = new NullLogger(),
         private readonly ?HttpClientInterface $httpClient = null,
         private readonly ?string $userDataPath = null,
         private readonly EventDispatcherInterface $dispatcher = new NullEventDispatcher(),
+        private readonly ?string $configFilePath = null,
     ) {
+        $this->config = $config;
     }
 
     public function boot(): void
     {
+        $this->ensureRuntimeDataOutsidePlugin();
         $this->database();
         $this->migrate();
     }
@@ -58,7 +67,9 @@ final class Container
             return $this->database;
         }
 
-        $configured = (string) ($this->config['storage']['path'] ?? 'user-data://opencalendar/opencalendar.db');
+        $this->ensureRuntimeDataOutsidePlugin();
+
+        $configured = (string) ($this->config['storage']['path'] ?? self::CANONICAL_STORAGE);
         $path = $this->resolvePath($configured);
         $wal = (bool) ($this->config['storage']['wal_mode'] ?? true);
 
@@ -69,7 +80,7 @@ final class Container
 
     public function migrate(): void
     {
-        if ($this->migrated) {
+        if ($this->schemaMigrated) {
             return;
         }
 
@@ -78,7 +89,7 @@ final class Container
             $this->pluginPath . '/classes/Storage/Migrations'
         );
         $migrator->migrate();
-        $this->migrated = true;
+        $this->schemaMigrated = true;
     }
 
     public function cache(): CacheService
@@ -143,18 +154,15 @@ final class Container
     }
 
     /**
-     * Allowed filesystem roots for type=local sources (uploads + plugin tree).
+     * Allowed filesystem roots for type=local sources (user data only — never the plugin tree).
      *
      * @return list<string>
      */
     public function localSourceBases(): array
     {
-        $bases = [
-            rtrim($this->userDataRoot(), '/') . '/opencalendar',
-            rtrim($this->pluginPath, '/'),
-        ];
+        $base = rtrim($this->userDataRoot(), '/') . '/opencalendar';
 
-        return array_values(array_unique(array_filter($bases, static fn (string $b): bool => $b !== '')));
+        return $base !== '/opencalendar' ? [$base] : [];
     }
 
     private function userDataRoot(): string
@@ -265,11 +273,97 @@ final class Container
         return array_key_exists('sources', $this->config);
     }
 
+    /**
+     * Move legacy runtime files out of the plugin directory and rewrite config paths.
+     */
+    private function ensureRuntimeDataOutsidePlugin(): void
+    {
+        if ($this->runtimeMigrated) {
+            return;
+        }
+        $this->runtimeMigrated = true;
+
+        $migrator = new RuntimeDataMigrator(
+            $this->pluginPath,
+            $this->userDataRoot(),
+            $this->logger,
+        );
+
+        $result = $migrator->migrate($this->config);
+        $this->config = $result['config'];
+
+        // Always canonicalize plugin-relative storage to user-data after migration attempt.
+        $storagePath = trim((string) ($this->config['storage']['path'] ?? ''));
+        if ($storagePath === '' || $migrator->isPluginRelativeStorage($storagePath)) {
+            if (!isset($this->config['storage']) || !is_array($this->config['storage'])) {
+                $this->config['storage'] = [];
+            }
+            $this->config['storage']['path'] = self::CANONICAL_STORAGE;
+            $result['storage_rewritten'] = true;
+            $result['migrated'] = true;
+        }
+
+        if (!$result['migrated'] || $this->configFilePath === null || $this->configFilePath === '') {
+            return;
+        }
+
+        try {
+            $patcher = new PluginConfigPatcher($this->configFilePath);
+            $patcher->patch(function (array $fileConfig) use ($result): array {
+                if ($result['storage_rewritten']) {
+                    if (!isset($fileConfig['storage']) || !is_array($fileConfig['storage'])) {
+                        $fileConfig['storage'] = [];
+                    }
+                    $fileConfig['storage']['path'] = self::CANONICAL_STORAGE;
+                }
+
+                if ($result['sources_rewritten'] > 0 && isset($this->config['sources']) && is_array($this->config['sources'])) {
+                    // Prefer rewritten source URLs from the migrated in-memory config when keys match.
+                    $rewrittenByKey = [];
+                    foreach ($this->config['sources'] as $row) {
+                        if (!is_array($row)) {
+                            continue;
+                        }
+                        $name = trim((string) ($row['name'] ?? ''));
+                        if ($name === '') {
+                            continue;
+                        }
+                        $rewrittenByKey[SourceConfig::slugify($name)] = $row;
+                    }
+
+                    $sources = ConfigNormalizer::toArray($fileConfig['sources'] ?? []);
+                    foreach ($sources as $index => $row) {
+                        if (!is_array($row)) {
+                            continue;
+                        }
+                        $name = trim((string) ($row['name'] ?? ''));
+                        if ($name === '') {
+                            continue;
+                        }
+                        $key = SourceConfig::slugify($name);
+                        if (!isset($rewrittenByKey[$key])) {
+                            continue;
+                        }
+                        $newUrl = trim((string) ($rewrittenByKey[$key]['url'] ?? ''));
+                        if ($newUrl !== '' && $newUrl !== trim((string) ($row['url'] ?? ''))) {
+                            $sources[$index]['url'] = $newUrl;
+                        }
+                    }
+                    $fileConfig['sources'] = array_values($sources);
+                }
+
+                return $fileConfig;
+            });
+        } catch (\Throwable $e) {
+            $this->logger->warning('OpenCalendar could not persist migrated paths to config: ' . $e->getMessage());
+        }
+    }
+
     private function resolvePath(string $path): string
     {
         $path = trim($path);
         if ($path === '') {
-            $path = 'user-data://opencalendar/opencalendar.db';
+            $path = self::CANONICAL_STORAGE;
         }
 
         if (str_starts_with($path, 'user-data://')) {
@@ -279,10 +373,21 @@ final class Container
         }
 
         if ($path[0] === '/' || preg_match('#^[A-Za-z]:[/\\\\]#', $path) === 1) {
+            // Absolute paths inside the plugin tree are not writable storage anymore.
+            $migrator = new RuntimeDataMigrator($this->pluginPath, $this->userDataRoot(), $this->logger);
+            if ($migrator->isPathInsidePlugin($path)) {
+                return rtrim($this->userDataRoot(), '/') . '/opencalendar/opencalendar.db';
+            }
+
             return $path;
         }
 
-        // Legacy relative paths remain under the plugin directory.
-        return rtrim($this->pluginPath, '/') . '/' . ltrim($path, '/');
+        // Relative paths historically lived under the plugin; keep them under user data.
+        $relative = ltrim(str_replace('\\', '/', $path), '/');
+        if (str_starts_with($relative, 'data/')) {
+            $relative = substr($relative, strlen('data/'));
+        }
+
+        return rtrim($this->userDataRoot(), '/') . '/opencalendar/' . ltrim($relative, '/');
     }
 }

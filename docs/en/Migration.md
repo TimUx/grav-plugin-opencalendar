@@ -19,7 +19,7 @@ Always read [CHANGELOG.md](../../CHANGELOG.md) before upgrading.
 1. Back up the SQLite database:
 
    ```bash
-   cp user/plugins/opencalendar/data/opencalendar.db ~/backup/opencalendar.db
+   cp user/data/opencalendar/opencalendar.db ~/backup/opencalendar.db
    ```
 
 2. Back up site config:
@@ -59,9 +59,9 @@ If migration fails:
 ## Moving between servers
 
 1. Copy `user/config/plugins/opencalendar.yaml`
-2. Copy `user/plugins/opencalendar/data/opencalendar.db` (or re-sync from sources)
+2. Copy `user/data/opencalendar/opencalendar.db` (or re-sync from sources)
 3. Ensure PHP extensions are available; release packages already include `vendor/`
-4. Fix file permissions on `data/`
+4. Fix file permissions on `user/data/opencalendar/`
 
 Alternatively, omit the database and trigger a full re-sync — suitable when sources are authoritative.
 

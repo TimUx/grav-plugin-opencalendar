@@ -13,6 +13,11 @@ final class BridgeLogger implements LoggerInterface
     {
     }
 
+    public function info(string $message, array $context = []): void
+    {
+        $this->log('info', $message, $context);
+    }
+
     public function warning(string $message, array $context = []): void
     {
         $this->log('warning', $message, $context);

@@ -95,19 +95,16 @@ final class AdditionalSourcesTest extends TestCase
         $source->fetch($config);
     }
 
-    public function testLocalSourceReadsFromSecondaryBase(): void
+    public function testLocalSourceReadsFromUserDataBaseOnly(): void
     {
         $uploads = $this->tmpDir . '/opencalendar/uploads';
         mkdir($uploads, 0777, true);
         $file = $uploads . '/feed.ics';
         file_put_contents($file, "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:u1\r\nDTSTART:20260801T100000Z\r\nSUMMARY:Upload\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n");
 
-        $pluginBase = $this->tmpDir . '/plugin';
-        mkdir($pluginBase, 0777, true);
-
         $source = new LocalSource(
             $this->unusedHttp(),
-            [$this->tmpDir . '/opencalendar', $pluginBase],
+            [$this->tmpDir . '/opencalendar'],
             new IcsParser('UTC'),
             new JsonParser('UTC'),
         );
@@ -117,6 +114,25 @@ final class AdditionalSourcesTest extends TestCase
 
         self::assertCount(1, $events);
         self::assertSame('Upload', $events[0]->title);
+    }
+
+    public function testLocalSourceRejectsPluginTreeAbsolutePath(): void
+    {
+        $plugin = $this->tmpDir . '/plugin';
+        mkdir($plugin . '/data', 0777, true);
+        $file = $plugin . '/data/secret.ics';
+        file_put_contents($file, "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+
+        $source = new LocalSource(
+            $this->unusedHttp(),
+            [$this->tmpDir . '/opencalendar'],
+            new IcsParser('UTC'),
+            new JsonParser('UTC'),
+        );
+        $config = $this->config('plugin-file', SourceType::Local, $file);
+
+        $this->expectException(\RuntimeException::class);
+        $source->fetch($config);
     }
 
     public function testCalDavSourceParsesMultistatusCalendarData(): void

@@ -6,7 +6,6 @@
 /.vscode/
 *.sqlite
 *.sqlite3
-/data/*.db
 /.phpunit.cache/
 /.phpunit.result.cache/
 /phpstan.neon.cache/

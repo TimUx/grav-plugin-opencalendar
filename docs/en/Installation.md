@@ -78,15 +78,17 @@ composer install --no-dev --optimize-autoloader
 
 Ensure the web server can write to:
 
-- `user/plugins/opencalendar/data/` (SQLite database)
+- `user/data/opencalendar/` (SQLite database and uploads)
 - `logs/` (plugin log file when configured)
 
 Example:
 
 ```bash
-chown -R www-data:www-data user/plugins/opencalendar/data
-chmod 775 user/plugins/opencalendar/data
+chown -R www-data:www-data user/data/opencalendar
+chmod 775 user/data/opencalendar
 ```
+
+Do not place runtime files under `user/plugins/opencalendar/` — that blocks clean GPM uninstall/updates.
 
 ## Verify installation
 

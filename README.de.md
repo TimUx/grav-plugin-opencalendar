@@ -67,7 +67,7 @@ Vollständiger Leitfaden: [docs/de/Installation.md](https://github.com/TimUx/gra
 
 ## Aktualisieren
 
-1. `user/config/plugins/opencalendar.yaml` und `data/opencalendar.db` sichern
+1. `user/config/plugins/opencalendar.yaml` und `user/data/opencalendar/opencalendar.db` sichern
 2. Plugin-Dateien aktualisieren (GPM oder git pull)
 3. Cache leeren: `bin/grav cache`
 
@@ -155,7 +155,7 @@ Leitfaden: [docs/de/Synchronization.md](https://github.com/TimUx/grav-plugin-ope
 
 ## SQLite
 
-Termine liegen in `data/opencalendar.db` mit WAL-Modus, FTS5-Suche und automatischen Schema-Migrationen.
+Termine liegen in `user/data/opencalendar/opencalendar.db` mit WAL-Modus, FTS5-Suche und automatischen Schema-Migrationen.
 
 Leitfaden: [docs/de/SQLite.md](https://github.com/TimUx/grav-plugin-opencalendar/blob/main/docs/de/SQLite.md)
 
