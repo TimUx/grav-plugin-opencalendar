@@ -28,7 +28,52 @@ final class IntegrationApiTwigTest extends TestCase
         $this->pluginPath = dirname(__DIR__, 3);
         $this->dbPath = sys_get_temp_dir() . '/opencalendar-api-' . uniqid('', true) . '.db';
         $this->icsPath = sys_get_temp_dir() . '/opencalendar-api-' . uniqid('', true) . '.ics';
-        copy($this->pluginPath . '/tests/Fixtures/sample.ics', $this->icsPath);
+
+        // Keep instances inside the parser expand window (now-30d … +horizon).
+        $tz = new \DateTimeZone('UTC');
+        $meeting = (new \DateTimeImmutable('tomorrow', $tz))->setTime(10, 0);
+        $holiday = (new \DateTimeImmutable('+5 days', $tz))->setTime(0, 0);
+        $standup = (new \DateTimeImmutable('tomorrow', $tz))->setTime(9, 0);
+        $exdate = $standup->modify('+2 days');
+        $fmt = static fn (\DateTimeImmutable $dt): string => $dt->format('Ymd\THis\Z');
+        $day = static fn (\DateTimeImmutable $dt): string => $dt->format('Ymd');
+
+        $ics = <<<ICS
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenCalendar//TEST//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:simple-meeting@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:{$fmt($meeting)}
+DTEND:{$fmt($meeting->modify('+1 hour'))}
+SUMMARY:Team Meeting
+DESCRIPTION:Weekly sync meeting
+LOCATION:Room 1
+CATEGORIES:Work,Meetings
+END:VEVENT
+BEGIN:VEVENT
+UID:all-day@example.com
+DTSTAMP:20260701T100000Z
+DTSTART;VALUE=DATE:{$day($holiday)}
+DTEND;VALUE=DATE:{$day($holiday->modify('+1 day'))}
+SUMMARY:Company Holiday
+CATEGORIES:Holiday
+END:VEVENT
+BEGIN:VEVENT
+UID:recurring-standup@example.com
+DTSTAMP:20260701T100000Z
+DTSTART:{$fmt($standup)}
+DTEND:{$fmt($standup->modify('+15 minutes'))}
+SUMMARY:Daily Standup
+RRULE:FREQ=DAILY;COUNT=5
+EXDATE:{$fmt($exdate)}
+CATEGORIES:Work
+END:VEVENT
+END:VCALENDAR
+ICS;
+        file_put_contents($this->icsPath, $ics);
     }
 
     protected function tearDown(): void
