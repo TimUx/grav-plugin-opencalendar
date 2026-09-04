@@ -48,6 +48,17 @@ final class IcsParser
 
         $timezone = $this->resolveTimezone($document);
         $this->localizeFloatingTimes($document, $timezone);
+        $nonRecurringEvents = [];
+        foreach ($document->select('VEVENT') as $component) {
+            if (
+                $component instanceof VEvent
+                && !isset($component->RRULE)
+                && !isset($component->RDATE)
+                && !isset($component->{'RECURRENCE-ID'})
+            ) {
+                $nonRecurringEvents[] = clone $component;
+            }
+        }
         $events = [];
 
         if ($this->expandRecurring) {
@@ -64,8 +75,11 @@ final class IcsParser
                 $expanded = $document;
             }
 
-            if ($expanded instanceof VCalendar) {
+            if ($expanded instanceof VCalendar && $expanded !== $document) {
                 $document = $expanded;
+                foreach ($nonRecurringEvents as $component) {
+                    $document->add($component);
+                }
             }
         }
 
