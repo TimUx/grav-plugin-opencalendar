@@ -105,7 +105,7 @@ final class AdditionalSourcesTest extends TestCase
         $source = new LocalSource(
             $this->unusedHttp(),
             [$this->tmpDir . '/opencalendar'],
-            new IcsParser('UTC'),
+            new IcsParser('UTC', false),
             new JsonParser('UTC'),
         );
         $config = $this->config('upload', SourceType::Local, 'uploads/feed.ics');
