@@ -253,8 +253,8 @@ ICS;
         self::assertStringNotContainsString('oc-list__group', $noGroup);
 
         $query = EventQuery::fromRequest([
-            'from' => '-1 day',
-            'to' => '+30 days',
+            'from' => (new \DateTimeImmutable('today'))->format('Y-m-d'),
+            'to' => (new \DateTimeImmutable('+30 days'))->format('Y-m-d'),
             'sort' => 'asc',
             'limit' => 50,
         ]);

@@ -34,7 +34,7 @@ final class IcsParserTest extends TestCase
         $ics = file_get_contents(dirname(__DIR__, 2) . '/Fixtures/sample.ics');
         self::assertIsString($ics);
 
-        $events = $this->parser->parse($ics, $this->config, 1);
+        $events = (new IcsParser('UTC', false))->parse($ics, $this->config, 1);
         self::assertNotEmpty($events);
 
         $meeting = null;
@@ -61,7 +61,7 @@ final class IcsParserTest extends TestCase
         $ics = file_get_contents(dirname(__DIR__, 2) . '/Fixtures/sample.ics');
         self::assertIsString($ics);
 
-        $events = $this->parser->parse($ics, $this->config, 1);
+        $events = (new IcsParser('UTC', false))->parse($ics, $this->config, 1);
         $holiday = null;
         foreach ($events as $event) {
             if ($event->uid === 'all-day@example.com') {
