@@ -16,7 +16,7 @@ final class IcsParserTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->parser = new IcsParser('UTC', true, 365, false);
+        $this->parser = new IcsParser('UTC', false, 365, false);
         $this->config = new SourceConfig(
             key: 'test',
             name: 'Test Calendar',
@@ -117,7 +117,7 @@ ICS;
 
     public function testParsesUtcInstantIntoDefaultTimezone(): void
     {
-        $parser = new IcsParser('Europe/Berlin', true, 365, false);
+        $parser = new IcsParser('Europe/Berlin', false, 365, false);
         $ics = <<<'ICS'
 BEGIN:VCALENDAR
 VERSION:2.0
@@ -140,7 +140,7 @@ ICS;
 
     public function testParsesFloatingTimeInDefaultTimezone(): void
     {
-        $parser = new IcsParser('Europe/Berlin', true, 365, false);
+        $parser = new IcsParser('Europe/Berlin', false, 365, false);
         $ics = <<<'ICS'
 BEGIN:VCALENDAR
 VERSION:2.0
