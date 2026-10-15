@@ -51,7 +51,7 @@ final class PaginatedResult
     public function toArray(callable $mapper): array
     {
         /** @var list<TMapped> $data */
-        $data = array_values(array_map($mapper, $this->items));
+        $data = array_map($mapper, $this->items);
 
         return [
             'meta' => [

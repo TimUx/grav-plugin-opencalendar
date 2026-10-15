@@ -18,6 +18,9 @@ use Grav\Plugin\OpenCalendar\Sync\SyncService;
  */
 final class CalendarService
 {
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(
         private readonly EventRepository $events,
         private readonly CalendarRepository $calendars,
@@ -78,6 +81,7 @@ final class CalendarService
     }
 
     /**
+     * @param list<string>|null $calendarKeys
      * @return list<string>
      */
     public function listCategories(?array $calendarKeys = null): array

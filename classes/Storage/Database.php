@@ -116,7 +116,7 @@ final class Database
      */
     public function fetchAll(string $sql, array $params = []): array
     {
-        return $this->execute($sql, $params)->fetchAll();
+        return array_values($this->execute($sql, $params)->fetchAll());
     }
 
     /**

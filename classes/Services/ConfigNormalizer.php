@@ -53,7 +53,7 @@ final class ConfigNormalizer
             $asArray = self::toArray($value);
             // Distinguish list/object-like structures: if conversion yielded data, prefer array form
             // for nested config sections; scalars/objects without toArray stay as-is when empty.
-            if ($asArray !== [] || is_array($value) || (is_object($value) && method_exists($value, 'toArray'))) {
+            if ($asArray !== [] || is_array($value) || method_exists($value, 'toArray')) {
                 return $asArray;
             }
         }

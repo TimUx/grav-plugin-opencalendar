@@ -58,7 +58,7 @@ final class CurlHttpClient implements HttpClientInterface
             CURLOPT_MAXREDIRS => max(0, $maxRedirects),
             CURLOPT_TIMEOUT => max(1, $timeout),
             CURLOPT_CONNECTTIMEOUT => max(1, min(15, $timeout)),
-            CURLOPT_USERAGENT => $userAgent,
+            CURLOPT_USERAGENT => $userAgent !== '' ? $userAgent : 'OpenCalendar/1.0',
             CURLOPT_HTTPHEADER => $headerLines,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HEADERFUNCTION => static function ($curl, string $headerLine) use (&$responseHeaders): int {

@@ -13,6 +13,9 @@ use Grav\Plugin\OpenCalendar\Services\Container;
  */
 final class ApiController
 {
+    /**
+     * @param array<string, mixed> $apiConfig
+     */
     public function __construct(
         private readonly Container $container,
         private readonly array $apiConfig,

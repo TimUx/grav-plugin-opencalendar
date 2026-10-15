@@ -19,5 +19,3 @@ parameters:
         -
             message: '#Cannot assign offset .* to Sabre\\VObject\\Node#'
             path: classes/Export/IcsExporter.php
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false

@@ -144,6 +144,7 @@ final class EventRepository
     }
 
     /**
+     * @param list<string>|null $calendarKeys
      * @return list<string>
      */
     public function distinctCategories(?array $calendarKeys = null): array
@@ -439,8 +440,10 @@ final class EventRepository
     {
         $placeholders = [];
         $params = [];
-        foreach (array_values($values) as $i => $value) {
+        $i = 0;
+        foreach ($values as $value) {
             $name = $prefix . $i;
+            $i++;
             $placeholders[] = ':' . $name;
             $params[$name] = $value;
         }
@@ -463,9 +466,9 @@ final class EventRepository
             'organizer' => $event->organizer,
             'url' => $event->url,
             'status' => $event->status,
-            'categories_json' => json_encode(array_values($event->categories), JSON_THROW_ON_ERROR),
+            'categories_json' => json_encode($event->categories, JSON_THROW_ON_ERROR),
             'color' => $event->color,
-            'attachments_json' => json_encode(array_values($event->attachments), JSON_THROW_ON_ERROR),
+            'attachments_json' => json_encode($event->attachments, JSON_THROW_ON_ERROR),
             'start_at' => $event->startAt->format(\DateTimeInterface::ATOM),
             'end_at' => $event->endAt?->format(\DateTimeInterface::ATOM),
             'all_day' => $event->allDay ? 1 : 0,
@@ -485,6 +488,8 @@ final class EventRepository
     {
         $categories = json_decode((string) ($row['categories_json'] ?? '[]'), true);
         $attachments = json_decode((string) ($row['attachments_json'] ?? '[]'), true);
+        /** @var list<array{uri: string, filename?: string|null, mime?: string|null}> $attachments */
+        $attachments = is_array($attachments) ? array_values($attachments) : [];
 
         return new Event(
             id: (int) $row['id'],
@@ -499,9 +504,9 @@ final class EventRepository
             status: $row['status'] !== null ? (string) $row['status'] : null,
             categories: is_array($categories) ? array_values(array_map('strval', $categories)) : [],
             color: $row['color'] !== null ? (string) $row['color'] : null,
-            attachments: is_array($attachments) ? $attachments : [],
+            attachments: $attachments,
             startAt: new \DateTimeImmutable((string) $row['start_at']),
-            endAt: isset($row['end_at']) && $row['end_at'] !== null
+            endAt: isset($row['end_at'])
                 ? new \DateTimeImmutable((string) $row['end_at'])
                 : null,
             allDay: (bool) $row['all_day'],
@@ -509,7 +514,7 @@ final class EventRepository
             isRecurring: (bool) $row['is_recurring'],
             rrule: $row['rrule'] !== null ? (string) $row['rrule'] : null,
             contentHash: $row['content_hash'] !== null ? (string) $row['content_hash'] : null,
-            deletedAt: isset($row['deleted_at']) && $row['deleted_at'] !== null
+            deletedAt: isset($row['deleted_at'])
                 ? new \DateTimeImmutable((string) $row['deleted_at'])
                 : null,
             calendarName: isset($row['calendar_name']) ? (string) $row['calendar_name'] : null,

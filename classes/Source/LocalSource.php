@@ -20,6 +20,7 @@ final class LocalSource extends AbstractSource
 
     /**
      * @param string|list<string> $basePath Primary base, or list of allowed bases (first used for relative paths)
+     * @param array<string, mixed> $httpOptions
      */
     public function __construct(
         HttpClientInterface $http,
