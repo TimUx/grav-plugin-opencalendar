@@ -144,6 +144,7 @@ final class EventRepository
     }
 
     /**
+     * @param list<string>|null $calendarKeys
      * @return list<string>
      */
     public function distinctCategories(?array $calendarKeys = null): array
@@ -439,8 +440,10 @@ final class EventRepository
     {
         $placeholders = [];
         $params = [];
-        foreach (array_values($values) as $i => $value) {
+        $i = 0;
+        foreach ($values as $value) {
             $name = $prefix . $i;
+            $i++;
             $placeholders[] = ':' . $name;
             $params[$name] = $value;
         }
@@ -485,6 +488,8 @@ final class EventRepository
     {
         $categories = json_decode((string) ($row['categories_json'] ?? '[]'), true);
         $attachments = json_decode((string) ($row['attachments_json'] ?? '[]'), true);
+        /** @var list<array{uri: string, filename?: string|null, mime?: string|null}> $attachments */
+        $attachments = is_array($attachments) ? array_values($attachments) : [];
 
         return new Event(
             id: (int) $row['id'],
@@ -497,11 +502,11 @@ final class EventRepository
             organizer: $row['organizer'] !== null ? (string) $row['organizer'] : null,
             url: $row['url'] !== null ? (string) $row['url'] : null,
             status: $row['status'] !== null ? (string) $row['status'] : null,
-            categories: is_array($categories) ? array_values(array_map('strval', $categories)) : [],
+            categories: is_array($categories) ? array_map('strval', $categories) : [],
             color: $row['color'] !== null ? (string) $row['color'] : null,
-            attachments: is_array($attachments) ? $attachments : [],
+            attachments: $attachments,
             startAt: new \DateTimeImmutable((string) $row['start_at']),
-            endAt: isset($row['end_at']) && $row['end_at'] !== null
+            endAt: isset($row['end_at'])
                 ? new \DateTimeImmutable((string) $row['end_at'])
                 : null,
             allDay: (bool) $row['all_day'],
@@ -509,7 +514,7 @@ final class EventRepository
             isRecurring: (bool) $row['is_recurring'],
             rrule: $row['rrule'] !== null ? (string) $row['rrule'] : null,
             contentHash: $row['content_hash'] !== null ? (string) $row['content_hash'] : null,
-            deletedAt: isset($row['deleted_at']) && $row['deleted_at'] !== null
+            deletedAt: isset($row['deleted_at'])
                 ? new \DateTimeImmutable((string) $row['deleted_at'])
                 : null,
             calendarName: isset($row['calendar_name']) ? (string) $row['calendar_name'] : null,

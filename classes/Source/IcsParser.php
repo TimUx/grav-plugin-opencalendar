@@ -56,16 +56,12 @@ final class IcsParser
             $to = $from->modify('+' . max(1, $this->recurringHorizonDays) . ' days');
 
             try {
-                $expanded = $document->expand(
+                $document = $document->expand(
                     \DateTime::createFromImmutable($from),
                     \DateTime::createFromImmutable($to)
                 );
             } catch (\Throwable) {
-                $expanded = $document;
-            }
-
-            if ($expanded instanceof VCalendar) {
-                $document = $expanded;
+                // Keep the unexpanded calendar if recurrence expansion fails.
             }
         }
 
@@ -105,7 +101,7 @@ final class IcsParser
 
         if (isset($vevent->DTEND)) {
             $endAt = $this->fromIcalDate($vevent->DTEND, $fallbackTz);
-        } elseif (isset($vevent->DURATION) && $startAt !== null) {
+        } elseif (isset($vevent->DURATION)) {
             try {
                 $duration = $vevent->DURATION->getDateInterval();
                 $endAt = $startAt->add($duration);

@@ -127,7 +127,7 @@ final class RuntimeDataMigrator
                     $urlMap[$oldUrl] = $newUrl;
                     $urlMap[str_replace('\\', '/', $file)] = $newUrl;
                     $real = realpath($dest);
-                    if (is_string($real) && $real !== '') {
+                    if (is_string($real)) {
                         $urlMap[$real] = $newUrl;
                     }
                 }

@@ -10,6 +10,9 @@ use Grav\Plugin\OpenCalendar\Http\HttpClientInterface;
 
 abstract class AbstractSource implements SourceInterface
 {
+    /**
+     * @param array<string, mixed> $httpOptions
+     */
     public function __construct(
         protected readonly HttpClientInterface $http,
         protected readonly array $httpOptions = [],

@@ -55,7 +55,7 @@ final class PluginSourcesWriter
             $normalized[] = $sourceRow;
         }
 
-        $config['sources'] = array_values($normalized);
+        $config['sources'] = $normalized;
         if (!array_key_exists('enabled', $config)) {
             $config['enabled'] = true;
         }
@@ -65,7 +65,7 @@ final class PluginSourcesWriter
         return [
             'key' => $key,
             'created' => $created,
-            'sources' => array_values($normalized),
+            'sources' => $normalized,
         ];
     }
 

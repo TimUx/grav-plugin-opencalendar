@@ -224,8 +224,10 @@ final class CalendarRepository
 
         $placeholders = [];
         $params = [];
-        foreach (array_values($keepKeys) as $i => $key) {
+        $i = 0;
+        foreach ($keepKeys as $key) {
             $name = 'k' . $i;
+            $i++;
             $placeholders[] = ':' . $name;
             $params[$name] = $key;
         }

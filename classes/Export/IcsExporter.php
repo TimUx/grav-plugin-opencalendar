@@ -45,7 +45,7 @@ final class IcsExporter
 
         $seen = [];
         foreach ($events as $event) {
-            if (!$event instanceof Event || $event->deletedAt !== null) {
+            if ($event->deletedAt !== null) {
                 continue;
             }
 

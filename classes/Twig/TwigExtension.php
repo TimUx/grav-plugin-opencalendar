@@ -15,6 +15,7 @@ use Twig\TwigFunction;
 class TwigExtension extends AbstractExtension
 {
     /**
+     * @param array<string, mixed> $config
      * @param callable(string, array<int|string, scalar|null>=): string|null $translator
      */
     public function __construct(
@@ -169,7 +170,7 @@ class TwigExtension extends AbstractExtension
 
         $perPage = max(1, (int) ($options['limit'] ?? $this->config['display']['list']['limit'] ?? 50));
         $maxEvents = null;
-        if (isset($options['max_events']) && $options['max_events'] !== '' && $options['max_events'] !== null) {
+        if (isset($options['max_events']) && $options['max_events'] !== '') {
             $maxEvents = max(1, (int) $options['max_events']);
         }
         $noPagination = $this->toBool($options['no_pagination'] ?? false);
@@ -852,7 +853,7 @@ HTML;
     private function resolveCategoryFilter(array $options, array $requestFilters): array
     {
         $categories = [];
-        if (isset($options['categories']) && $options['categories'] !== '' && $options['categories'] !== null) {
+        if (isset($options['categories']) && $options['categories'] !== '') {
             if (is_array($options['categories'])) {
                 foreach ($options['categories'] as $category) {
                     $category = trim((string) $category);
@@ -1011,6 +1012,9 @@ HTML;
         return $href;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     private function resolvePage(array $options): int
     {
         if (isset($options['page'])) {
@@ -1082,6 +1086,10 @@ HTML;
         return 'en';
     }
 
+    /**
+     * @param array<string, mixed> $event
+     * @return array{display_date: string, display_time: string}
+     */
     private function displayFields(array $event, string $locale, string $timezone): array
     {
         $start = (string) ($event['start'] ?? '');

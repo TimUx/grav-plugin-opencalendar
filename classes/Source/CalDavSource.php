@@ -15,6 +15,9 @@ use Grav\Plugin\OpenCalendar\Models\Event;
  */
 final class CalDavSource extends AbstractSource
 {
+    /**
+     * @param array<string, mixed> $httpOptions
+     */
     public function __construct(
         HttpClientInterface $http,
         private readonly IcsParser $parser,
