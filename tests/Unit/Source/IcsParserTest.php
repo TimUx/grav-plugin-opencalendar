@@ -100,7 +100,7 @@ END:VEVENT
 END:VCALENDAR
 ICS;
 
-        $events = $this->parser->parse($ics, $this->config, 1);
+        $events = (new IcsParser('UTC', true))->parse($ics, $this->config, 1);
         $standup = array_values(array_filter(
             $events,
             static fn ($e): bool => $e->uid === 'recurring-standup@example.com'
