@@ -48,6 +48,17 @@ final class IcsParser
 
         $timezone = $this->resolveTimezone($document);
         $this->localizeFloatingTimes($document, $timezone);
+        $nonRecurringEvents = [];
+        foreach ($document->select('VEVENT') as $component) {
+            if (
+                $component instanceof VEvent
+                && !isset($component->RRULE)
+                && !isset($component->RDATE)
+                && !isset($component->{'RECURRENCE-ID'})
+            ) {
+                $nonRecurringEvents[] = clone $component;
+            }
+        }
         $events = [];
 
         if ($this->expandRecurring) {
@@ -56,12 +67,19 @@ final class IcsParser
             $to = $from->modify('+' . max(1, $this->recurringHorizonDays) . ' days');
 
             try {
-                $document = $document->expand(
+                $expanded = $document->expand(
                     \DateTime::createFromImmutable($from),
                     \DateTime::createFromImmutable($to)
                 );
             } catch (\Throwable) {
-                // Keep the unexpanded calendar if recurrence expansion fails.
+                $expanded = $document;
+            }
+
+            if ($expanded !== $document) {
+                $document = $expanded;
+                foreach ($nonRecurringEvents as $component) {
+                    $document->add($component);
+                }
             }
         }
 
