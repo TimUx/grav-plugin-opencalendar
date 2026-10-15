@@ -8,6 +8,8 @@ use Grav\Plugin\OpenCalendar\Dto\SourceConfig;
 use Grav\Plugin\OpenCalendar\Models\Event;
 use Sabre\VObject\Component\VCalendar;
 use Sabre\VObject\Component\VEvent;
+use Sabre\VObject\Node;
+use Sabre\VObject\Property;
 use Sabre\VObject\Reader;
 
 /**
@@ -97,6 +99,9 @@ final class IcsParser
         return $events;
     }
 
+    /**
+     * @param VEvent&iterable<int, Node> $vevent
+     */
     private function mapEvent(
         VEvent $vevent,
         SourceConfig $config,
@@ -189,6 +194,9 @@ final class IcsParser
         );
     }
 
+    /**
+     * @param VCalendar&iterable<int, Node> $calendar
+     */
     private function localizeFloatingTimes(VCalendar $calendar, \DateTimeZone $timezone): void
     {
         $tzName = $timezone->getName();
@@ -218,7 +226,7 @@ final class IcsParser
     }
 
     /**
-     * @param \Sabre\VObject\Property $prop
+     * @param Property&iterable<int, Node> $prop
      */
     private function fromIcalDate(object $prop, \DateTimeZone $fallbackTz): \DateTimeImmutable
     {
@@ -245,6 +253,9 @@ final class IcsParser
         return $immutable->setTimezone($fallbackTz);
     }
 
+    /**
+     * @param VCalendar&iterable<int, Node> $calendar
+     */
     private function resolveTimezone(VCalendar $calendar): \DateTimeZone
     {
         $candidate = $this->defaultTimezone;
@@ -274,6 +285,9 @@ final class IcsParser
         return $text;
     }
 
+    /**
+     * @param VEvent&iterable<int, Node> $vevent
+     */
     private function extractOrganizer(VEvent $vevent): ?string
     {
         if (!isset($vevent->ORGANIZER)) {
@@ -293,6 +307,7 @@ final class IcsParser
     }
 
     /**
+     * @param VEvent&iterable<int, Node> $vevent
      * @return list<string>
      */
     private function extractCategories(VEvent $vevent): array
@@ -315,6 +330,9 @@ final class IcsParser
         return array_values(array_unique($categories));
     }
 
+    /**
+     * @param VEvent&iterable<int, Node> $vevent
+     */
     private function extractColor(VEvent $vevent): ?string
     {
         foreach (['COLOR', 'X-APPLE-CALENDAR-COLOR', 'X-COLOR'] as $name) {
@@ -330,6 +348,7 @@ final class IcsParser
     }
 
     /**
+     * @param VEvent&iterable<int, Node> $vevent
      * @return list<array{uri: string, filename?: string|null, mime?: string|null}>
      */
     private function extractAttachments(VEvent $vevent): array

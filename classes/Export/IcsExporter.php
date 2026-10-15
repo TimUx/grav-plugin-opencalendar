@@ -6,6 +6,7 @@ namespace Grav\Plugin\OpenCalendar\Export;
 
 use Grav\Plugin\OpenCalendar\Models\Event;
 use Sabre\VObject\Component\VCalendar;
+use Sabre\VObject\Node;
 
 /**
  * Builds an RFC5545 VCALENDAR document from normalized Event models.
@@ -61,6 +62,9 @@ final class IcsExporter
         return $vcalendar->serialize();
     }
 
+    /**
+     * @param VCalendar&iterable<int, Node> $vcalendar
+     */
     private function addEvent(VCalendar $vcalendar, Event $event): void
     {
         $props = [
