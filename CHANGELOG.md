@@ -1,3 +1,9 @@
+# v1.3.5
+## 11/04/2026
+
+1. [](#improved)
+    * CI verifies compatibility on PHP 8.2, 8.3, 8.4, and 8.5
+
 # v1.3.2
 ## 08/13/2026
 
