@@ -27,7 +27,7 @@ ln -s "$(pwd)" /path/to/grav/user/plugins/opencalendar
 | PHPCS | `composer phpcs` | `phpcs.xml` (PSR-12) |
 | Alle | `composer check` | `composer.json` scripts |
 
-CI führt dieselben Prüfungen unter PHP 8.2 und 8.3 aus (siehe `.github/workflows/ci.yml`).
+CI führt dieselben Prüfungen unter PHP 8.2, 8.3, 8.4 und 8.5 aus (siehe `.github/workflows/ci.yml`).
 
 ## Projektstruktur
 
