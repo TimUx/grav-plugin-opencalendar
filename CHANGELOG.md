@@ -1,3 +1,10 @@
+# v1.3.6
+## 11/15/2026
+
+1. [](#improved)
+    * Development tooling: PHPUnit 11.5 and PHPStan 2.3.5; tests pass on PHP 8.2, 8.3, 8.4 and 8.5
+    * Dependabot keeps PHPUnit below 12 while PHP 8.2 (Grav 1.7) is supported
+
 # v1.3.5
 ## 11/04/2026
 
