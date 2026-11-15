@@ -31,3 +31,9 @@ updates:
     open-pull-requests-limit: 5
     pull-request-branch-name:
       separator: "/"
+    ignore:
+      # The plugin supports Grav 1.7 (PHP up to 8.3) and Grav 2.0 (PHP 8.3 to 8.5), so CI
+      # tests PHP 8.2 to 8.5. PHPUnit 12 needs PHP 8.3 and PHPUnit 13 needs PHP 8.4; keep
+      # PHPUnit below 12 as long as PHP 8.2 is supported.
+      - dependency-name: "phpunit/phpunit"
+        versions: [">=12"]
